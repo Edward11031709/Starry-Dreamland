@@ -1,36 +1,42 @@
 # Starry Dreamland｜星夢樂園
 
-A browser-first fantasy mini-game platform. The intended entry point is `index.html`; players should be able to open the website directly without installing a desktop client.
+A browser-first celestial mini-game platform. The game opens directly from the repository-root `index.html`; no desktop installation or build step is required for this starter version.
 
-## Current project direction
+## Current playable entry
 
-- Traditional Chinese interface.
-- Cinematic, realistic fantasy 3D art direction: deep blue, violet, silver-white and warm gold.
-- Existing V4.1 browser demo is the stable gameplay baseline.
-- The plaza starts with a fixed angled camera. Free movement and camera rotation are a final-stage upgrade, not a prerequisite for launch.
-- Use licensed, pre-existing GLB/glTF models only. Do not create custom 3D models.
+- Traditional Chinese UI.
+- Starry Dream Plaza with three game entrances.
+- Constellation Alignment, Lunar Resonance and Gravity Voyage.
+- Little Starland: star connecting and memory matching.
+- Local demo profile, Stardust scoring, records and local leaderboard.
+- Locked Cosmic Stadium placeholder.
 
-## Publish with GitHub Pages
+## Important demo limitation
 
-After the website files are uploaded to the repository root:
+This starter version uses browser `localStorage`. Demo accounts, scores and history are stored only in the current browser profile. They do not sync between devices or between different visitors. Do not enter a real password or real personal information. Global accounts and a shared leaderboard require a backend such as Supabase with Row Level Security and server-validated score submissions.
+
+## GitHub Pages
+
+Expected URL: https://Edward11031709.github.io/Starry-Dreamland/
 
 1. Open **Settings → Pages**.
-2. Set Source to **Deploy from a branch**.
-3. Select branch `main` and folder `/(root)`.
-4. Save and wait for the deployment check.
-5. The expected site URL is https://Edward11031709.github.io/Starry-Dreamland/
+2. Under **Build and deployment → Source**, choose **GitHub Actions**.
+3. The repository already contains `.github/workflows/pages.yml`.
+4. Open the **Actions** tab and verify that **Deploy Starry Dreamland to GitHub Pages** completes successfully.
+5. Then open the URL above.
 
-The website package is a static site. It does not require npm or a build step in the current version.
+No npm installation or build step is required by the current single-file demo.
 
-## Current limitations
+## 3D direction
 
-- The current demo uses browser-local storage; records do not synchronize between devices.
-- GitHub Pages is static hosting only. Shared accounts and global leaderboards require a backend such as Supabase with Row Level Security.
-- Never commit passwords, service-role keys, private credentials, or real player personal data.
+The confirmed art direction is cinematic realistic fantasy 3D, with fixed angled plaza camera first. Free movement, mouse camera rotation and zoom are postponed until the plaza, game loop and data layer are stable. Use only existing GLB/glTF assets with verified licences; do not create custom models.
 
 ## Documentation
 
-- [Traditional Chinese project guide](README_zh-TW.md)
+- [Traditional Chinese guide](README_zh-TW.md)
 - [Cinematic 3D roadmap](docs/3D_ROADMAP_CINEMATIC_FREE_ROAM_zh-TW.md)
 - [GitHub Pages deployment guide](docs/GITHUB_PAGES_DEPLOYMENT_zh-TW.md)
-- [Asset license register](LICENSES.md)
+- [GaiaCraft reference notes](docs/REFERENCE_GAIACRAFT_zh-TW.md)
+- [Asset licence register](LICENSES.md)
+
+Never commit passwords, private credentials, service-role keys, or real player personal data.
