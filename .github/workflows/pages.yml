@@ -1,4 +1,4 @@
-name: Deploy Starry Dreamland to GitHub Pages
+name: 發布星夢樂園到 GitHub Pages
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: starry-dreamland-pages
   cancel-in-progress: true
 
 jobs:
@@ -21,14 +21,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 下載 Repository 程式碼
         uses: actions/checkout@v6
-      - name: Configure Pages
+
+      - name: 設定 GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Upload site artifact
+
+      - name: 打包網站檔案
         uses: actions/upload-pages-artifact@v4
         with:
           path: .
-      - name: Deploy
+
+      - name: 發布網站
         id: deployment
         uses: actions/deploy-pages@v4
