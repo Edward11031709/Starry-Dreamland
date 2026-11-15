@@ -176,10 +176,10 @@ function launch(id){if(id==="constellation")startConstellation();if(id==="moon")
 
 function startShootingRange(){
  const glyphs=["✦","☾","✧","◇","◈","⊙","△","✹","✶"],seq=glyphs.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,6);
- let round=0,hits=0,misses=0,seconds=24,live=false,targetStart=0;
+ let round=0,hits=0,misses=0,seconds=24,live=false,targetStart=0,targetTimer=null,roundToken=0;
  const outcomes=Array(6).fill(null),wrong=[],timers=new Set();
- active={id:"shooting-range",review:()=>({summary:"每一輪都列出正確目標、你的命中結果與反應時間。",lines:seq.map((p,i)=>"第 "+(i+1)+" 輪正解：第 "+(p+1)+" 號靶 "+glyphs[p]+"；"+(outcomes[i]?.hit?"命中，反應 "+outcomes[i].ms+" ms":"未命中／超時")+(outcomes[i]?.wrong?"，誤按 "+outcomes[i].wrong+" 次":"")).concat(wrong.length?["額外誤按："+wrong.join("、")]:[])}),cleanup:()=>timers.forEach(clearTimeout)};
- function later(fn,ms){const t=setTimeout(()=>{timers.delete(t);fn()},ms);timers.add(t)}
+ active={id:"shooting-range",review:()=>({summary:"每一輪都列出正確目標、你的命中結果與反應時間。",lines:seq.map((p,i)=>"第 "+(i+1)+" 輪正解：第 "+(p+1)+" 號靶 "+glyphs[p]+"；"+(outcomes[i]?.hit?"命中，反應 "+outcomes[i].ms+" ms":"未命中／超時")+(outcomes[i]?.wrong?"，誤按 "+outcomes[i].wrong+" 次":"")).concat(wrong.length?["額外誤按："+wrong.join("、")]:[])}),cleanup:()=>{timers.forEach(clearTimeout);timers.clear();targetTimer=null;roundToken++}};
+ function later(fn,ms){const t=setTimeout(()=>{timers.delete(t);fn()},ms);timers.add(t);return t}
  shell('<section class="hero"><div class="eyebrow">NEON SHOOTING GALLERY</div><h1>霓虹神射手</h1><p>夜場反應靶場：記住每輪亮起的靶位，快速命中六個目標。</p></section><div class="panel shooting-panel"><div class="head"><div><h2>◎ 極光反應靶場</h2><p>只有發亮的靶才是本輪目標；誤按會扣分。</p></div><div class="meta"><span class="chip" id="shootTime">24 秒</span><span class="chip" id="shootCount">命中 0 / 6</span><button class="ghost" data-quit>結束</button></div></div><div class="shooting-status" id="shootStatus">準備瞄準第一輪…</div><div class="shooting-grid" id="shootGrid"></div><div class="head"><span class="chip" id="shootHint">依序命中六個亮起的目標</span><b id="shootScore" style="color:var(--gold)">命中 0　失誤 0</b></div><div class="progress"><i id="shootProgress"></i></div></div>');
  const grid=document.getElementById("shootGrid");
  glyphs.forEach((glyph,i)=>{
@@ -187,7 +187,7 @@ function startShootingRange(){
   b.onclick=()=>{
    if(!live||round>=6)return;
    if(i!==seq[round]){misses++;wrong.push("第 "+(round+1)+" 輪誤按 "+(i+1)+" 號靶");document.getElementById("shootScore").textContent="命中 "+hits+"　失誤 "+misses;b.classList.add("wrong");later(()=>b.classList.remove("wrong"),240);return}
-   live=false;outcomes[round]={hit:true,ms:Date.now()-targetStart,wrong:wrong.filter(x=>x.startsWith("第 "+(round+1)+" 輪")).length};hits++;b.classList.remove("lit");b.classList.add("hit");
+   live=false;roundToken++;if(targetTimer!==null){clearTimeout(targetTimer);timers.delete(targetTimer);targetTimer=null}outcomes[round]={hit:true,ms:Date.now()-targetStart,wrong:wrong.filter(x=>x.startsWith("第 "+(round+1)+" 輪")).length};hits++;b.classList.remove("lit");b.classList.add("hit");
    document.getElementById("shootCount").textContent="命中 "+hits+" / 6";document.getElementById("shootScore").textContent="命中 "+hits+"　失誤 "+misses;document.getElementById("shootProgress").style.width=(hits/6*100)+"%";
    later(()=>{b.classList.remove("hit");round++;present()},320);
   };
@@ -196,10 +196,10 @@ function startShootingRange(){
  function finish(status){live=false;result(Math.max(0,Math.min(100,Math.round(hits/6*100-misses*2))),status,"shooting-range")}
  function present(){
   if(round>=6){finish("completed");return}
-  const p=seq[round],b=grid.children[p];live=true;targetStart=Date.now();
+  const p=seq[round],b=grid.children[p],thisRound=++roundToken;live=true;targetStart=Date.now();
   document.getElementById("shootStatus").textContent="第 "+(round+1)+" / 6 輪：目標出現！";
   document.getElementById("shootHint").textContent="瞄準發亮的 "+glyphs[p]+"（靶位 "+(p+1)+"）";b.classList.add("lit");
-  later(()=>{if(!live)return;live=false;b.classList.remove("lit");outcomes[round]={hit:false,wrong:wrong.filter(x=>x.startsWith("第 "+(round+1)+" 輪")).length};misses++;document.getElementById("shootScore").textContent="命中 "+hits+"　失誤 "+misses;later(()=>{round++;present()},280)},2600);
+  targetTimer=later(()=>{targetTimer=null;if(thisRound!==roundToken||!live)return;live=false;b.classList.remove("lit");outcomes[round]={hit:false,wrong:wrong.filter(x=>x.startsWith("第 "+(round+1)+" 輪")).length};misses++;document.getElementById("shootScore").textContent="命中 "+hits+"　失誤 "+misses;later(()=>{round++;present()},280)},2600);
  }
  present();clock=setInterval(()=>{seconds--;const el=document.getElementById("shootTime");if(el)el.textContent=seconds+" 秒";if(seconds<=0)finish("timed_out")},1000);
 }
