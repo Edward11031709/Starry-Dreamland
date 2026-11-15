@@ -697,24 +697,71 @@ function disposeWorld(world) {
   });
 }
 
-function buildPlayer(scene) {
-  const player = new THREE.Group();
-  player.name = "StarryDreamlandPlayer";
-  const robe = new THREE.MeshStandardMaterial({ color: 0x8d75c9, roughness: 0.48, metalness: 0.12 });
-  const trim = new THREE.MeshStandardMaterial({ color: 0xe9c982, emissive: 0x8b6330, emissiveIntensity: 0.35, roughness: 0.35, metalness: 0.5 });
-  const face = new THREE.MeshStandardMaterial({ color: 0xf1d9c5, roughness: 0.78 });
-  addMesh(player, new THREE.SphereGeometry(0.43, 18, 14), robe, [0, 0.72, 0], [0.78, 1.08, 0.62]);
-  addMesh(player, new THREE.SphereGeometry(0.29, 18, 14), face, [0, 1.48, 0.02]);
-  addMesh(player, new THREE.ConeGeometry(0.3, 0.42, 8), trim, [0, 1.83, 0]);
-  addMesh(player, new THREE.SphereGeometry(0.095, 12, 10), trim, [0, 2.08, 0]);
-  [-0.2, 0.2].forEach(x => addMesh(player, new THREE.SphereGeometry(0.075, 10, 8), trim, [x, 0.18, 0.02]));
-  const halo = addMesh(player, new THREE.TorusGeometry(0.58, 0.035, 8, 36), trim, [0, 2.15, 0]);
-  halo.rotation.x = Math.PI / 2;
-  player.userData.halo = halo;
-  player.userData.walkPhase = 0;
-  scene.add(player);
-  return player;
+function buildPlayer(scene,avatarId="wanderer"){
+  const styles={
+    wanderer:{robe:0x30466f,trim:0xf1d18e,mantle:0x6556a2,hair:0x332744,skin:0xf0d5c1,metal:0x8cbcd8},
+    "moon-priestess":{robe:0x7770a7,trim:0xe6e4ff,mantle:0x9b91cf,hair:0x3b315e,skin:0xf1d8ca,metal:0xa7d9ed},
+    "nebula-prince":{robe:0x265c73,trim:0xf2d28f,mantle:0x4f75a5,hair:0x261f46,skin:0xe9c9ad,metal:0x8be0db},
+    "crystal-witch":{robe:0x593d75,trim:0xe7b7f0,mantle:0x34234f,hair:0x251b39,skin:0xf2d2c8,metal:0xc7a6ef},
+    "astral-knight":{robe:0x536a86,trim:0xf5dda7,mantle:0x273a59,hair:0x39313b,skin:0xeacdb7,metal:0xdce6f5},
+    "celestial-guardian":{robe:0xe0d9c8,trim:0xffe2a0,mantle:0x8b7ab7,hair:0xdbc8a2,skin:0xf3d9c3,metal:0xf1e8ff}
+  };
+  const style=styles[avatarId]||styles.wanderer;
+  const player=new THREE.Group();player.name="StarryDreamlandPlayer";player.userData.avatarId=avatarId;
+  const robe=makeMaterial(style.robe,0.34,0.28,{clearcoat:0.62,clearcoatRoughness:0.22});
+  const mantle=makeMaterial(style.mantle,0.38,0.22,{clearcoat:0.55});
+  const trim=makeMaterial(style.trim,0.2,0.78,{clearcoat:1});
+  const hair=makeMaterial(style.hair,0.52,0.08);
+  const skin=makeMaterial(style.skin,0.78,0.02);
+  const metal=makeMaterial(style.metal,0.2,0.76,{clearcoat:1});
+  const shadow=makeMaterial(0x1a1930,0.82,0.05);
+  // Tailored layered robe and short mantle; no more plain sphere-only body.
+  addMesh(player,new THREE.CylinderGeometry(0.25,0.48,0.98,20,2),robe,[0,0.77,0]);
+  addMesh(player,new THREE.CylinderGeometry(0.28,0.31,0.12,20),trim,[0,1.19,0]);
+  const cape=addMesh(player,new THREE.CylinderGeometry(0.12,0.53,0.88,20,1,true),mantle,[0,0.72,-0.16]);
+  cape.rotation.x=-0.1;
+  addMesh(player,new THREE.TorusGeometry(0.31,0.045,8,36),trim,[0,0.98,0]).rotation.x=Math.PI/2;
+  addMesh(player,new THREE.BoxGeometry(0.54,0.1,0.18),metal,[0,0.99,0.02]);
+  addMesh(player,new THREE.OctahedronGeometry(0.12,1),trim,[0,1.0,0.13],[0.72,1.15,0.72]);
+  // Boots, gloves and small shoulder guards give the silhouette readable detail.
+  [-0.19,0.19].forEach(x=>{
+    addMesh(player,new THREE.CylinderGeometry(0.105,0.13,0.31,12),shadow,[x,0.19,0.02]);
+    addMesh(player,new THREE.TorusGeometry(0.11,0.025,6,20),trim,[x,0.31,0.02]);
+    addMesh(player,new THREE.SphereGeometry(0.13,14,10),robe,[x*1.55,1.03,0],[1,0.86,0.92]);
+    addMesh(player,new THREE.SphereGeometry(0.09,12,10),skin,[x*1.78,0.76,0.06]);
+  });
+  // Face, hair, eyes and side locks.
+  addMesh(player,new THREE.SphereGeometry(0.255,24,18),skin,[0,1.48,0.025],[0.94,1.05,0.9]);
+  addMesh(player,new THREE.SphereGeometry(0.27,20,14,0,Math.PI*2,0,Math.PI/2),hair,[0,1.56,-0.015],[1.04,0.86,0.98]);
+  [-1,1].forEach(side=>{
+    addMesh(player,new THREE.SphereGeometry(0.085,12,10),hair,[side*0.235,1.38,0.02],[0.8,1.65,0.95]);
+    addMesh(player,new THREE.SphereGeometry(0.028,10,8),shadow,[side*0.095,1.5,0.242]);
+  });
+  addMesh(player,new THREE.SphereGeometry(0.045,12,10),skin,[0,1.41,0.238],[0.8,0.62,0.7]);
+  addMesh(player,new THREE.TorusGeometry(0.285,0.045,8,36),trim,[0,1.68,0]).rotation.x=Math.PI/2;
+  // Signature headpiece differs by outfit, while every free outfit remains detailed.
+  if(avatarId==="crystal-witch"){
+    const brim=addMesh(player,new THREE.CylinderGeometry(0.43,0.43,0.07,24),mantle,[0,1.78,0]);
+    addMesh(player,new THREE.ConeGeometry(0.34,0.68,16),mantle,[0,2.12,0]);
+    addMesh(player,new THREE.TorusGeometry(0.25,0.035,8,28),trim,[0,1.93,0]);
+  }else if(avatarId==="astral-knight"||avatarId==="celestial-guardian"){
+    addMesh(player,new THREE.CylinderGeometry(0.31,0.35,0.12,16),metal,[0,1.74,0]);
+    addMesh(player,new THREE.ConeGeometry(0.18,0.48,8),trim,[0,1.99,0]);
+    [-1,1].forEach(side=>{const horn=addMesh(player,new THREE.ConeGeometry(0.09,0.34,8),metal,[side*0.26,1.9,0]);horn.rotation.z=side*0.48});
+  }else{
+    addMesh(player,new THREE.CylinderGeometry(0.36,0.28,0.08,24),mantle,[0,1.76,0]);
+    addMesh(player,new THREE.ConeGeometry(0.25,0.42,12),mantle,[0,1.98,0]);
+    addMesh(player,new THREE.OctahedronGeometry(0.12,1),trim,[0,2.23,0],null,false,false);
+  }
+  const floatingStar=addMesh(player,new THREE.OctahedronGeometry(0.105,1),trim,[0,2.34,0],null,false,false);
+  const halo=addMesh(player,new THREE.TorusGeometry(0.49,0.028,8,44),metal,[0,2.21,0]);
+  halo.rotation.x=Math.PI/2;
+  const shoulderGem=addMesh(player,new THREE.OctahedronGeometry(0.075,1),trim,[-0.26,1.08,0.09],null,false,false);
+  const shoulderGem2=addMesh(player,new THREE.OctahedronGeometry(0.075,1),trim,[0.26,1.08,0.09],null,false,false);
+  player.userData.halo=halo;player.userData.floatingStar=floatingStar;player.userData.walkPhase=0;
+  scene.add(player);return player;
 }
+
 
 function mount(host) {
   if (!host || !host.isConnected) return;
