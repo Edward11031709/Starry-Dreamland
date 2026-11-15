@@ -479,6 +479,10 @@ function buildEnvironment(scene) {
   const island = new THREE.Group();
   island.name = "OpenWorldParkIsland";
   scene.add(island);
+  const colliders = [];
+  const walkSegments = [];
+  const terrainZones = [];
+  const addCollider = (x,z,radius,label)=>colliders.push({x,z,radius,label});
   const cliff = addMesh(island,new THREE.CylinderGeometry(44.2,34.5,4.2,64,3),materials.rock,[0,-1.42,0]);
   cliff.rotation.y=0.12;
   addMesh(island,new THREE.DodecahedronGeometry(34,1),materials.rockLight,[0,-2.55,0],[1.06,0.5,0.92]).rotation.y=0.22;
@@ -516,6 +520,7 @@ function buildEnvironment(scene) {
       const segment=new THREE.Group();
       segment.position.set((a[0]+b[0])/2,0.785,(a[1]+b[1])/2);
       segment.rotation.y=Math.atan2(dx,dz);island.add(segment);
+      walkSegments.push({x1:a[0],z1:a[1],x2:b[0],z2:b[1],width,surfaceY:0.822});
       addMesh(segment,new THREE.BoxGeometry(width,0.075,length+0.42),materials.road,[0,0,0],null,false,true);
       [-1,1].forEach(side=>addMesh(segment,new THREE.BoxGeometry(0.12,0.045,length+0.48),materials.roadEdge,[side*(width/2-0.08),0.052,0],null,false,false));
     }
@@ -537,6 +542,7 @@ function buildEnvironment(scene) {
     addMesh(island,new THREE.CylinderGeometry(radius,radius,0.13,48),tint,[x,0.80,z],null,false,true);
     const ring=addMesh(island,new THREE.TorusGeometry(radius-0.16,0.075,8,64),materials.gold,[x,0.89,z]);
     ring.rotation.x=Math.PI/2;
+    terrainZones.push({x,z,radius,surfaceY:0.865});
   }
   addDistrictPlaza(0,0,12.8);addDistrictPlaza(-21.5,0.7,7.1);
   addDistrictPlaza(-13,-11.5,5.4);addDistrictPlaza(13,-10,5.4);
@@ -545,9 +551,11 @@ function buildEnvironment(scene) {
 
   // The old satellite islands become reachable themed gardens at the far end of the park.
   buildCastle(scene,materials);
+  addCollider(0,-18.2,5.7,"星夢城堡");
   const left=makeIsland(scene,-30,0.68,-16.5,4.4,{rock:materials.rock,top:materials.top,trim:materials.gold});
   left.rotation.y=-0.12;
   buildObservatory(scene,-30,0.68,-16.5,materials);
+  addCollider(-30,-16.5,3.0,"星辰觀測站");
   const right=makeIsland(scene,30,0.68,-16.5,4.1,{rock:materials.rock,top:materials.top,trim:materials.silver});
   right.rotation.y=0.18;
   for(let i=0;i<5;i++)createTree(right,-1.45+i*0.72,-0.35+(i%2)*0.85,0.7+(i%2)*0.16,{wood:materials.wood});
@@ -565,19 +573,20 @@ function buildEnvironment(scene) {
   }
 
   const portals=[];
-  [-7.2,0,7.2].forEach((x,i)=>portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials)));
+  [-7.2,0,7.2].forEach((x,i)=>{portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials));addCollider(x,8.2,1.62,gameMeta[i].title)});
 
   const rides=[];
-  const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);
-  rides.push(buildTeacupRide(scene,materials,-13,-11.5));
-  rides.push(buildDropTower(scene,materials,13,-10));
-  rides.push(buildFerrisWheel(scene,materials,25,0.78,-17));
-  buildRollerCoaster(scene,materials);
-  const ticketBooth=buildTicketBooth(scene,materials,-4.8,30.5);
+  const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);addCollider(-21.5,0.7,3.65,"星光旋轉木馬");
+  rides.push(buildTeacupRide(scene,materials,-13,-11.5));addCollider(-13,-11.5,3.2,"星月茶杯");
+  rides.push(buildDropTower(scene,materials,13,-10));addCollider(13,-10,2.7,"星際自由落體");
+  rides.push(buildFerrisWheel(scene,materials,25,0.78,-17));addCollider(25,-17,3.8,"星河摩天輪");
+  buildRollerCoaster(scene,materials);addCollider(-24.5,-19.0,4.8,"星際雲霄飛車");
+  const ticketBooth=buildTicketBooth(scene,materials,-4.8,30.5);addCollider(-4.8,30.5,2.55,"星夢入園票亭");
   buildEntranceGate(scene,materials);
   const arcadeStalls=buildArcadeStalls(scene,materials);
-  const shootingGallery=buildShootingGallery(scene,materials,18,9);
-  const mirrorHouse=buildMirrorHouse(scene,materials,-19,-8);
+  addCollider(5.1,6.9,1.35,"星塵兌換所");addCollider(8.25,5.45,1.35,"旅人補給站");
+  const shootingGallery=buildShootingGallery(scene,materials,18,9);addCollider(18,9,4.45,"霓虹神射手");
+  const mirrorHouse=buildMirrorHouse(scene,materials,-19,-8);addCollider(-19,-8,4.2,"幻影鏡屋");
   const interactables=[...portals,carousel.root,ticketBooth,shootingGallery,mirrorHouse];
 
   // Each attraction carries its own sign directly on the matching model.
@@ -629,7 +638,7 @@ function buildEnvironment(scene) {
     }),[Math.cos(angle)*radius,-6.1-(i%3)*0.65,Math.sin(angle)*radius],[4.4+(i%3),0.72,2.5],false,false);
     cloud.userData.phase=angle;
   }
-  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,guests,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,playableRadius:41.2};
+  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,guests,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
 }
 
 function createStarfield(scene, count = 620) {
