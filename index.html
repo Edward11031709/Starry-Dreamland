@@ -800,7 +800,7 @@ async function recordParkDiscovery(detail){
   }
  }catch(error){
   console.warn("Park discovery save failed:",error);
-  say("探索紀錄同步失敗，請重新進入該區域再試。");
+  say("探索紀錄同步失敗，請重新整理後再進入該區域重試。");
  }finally{
   parkDiscoveryPending.delete(item.id);
  }
