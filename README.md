@@ -23,7 +23,7 @@ The scene is still a procedural 3D prototype, not a finished photorealistic asse
 
 ## Starry Dreamland exploration journal
 
-The park includes a 12-location exploration journal. Discoveries are triggered by walking into real landmark areas; the player must enter the area on foot, and overlapping zones only select the nearest newly entered landmark at a time.
+The park includes a 12-location exploration journal. Discoveries are triggered by walking into real landmark areas; the player must enter the area on foot (riding through a zone does not count), and overlapping zones select the nearest landmark as the player moves between them.
 
 - Entrance Gate and Ticket Booth
 - Astral Plaza and Star Dream Castle
@@ -32,7 +32,7 @@ The park includes a 12-location exploration journal. Discoveries are triggered b
 - Stargazer Observatory and Cosmic Coaster
 - Neon Shooting Gallery and Phantom Mirror House
 
-The journal shows locked/discovered entries and progress milestones at 4, 8 and 12 locations. It does not award leaderboard points or change ride/game scores. Signed-in progress is stored per account in the non-exposed `private.sd_park_discoveries` table. The browser can only call authenticated RPC wrappers; the private functions validate a fixed discovery catalog, are not executable by `anon`, and direct table grants are revoked. Unauthenticated local/demo play keeps a local-only journal.
+The journal shows locked/discovered entries and progress milestones at 4, 8 and 12 locations. It does not award leaderboard points or change ride/game scores. Signed-in progress is stored per account in the non-exposed `private.sd_park_discoveries` table. The browser can only call authenticated RPC wrappers; the private functions validate a fixed discovery catalog, are not executable by `anon`, and direct table grants are revoked. Unauthenticated demo preview keeps the journal in the current session only; signed-in accounts persist progress across sessions and devices.
 
 ## Interactive attraction rides
 
