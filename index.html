@@ -559,11 +559,15 @@ function bindParkTouchControls(){
  const knob=document.getElementById("parkJoystickKnob");
  const runButton=document.getElementById("parkRunButton");
  const viewButton=document.querySelector("[data-camera-toggle]");
- if(viewButton&&!viewButton.dataset.bound){
+ if(viewButton){
   viewButton.dataset.bound="1";
   viewButton.textContent="切換第三人稱";
+ }
+ if(!window.__parkCameraModeListener){
+  window.__parkCameraModeListener=true;
   window.addEventListener("starry-3d-camera-mode",event=>{
-   viewButton.textContent=event.detail?.mode==="first"?"切換第三人稱":"切換第一人稱";
+   const current=document.querySelector("[data-camera-toggle]");
+   if(current)current.textContent=event.detail?.mode==="first"?"切換第三人稱":"切換第一人稱";
   });
  }
  if(joystick&&!joystick.dataset.bound){
