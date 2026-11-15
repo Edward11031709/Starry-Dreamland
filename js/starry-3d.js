@@ -235,12 +235,14 @@ function makeChatBubbleSprite(message){
  const lines=[];let line="";
  for(const char of raw){
   const next=line+char;
-  if(ctx.measureText(next).width>438&&line){lines.push(line);line=char;if(lines.length===2)break}
-  else line=next;
+  if(ctx.measureText(next).width>438&&line){
+   lines.push(line);line=char;
+   if(lines.length===3)break;
+  }else line=next;
  }
  if(line&&lines.length<3)lines.push(line);
- const used=lines.join("").length,remaining=raw.slice(used);
- if(remaining&&lines.length===3)lines[2]=lines[2].slice(0,Math.max(0,lines[2].length-1))+"…";
+ const rendered=lines.join("").length;
+ if(rendered<raw.length&&lines.length===3)lines[2]=lines[2].slice(0,Math.max(0,lines[2].length-1))+"…";
  const top=lines.length===1?92:lines.length===2?76:62;
  lines.forEach((text,i)=>ctx.fillText(text,256,top+i*39,438));
  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
