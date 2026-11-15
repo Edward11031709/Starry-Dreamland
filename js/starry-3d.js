@@ -750,6 +750,8 @@ function disposeWorld(world) {
   if (world.canvas) {
     world.canvas.removeEventListener("wheel", world.onWheel);
     if(world.onAvatarChange)window.removeEventListener("starry-3d-avatar-change",world.onAvatarChange);
+    if(world.onRemotePlayers)window.removeEventListener("starry-3d-players",world.onRemotePlayers);
+    if(world.onRemoteMove)window.removeEventListener("starry-3d-player-move",world.onRemoteMove);
     world.canvas.removeEventListener("pointerdown", world.onPointerDown);
     world.canvas.removeEventListener("pointermove", world.onPointerMove);
     world.canvas.removeEventListener("pointerup", world.onPointerUp);
@@ -938,6 +940,7 @@ function mount(host) {
     host, scene, renderer, camera, starfield, environment,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
     cameraState, keys: new Set(), mountedRide: null, minimapLast: 0,
+    localUserId: host.dataset.userId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
     running: true, frame: 0, lastTime: 0
   };
@@ -997,6 +1000,55 @@ function mount(host) {
     scene.remove(player);player=next;world.player=next;
   };
   window.addEventListener("starry-3d-avatar-change",world.onAvatarChange);
+
+  function releaseRemoteAvatar(entry){
+    if(!entry||!entry.model)return;
+    scene.remove(entry.model);
+    entry.model.traverse(obj=>{
+      if(obj.geometry)obj.geometry.dispose();
+      if(obj.material){
+        const list=Array.isArray(obj.material)?obj.material:[obj.material];
+        list.forEach(mat=>{Object.values(mat).forEach(v=>{if(v&&v.isTexture)v.dispose()});mat.dispose()});
+      }
+    });
+  }
+
+  function upsertRemotePlayer(info){
+    if(!info||!info.userId||info.userId===world.localUserId)return;
+    const id=String(info.userId);
+    const x=THREE.MathUtils.clamp(Number(info.x)||0,-environment.playableRadius,environment.playableRadius);
+    const z=THREE.MathUtils.clamp(Number(info.z)||0,-environment.playableRadius,environment.playableRadius);
+    const avatarId=info.avatarId||"wanderer";
+    let entry=world.otherPlayers.get(id);
+    if(!entry||entry.avatarId!==avatarId){
+      if(entry)releaseRemoteAvatar(entry);
+      const model=buildPlayer(scene,avatarId);
+      model.scale.setScalar(0.82);
+      const nameTag=makeLabelSprite({title:String(info.nickname||"星空旅人").slice(0,12),subtitle:"ONLINE"});
+      if(nameTag){nameTag.position.set(0,3.05,0);nameTag.scale.set(2.35,0.64,1);model.add(nameTag)}
+      entry={model,avatarId,target:new THREE.Vector3(x,surfaceAt(x,z)-0.025,z),targetYaw:Number(info.yaw)||0,nickname:info.nickname||"星空旅人"};
+      world.otherPlayers.set(id,entry);
+    }
+    entry.nickname=info.nickname||entry.nickname;
+    entry.target.set(x,surfaceAt(x,z)-0.025,z);
+    entry.targetYaw=Number(info.yaw)||0;
+  }
+
+  world.onRemotePlayers = event => {
+    const list=event.detail&&Array.isArray(event.detail.players)?event.detail.players:[];
+    const visible=new Set();
+    list.forEach(info=>{
+      if(!info||!info.userId||info.userId===world.localUserId)return;
+      visible.add(String(info.userId));
+      upsertRemotePlayer(info);
+    });
+    for(const [id,entry] of world.otherPlayers){
+      if(!visible.has(id)){releaseRemoteAvatar(entry);world.otherPlayers.delete(id)}
+    }
+  };
+  world.onRemoteMove = event => upsertRemotePlayer(event.detail&&event.detail.player);
+  window.addEventListener("starry-3d-players",world.onRemotePlayers);
+  window.addEventListener("starry-3d-player-move",world.onRemoteMove);
 
   world.onKeyDown = event => {
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target && event.target.tagName)) return;
@@ -1162,6 +1214,15 @@ function mount(host) {
       motion.crystal.position.y = 2.16 + Math.sin(t * 1.1 + motion.phase) * 0.11;
       motion.core.material.opacity = 0.17 + (Math.sin(t * 1.5 + motion.phase) + 1) * 0.08;
       if (motion.aura) motion.aura.intensity = 8 + (Math.sin(t * 1.8 + motion.phase) + 1) * 2.5;
+    });
+    world.otherPlayers.forEach(entry=>{
+      entry.model.position.lerp(entry.target,Math.min(1,delta*9));
+      let angle=entry.targetYaw;
+      const current=entry.model.rotation.y;
+      angle=current+Math.atan2(Math.sin(angle-current),Math.cos(angle-current));
+      entry.model.rotation.y=THREE.MathUtils.lerp(current,angle,Math.min(1,delta*8));
+      entry.model.userData.halo.rotation.z+=delta*0.38;
+      if(entry.model.userData.floatingStar)entry.model.userData.floatingStar.rotation.y+=delta*0.58;
     });
     if(t-world.minimapLast>0.15){
       world.minimapLast=t;
