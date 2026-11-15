@@ -1526,6 +1526,7 @@ function mount(host) {
       const target=findTarget(hit.object);
       if(!target)continue;
       if(target.type==="game"){
+        if(world.mountedRide)dismountRide();
         window.dispatchEvent(new CustomEvent("starry-3d-portal",{detail:{gameId:target.gameId}}));
       }else if(target.action&&target.action.startsWith("ride-")){
         if(world.mountedRide){dismountRide();break}
