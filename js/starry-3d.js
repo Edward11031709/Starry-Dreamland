@@ -304,7 +304,21 @@ function buildCarousel(scene,materials,x,z){
   addMesh(ride,new THREE.CylinderGeometry(2.42,0.86,0.36,48),materials.roof,[0,3.18,0]);
   addMesh(ride,new THREE.CylinderGeometry(2.45,2.45,0.12,48),materials.gold,[0,3.4,0]);
   addMesh(ride,new THREE.TorusGeometry(2.28,0.055,8,72),materials.trim,[0,3.48,0]);
+  const scallop=addMesh(ride,new THREE.TorusGeometry(2.42,0.035,7,96),materials.gold,[0,3.43,0]);scallop.rotation.x=Math.PI/2;
+  for(let panel=0;panel<12;panel++){
+    const a=panel/12*Math.PI*2;
+    const ornament=addMesh(ride,new THREE.OctahedronGeometry(0.09,0),panel%2?materials.gold:materials.crystal,
+      [Math.cos(a)*2.34,3.5,Math.sin(a)*2.34],[0.72,0.38,1.7],null,false,false);
+    ornament.rotation.y=a;
+    const pendant=addMesh(ride,new THREE.ConeGeometry(0.07,0.24,6),materials.gold,
+      [Math.cos(a)*2.15,3.22,Math.sin(a)*2.15]);pendant.rotation.z=Math.cos(a)*0.35;
+  }
   const canopy=addMesh(ride,new THREE.ConeGeometry(1.16,0.92,12),materials.trim,[0,3.98,0]);canopy.rotation.y=Math.PI/12;
+  for(let panel=0;panel<12;panel++){
+    const a=panel/12*Math.PI*2;
+    const seam=addMesh(ride,new THREE.BoxGeometry(0.035,0.38,1.2),materials.gold,
+      [Math.cos(a)*0.72,3.19,Math.sin(a)*0.72],null,false,false);seam.rotation.y=a;
+  }
   addMesh(ride,new THREE.SphereGeometry(0.22,16,12),materials.crystal,[0,4.5,0],null,false,false);
   for(let i=0;i<12;i++){
     const a=i/12*Math.PI*2,xp=Math.cos(a)*2.13,zp=Math.sin(a)*2.13;
@@ -334,6 +348,9 @@ function buildCarousel(scene,materials,x,z){
       addMesh(horse,new THREE.CylinderGeometry(0.07,0.09,0.12,10),materials.darkStone,[lx,0.02,lz]);
     }
     addMesh(horse,new THREE.TorusGeometry(0.26,0.035,7,24),materials.gold,[0,0.78,0]);
+    addMesh(horse,new THREE.TorusGeometry(0.19,0.025,6,24),materials.gold,[0.48,0.76,0]).rotation.y=Math.PI/2;
+    addMesh(horse,new THREE.OctahedronGeometry(0.075,1),materials.crystal,[0.46,0.82,0.18],[0.7,1.15,0.7],null,false,false);
+    addMesh(horse,new THREE.TorusGeometry(0.12,0.025,6,24),materials.trim,[0.86,1.05,0.02]);
   }
   const rideSeat=new THREE.Group();rideSeat.position.set(1.48,1.34,0);rideSeat.rotation.y=-Math.PI/2;ride.add(rideSeat);
   const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL · RIDE"});
@@ -344,22 +361,33 @@ function buildCarousel(scene,materials,x,z){
 function buildFerrisWheel(scene,materials,x,y,z){
   const root=new THREE.Group();root.position.set(x,y,z);scene.add(root);
   [-0.82,0.82].forEach((sx,i)=>{
+    const foot=addMesh(root,new THREE.CylinderGeometry(0.34,0.4,0.26,12),materials.darkStone,[sx,0.16,0]);
+    addMesh(root,new THREE.TorusGeometry(0.31,0.045,8,28),materials.gold,[sx,0.31,0]).rotation.x=Math.PI/2;
     const leg=addMesh(root,new THREE.BoxGeometry(0.23,3.5,0.28),materials.silverMetal,[sx,1.6,0]);leg.rotation.z=i===0?-0.26:0.26;
+    const inlay=addMesh(root,new THREE.BoxGeometry(0.045,3.02,0.045),materials.gold,[sx+(i===0?0.12:-0.12),1.58,0.15]);inlay.rotation.z=i===0?-0.26:0.26;
     addMesh(root,new THREE.BoxGeometry(0.62,0.18,0.72),materials.gold,[sx,0.12,0]);
   });
   const wheel=new THREE.Group();wheel.position.set(0,3.45,0.18);root.add(wheel);
   addMesh(wheel,new THREE.TorusGeometry(2.62,0.085,12,80),materials.gold,[0,0,0]);
   addMesh(wheel,new THREE.TorusGeometry(2.28,0.045,8,72),materials.silver,[0,0,0]);
+  addMesh(wheel,new THREE.TorusGeometry(2.8,0.028,7,88),materials.crystal,[0,0,0]);
   for(let i=0;i<10;i++){
     const a=i/10*Math.PI*2;
     const spoke=addMesh(wheel,new THREE.BoxGeometry(0.075,5.18,0.09),materials.silverMetal,[0,0,0]);spoke.rotation.z=a;
+    const pin=addMesh(wheel,new THREE.BoxGeometry(0.025,4.9,0.035),materials.gold,[0,0,0]);pin.rotation.z=a;
     const cx=Math.cos(a)*2.62,cy=Math.sin(a)*2.62;
     const gondolaMat=makeMaterial([0x6f8fc5,0xb18bcf,0xd7ad70,0x81a9a0,0xc27ea1][i%5],0.42,0.28);
     addMesh(wheel,new THREE.BoxGeometry(0.52,0.55,0.46),gondolaMat,[cx,cy-0.08,0.18]);
     addMesh(wheel,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[cx,cy+0.22,0.18]);
+    addMesh(wheel,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[cx-0.28,cy-0.05,0.18]);
+    addMesh(wheel,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[cx+0.28,cy-0.05,0.18]);
+    const canopy=addMesh(wheel,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[cx,cy+0.44,0.18]);canopy.rotation.y=Math.PI/8;
+    addMesh(wheel,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[cx,cy+0.61,0.18],[0.8,1.2,0.8],null,false,false);
     addMesh(wheel,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[cx,cy-0.36,0.42]);
   }
-  const hub=addMesh(wheel,new THREE.CylinderGeometry(0.35,0.35,0.42,20),materials.gold,[0,0,0]);hub.rotation.x=Math.PI/2;
+  const hub=addMesh(wheel,new THREE.CylinderGeometry(0.42,0.42,0.52,24),materials.gold,[0,0,0]);hub.rotation.x=Math.PI/2;
+  addMesh(wheel,new THREE.TorusGeometry(0.49,0.055,8,48),materials.trim,[0,0,0]).rotation.x=Math.PI/2;
+  const hubGem=addMesh(wheel,new THREE.OctahedronGeometry(0.28,1),materials.crystal,[0,0,0.32],[0.8,1.15,0.8],null,false,false);hubGem.rotation.z=Math.PI/4;
   const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL"});
   if(sign){sign.position.set(0,6.6,0.22);sign.scale.set(4.1,1.1,1);root.add(sign)}
   return {object:wheel,axis:"z",speed:-0.105};
@@ -429,7 +457,10 @@ function buildTeacupRide(scene,materials,x,z){
     const mat=makeMaterial(colors[i],0.34,0.28);
     addMesh(cup,new THREE.CylinderGeometry(0.32,0.48,0.58,20),mat,[0,0.24,0]);
     addMesh(cup,new THREE.TorusGeometry(0.39,0.055,8,28),materials.gold,[0,0.53,0]);
+    addMesh(cup,new THREE.TorusGeometry(0.2,0.045,8,24),materials.trim,[0.2,0.28,0]);
+    addMesh(cup,new THREE.TorusGeometry(0.49,0.028,6,32),materials.gold,[0,0.03,0]).rotation.x=Math.PI/2;
     addMesh(cup,new THREE.SphereGeometry(0.14,12,10),materials.lampGlow,[0,0.62,0],null,false,false);
+    addMesh(cup,new THREE.OctahedronGeometry(0.085,1),materials.crystal,[0,0.78,0.18],[0.72,1.2,0.72],null,false,false);
   }
   const sign=makeLabelSprite({title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS"});
   if(sign){sign.position.set(0,4.15,0);sign.scale.set(3.5,0.92,1);root.add(sign)}
@@ -447,8 +478,15 @@ function buildDropTower(scene,materials,x,z){
     leg.rotation.z=-Math.cos(a)*0.14;leg.rotation.x=Math.sin(a)*0.14;
     addMesh(root,new THREE.SphereGeometry(0.16,12,10),materials.lampGlow,[xp,7.0,zp],null,false,false);
   }
+  [1.0,3.8,6.55].forEach((yy,index)=>{
+    const band=addMesh(root,new THREE.TorusGeometry(index===1?0.72:0.56,0.045,8,48),index===1?materials.gold:materials.trim,[0,yy,0]);
+    band.rotation.x=Math.PI/2;
+  });
+  const crown=addMesh(root,new THREE.CylinderGeometry(0.72,0.88,0.2,12),materials.gold,[0,7.48,0]);
+  addMesh(root,new THREE.OctahedronGeometry(0.32,1),materials.crystal,[0,7.82,0],[0.76,1.3,0.76],null,false,false);
   const gondola=new THREE.Group();root.add(gondola);gondola.position.y=1.7;
   addMesh(gondola,new THREE.TorusGeometry(1.05,0.16,10,48),materials.gold,[0,0,0]);
+  addMesh(gondola,new THREE.TorusGeometry(0.9,0.045,8,48),materials.trim,[0,0.1,0]);
   for(let i=0;i<8;i++){
     const a=i/8*Math.PI*2;
     addMesh(gondola,new THREE.BoxGeometry(0.42,0.48,0.52),
@@ -532,8 +570,6 @@ function buildEnvironment(scene) {
     road: makeMaterial(0x292d50, 0.94, 0.08), roadEdge: makeMaterial(0xb5a0c9, 0.48, 0.48),
     paving: makeMaterial(0x393451, 0.78, 0.22),
     lampGlow: new THREE.MeshStandardMaterial({color:0xffedc2,emissive:0xf1bb72,emissiveIntensity:2.6,roughness:0.18,metalness:0.18}),
-    npcClothes: [makeMaterial(0x6f8fc5,0.58,0.08),makeMaterial(0xc27ea1,0.58,0.08),makeMaterial(0x7eaa9a,0.58,0.08),makeMaterial(0xd2a45f,0.58,0.08)],
-    npcSkin: makeMaterial(0xf0d2b8, 0.82, 0.02)
   };
 
   // A large connected floating island gives the park room for real exploration.
@@ -609,7 +645,20 @@ function buildEnvironment(scene) {
       segment.rotation.y=Math.atan2(dx,dz);island.add(segment);
       walkSegments.push({x1:a[0],z1:a[1],x2:b[0],z2:b[1],width,surfaceY:0.822});
       addMesh(segment,new THREE.BoxGeometry(width,0.075,length+0.42),materials.road,[0,0,0],null,false,true);
-      [-1,1].forEach(side=>addMesh(segment,new THREE.BoxGeometry(0.12,0.045,length+0.48),materials.roadEdge,[side*(width/2-0.08),0.052,0],null,false,false));
+      [-1,1].forEach(side=>{
+        addMesh(segment,new THREE.BoxGeometry(0.16,0.06,length+0.5),materials.roadEdge,[side*(width/2-0.08),0.052,0],null,false,false);
+        addMesh(segment,new THREE.BoxGeometry(0.045,0.025,length+0.28),materials.gold,[side*(width/2-0.26),0.094,0],null,false,false);
+      });
+      addMesh(segment,new THREE.BoxGeometry(0.055,0.018,length*0.82),materials.trim,[0,0.091,0],null,false,false);
+      const seamCount=Math.max(1,Math.floor(length/3.2));
+      for(let seam=1;seam<seamCount;seam++){
+        const zSeam=-length/2+seam*length/seamCount;
+        addMesh(segment,new THREE.BoxGeometry(width-0.48,0.018,0.035),materials.roadEdge,[0,0.094,zSeam],null,false,false);
+        for(const side of [-1,1]){
+          const inset=addMesh(segment,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[side*(width/2-0.42),0.12,zSeam],[0.8,0.28,1.5],null,false,false);
+          inset.rotation.y=Math.PI/4;
+        }
+      }
     }
   }
   [
@@ -739,14 +788,31 @@ function buildEnvironment(scene) {
 
   // Each attraction carries its own sign directly on the matching model.
 
-  // Warm lanterns, groves and small guests add scale and life to the walkways.
+  // Ornate lanterns and crystal groves add life to the walkways; no placeholder visitors are spawned.
   function addParkLamp(x,z,scale=1){
-    const lamp=new THREE.Group();lamp.position.set(x,0.72,z);island.add(lamp);
-    addMesh(lamp,new THREE.CylinderGeometry(0.075,0.12,2.65*scale,10),materials.darkStone,[0,1.32*scale,0]);
-    addMesh(lamp,new THREE.CylinderGeometry(0.19,0.24,0.13,12),materials.gold,[0,2.58*scale,0]);
-    addMesh(lamp,new THREE.SphereGeometry(0.2*scale,14,10),materials.lampGlow,[0,2.82*scale,0],null,false,false);
-    const halo=addMesh(lamp,new THREE.TorusGeometry(0.29*scale,0.035,6,28),materials.gold,[0,2.82*scale,0]);
-    halo.rotation.x=Math.PI/2;
+    const lamp=new THREE.Group();lamp.position.set(x,0.72,z);lamp.scale.setScalar(scale);island.add(lamp);
+    addMesh(lamp,new THREE.CylinderGeometry(0.25,0.32,0.2,12),materials.darkStone,[0,0.1,0]);
+    addMesh(lamp,new THREE.TorusGeometry(0.27,0.045,8,32),materials.gold,[0,0.19,0]).rotation.x=Math.PI/2;
+    addMesh(lamp,new THREE.CylinderGeometry(0.095,0.16,2.28,16),materials.darkStone,[0,1.35,0]);
+    for(let k=0;k<4;k++){
+      const rib=addMesh(lamp,new THREE.BoxGeometry(0.026,1.82,0.026),materials.gold,[0,1.36,0.14]);
+      rib.rotation.y=k*Math.PI/2;
+    }
+    addMesh(lamp,new THREE.TorusGeometry(0.19,0.04,8,32),materials.trim,[0,2.42,0]).rotation.x=Math.PI/2;
+    addMesh(lamp,new THREE.CylinderGeometry(0.24,0.3,0.16,12),materials.gold,[0,2.55,0]);
+    // Hexagonal glass lantern cage around a warm crystal lamp.
+    for(let k=0;k<6;k++){
+      const a=k/6*Math.PI*2;
+      addMesh(lamp,new THREE.CylinderGeometry(0.025,0.025,0.48,8),materials.silverMetal,
+        [Math.cos(a)*0.19,2.85,Math.sin(a)*0.19]);
+      addMesh(lamp,new THREE.SphereGeometry(0.045,8,8),materials.gold,
+        [Math.cos(a)*0.19,3.11,Math.sin(a)*0.19],null,false,false);
+    }
+    const glass=addMesh(lamp,new THREE.OctahedronGeometry(0.22,1),materials.lampGlow,[0,2.86,0],[0.82,1.12,0.82],null,false,false);
+    const halo=addMesh(lamp,new THREE.TorusGeometry(0.34,0.032,8,40),materials.gold,[0,2.84,0]);halo.rotation.x=Math.PI/2;
+    addMesh(lamp,new THREE.ConeGeometry(0.28,0.34,8),materials.trim,[0,3.28,0]);
+    addMesh(lamp,new THREE.OctahedronGeometry(0.15,1),materials.crystal,[0,3.56,0],[0.68,1.42,0.68],null,false,false);
+    const glow=new THREE.PointLight(0xffd48d,0.48,5.5,2);glow.position.set(0,2.82,0);lamp.add(glow);
   }
   [
     [-4,25],[4,25],[-5,14],[5,14],[-10,2],[10,2],[-17,8],[-26,8],
@@ -766,21 +832,6 @@ function buildEnvironment(scene) {
     addCollider(p[0],p[1],0.42,"星樹");
   });
 
-  function addGuest(x,z,outfitIndex,facing=0){
-    const guest=new THREE.Group();guest.position.set(x,0.62,z);guest.rotation.y=facing;island.add(guest);
-    addMesh(guest,new THREE.SphereGeometry(0.27,12,10),materials.npcClothes[outfitIndex%materials.npcClothes.length],[0,0.72,0],[0.78,1.18,0.68]);
-    addMesh(guest,new THREE.SphereGeometry(0.2,12,10),materials.npcSkin,[0,1.27,0.015]);
-    addMesh(guest,new THREE.ConeGeometry(0.21,0.25,8),materials.npcClothes[outfitIndex%materials.npcClothes.length],[0,1.52,0]);
-    return guest;
-  }
-  const guests=[
-    addGuest(-5.5,12.5,0,0.6),addGuest(5.8,11.8,1,-0.7),
-    addGuest(-17.2,5.4,2,1.2),addGuest(-25.5,3.8,3,-0.8),
-    addGuest(21,-9,1,2.1),addGuest(28.3,-8.5,0,-1.7),
-    addGuest(-3.2,27,3,0.2),addGuest(5.5,27.5,2,-0.3),
-    addGuest(-11.2,-8,0,0.8),addGuest(14.8,-7.5,1,-1.1)
-  ];
-
   const clouds=new THREE.Group();scene.add(clouds);
   for(let i=0;i<18;i++){
     const angle=(i/18)*Math.PI*2,radius=34+(i%4)*4.5;
@@ -789,7 +840,7 @@ function buildEnvironment(scene) {
     }),[Math.cos(angle)*radius,-6.1-(i%3)*0.65,Math.sin(angle)*radius],[4.4+(i%3),0.72,2.5],false,false);
     cloud.userData.phase=angle;
   }
-  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,guests,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
+  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
 }
 
 function createStarfield(scene, count = 620) {
@@ -864,70 +915,145 @@ function disposeWorld(world) {
   });
 }
 
-function buildPlayer(scene,avatarId="wanderer"){
+function buildPlayer(scene,avatarId="wanderer",customization={}){
   const styles={
-    wanderer:{robe:0x30466f,trim:0xf1d18e,mantle:0x6556a2,hair:0x332744,skin:0xf0d5c1,metal:0x8cbcd8},
-    "moon-priestess":{robe:0x7770a7,trim:0xe6e4ff,mantle:0x9b91cf,hair:0x3b315e,skin:0xf1d8ca,metal:0xa7d9ed},
-    "nebula-prince":{robe:0x265c73,trim:0xf2d28f,mantle:0x4f75a5,hair:0x261f46,skin:0xe9c9ad,metal:0x8be0db},
-    "crystal-witch":{robe:0x593d75,trim:0xe7b7f0,mantle:0x34234f,hair:0x251b39,skin:0xf2d2c8,metal:0xc7a6ef},
-    "astral-knight":{robe:0x536a86,trim:0xf5dda7,mantle:0x273a59,hair:0x39313b,skin:0xeacdb7,metal:0xdce6f5},
-    "celestial-guardian":{robe:0xe0d9c8,trim:0xffe2a0,mantle:0x8b7ab7,hair:0xdbc8a2,skin:0xf3d9c3,metal:0xf1e8ff}
+    wanderer:{robe:0x30466f,mantle:0x6556a2,metal:0x8cbcd8},
+    "moon-priestess":{robe:0x7770a7,mantle:0x9b91cf,metal:0xa7d9ed},
+    "nebula-prince":{robe:0x265c73,mantle:0x4f75a5,metal:0x8be0db},
+    "crystal-witch":{robe:0x593d75,mantle:0x34234f,metal:0xc7a6ef},
+    "astral-knight":{robe:0x536a86,mantle:0x273a59,metal:0xdce6f5},
+    "celestial-guardian":{robe:0xe0d9c8,mantle:0x8b7ab7,metal:0xf1e8ff}
   };
+  const types=["wanderer","mage","knight","priest","guardian"];
+  const hairStyles=["long","short","twin","hood"];
+  const hairColors=["#30263f","#633e69","#27445c","#a98b62","#d4b67c","#d5d7e8"];
+  const skinTones=["#f0d5c1","#f3d9c3","#e9bea0","#cc9877","#9c6c54"];
+  const accents=["#f1d18e","#8c75d6","#65c5e3","#e69cca","#a9d5b1","#d8e1f5"];
+  const rawAppearance=customization&&customization.appearance||{};
+  const appearance={
+    hairStyle:hairStyles.includes(rawAppearance.hairStyle)?rawAppearance.hairStyle:"long",
+    hairColor:hairColors.includes(rawAppearance.hairColor)?rawAppearance.hairColor:"#30263f",
+    skinTone:skinTones.includes(rawAppearance.skinTone)?rawAppearance.skinTone:"#f0d5c1",
+    accentColor:accents.includes(rawAppearance.accentColor)?rawAppearance.accentColor:"#f1d18e"
+  };
+  const avatarType=types.includes(customization&&customization.avatarType)?customization.avatarType:"wanderer";
   const style=styles[avatarId]||styles.wanderer;
-  const player=new THREE.Group();player.name="StarryDreamlandPlayer";player.userData.avatarId=avatarId;
-  const robe=makeMaterial(style.robe,0.34,0.28,{clearcoat:0.62,clearcoatRoughness:0.22});
-  const mantle=makeMaterial(style.mantle,0.38,0.22,{clearcoat:0.55});
-  const trim=makeMaterial(style.trim,0.2,0.78,{clearcoat:1});
-  const hair=makeMaterial(style.hair,0.52,0.08);
-  const skin=makeMaterial(style.skin,0.78,0.02);
+  const hex=value=>parseInt(String(value).replace("#",""),16);
+  const player=new THREE.Group();player.name="StarryDreamlandPlayer";
+  player.userData.avatarId=avatarId;player.userData.avatarType=avatarType;player.userData.appearance=appearance;
+  const robe=makeMaterial(style.robe,0.32,0.34,{clearcoat:0.72,clearcoatRoughness:0.18});
+  const mantle=makeMaterial(style.mantle,0.36,0.28,{clearcoat:0.68});
+  const trim=makeMaterial(hex(appearance.accentColor),0.2,0.82,{clearcoat:1});
+  const hair=makeMaterial(hex(appearance.hairColor),0.5,0.08);
+  const skin=makeMaterial(hex(appearance.skinTone),0.78,0.02);
   const metal=makeMaterial(style.metal,0.2,0.76,{clearcoat:1});
   const shadow=makeMaterial(0x1a1930,0.82,0.05);
-  // Tailored layered robe and short mantle; no more plain sphere-only body.
-  addMesh(player,new THREE.CylinderGeometry(0.25,0.48,0.98,20,2),robe,[0,0.77,0]);
-  addMesh(player,new THREE.CylinderGeometry(0.28,0.31,0.12,20),trim,[0,1.19,0]);
-  const cape=addMesh(player,new THREE.CylinderGeometry(0.12,0.53,0.88,20,1,true),mantle,[0,0.72,-0.16]);
+
+  // Tailored robe, layered mantle and a gemstone clasp.
+  addMesh(player,new THREE.CylinderGeometry(0.25,0.48,0.98,24,3),robe,[0,0.77,0]);
+  addMesh(player,new THREE.CylinderGeometry(0.28,0.31,0.12,24),trim,[0,1.19,0]);
+  const cape=addMesh(player,new THREE.CylinderGeometry(0.12,0.53,0.9,24,2,true),mantle,[0,0.72,-0.16]);
   cape.rotation.x=-0.1;
-  addMesh(player,new THREE.TorusGeometry(0.31,0.045,8,36),trim,[0,0.98,0]).rotation.x=Math.PI/2;
+  addMesh(player,new THREE.TorusGeometry(0.31,0.045,8,40),trim,[0,0.98,0]).rotation.x=Math.PI/2;
   addMesh(player,new THREE.BoxGeometry(0.54,0.1,0.18),metal,[0,0.99,0.02]);
-  addMesh(player,new THREE.OctahedronGeometry(0.12,1),trim,[0,1.0,0.13],[0.72,1.15,0.72]);
-  // Boots, gloves and small shoulder guards give the silhouette readable detail.
+  addMesh(player,new THREE.OctahedronGeometry(0.13,1),trim,[0,1.0,0.14],[0.72,1.15,0.72]);
+  // Boots, sleeves, gloves and decorative arm cuffs.
   [-0.19,0.19].forEach(x=>{
-    addMesh(player,new THREE.CylinderGeometry(0.105,0.13,0.31,12),shadow,[x,0.19,0.02]);
-    addMesh(player,new THREE.TorusGeometry(0.11,0.025,6,20),trim,[x,0.31,0.02]);
-    addMesh(player,new THREE.SphereGeometry(0.13,14,10),robe,[x*1.55,1.03,0],[1,0.86,0.92]);
-    addMesh(player,new THREE.SphereGeometry(0.09,12,10),skin,[x*1.78,0.76,0.06]);
+    addMesh(player,new THREE.CylinderGeometry(0.105,0.13,0.31,14),shadow,[x,0.19,0.02]);
+    addMesh(player,new THREE.TorusGeometry(0.11,0.025,6,22),trim,[x,0.31,0.02]);
+    addMesh(player,new THREE.SphereGeometry(0.13,16,12),robe,[x*1.55,1.03,0],[1,0.86,0.92]);
+    addMesh(player,new THREE.SphereGeometry(0.09,14,10),skin,[x*1.78,0.76,0.06]);
+    const cuff=addMesh(player,new THREE.TorusGeometry(0.095,0.022,6,20),metal,[x*1.78,0.82,0.06]);
+    cuff.rotation.x=Math.PI/2;
   });
-  // Face, hair, eyes and side locks.
+  // Face and selectable hair styles. The hood is an actual garment silhouette.
   addMesh(player,new THREE.SphereGeometry(0.255,24,18),skin,[0,1.48,0.025],[0.94,1.05,0.9]);
-  addMesh(player,new THREE.SphereGeometry(0.27,20,14,0,Math.PI*2,0,Math.PI/2),hair,[0,1.56,-0.015],[1.04,0.86,0.98]);
+  addMesh(player,new THREE.SphereGeometry(0.27,24,16,0,Math.PI*2,0,Math.PI/2),hair,[0,1.56,-0.015],
+    appearance.hairStyle==="short"?[1.04,0.58,0.98]:[1.04,0.86,0.98]);
+  if(appearance.hairStyle==="long"){
+    [-1,1].forEach(side=>{
+      addMesh(player,new THREE.SphereGeometry(0.085,14,12),hair,[side*0.235,1.34,-0.015],[0.8,2.3,0.98]);
+      addMesh(player,new THREE.ConeGeometry(0.07,0.48,10),hair,[side*0.245,1.03,-0.12]);
+    });
+    addMesh(player,new THREE.SphereGeometry(0.18,14,12),hair,[0,1.34,-0.19],[1.0,1.2,0.75]);
+  }else if(appearance.hairStyle==="twin"){
+    [-1,1].forEach(side=>{
+      addMesh(player,new THREE.SphereGeometry(0.12,16,12),hair,[side*0.29,1.62,-0.015],[1,1.05,1]);
+      addMesh(player,new THREE.ConeGeometry(0.07,0.42,10),hair,[side*0.34,1.31,-0.04]);
+      addMesh(player,new THREE.TorusGeometry(0.13,0.022,6,20),trim,[side*0.29,1.64,-0.015]);
+    });
+  }else if(appearance.hairStyle==="hood"){
+    const hood=addMesh(player,new THREE.SphereGeometry(0.34,24,16,0,Math.PI*2,0,Math.PI/1.65),mantle,[0,1.54,-0.075],[1.08,1.16,1.08]);
+    hood.rotation.x=-0.1;
+    addMesh(player,new THREE.TorusGeometry(0.28,0.045,8,36),trim,[0,1.39,0.12]).rotation.x=Math.PI/2;
+  }else{
+    [-1,1].forEach(side=>addMesh(player,new THREE.SphereGeometry(0.07,12,10),hair,[side*0.23,1.39,-0.01],[0.8,1.4,0.9]));
+  }
   [-1,1].forEach(side=>{
-    addMesh(player,new THREE.SphereGeometry(0.085,12,10),hair,[side*0.235,1.38,0.02],[0.8,1.65,0.95]);
     addMesh(player,new THREE.SphereGeometry(0.028,10,8),shadow,[side*0.095,1.5,0.242]);
   });
   addMesh(player,new THREE.SphereGeometry(0.045,12,10),skin,[0,1.41,0.238],[0.8,0.62,0.7]);
   addMesh(player,new THREE.TorusGeometry(0.285,0.045,8,36),trim,[0,1.68,0]).rotation.x=Math.PI/2;
-  // Signature headpiece differs by outfit, while every free outfit remains detailed.
-  if(avatarId==="crystal-witch"){
-    const brim=addMesh(player,new THREE.CylinderGeometry(0.43,0.43,0.07,24),mantle,[0,1.78,0]);
+
+  // Traveler archetype controls the silhouette; outfits remain independently selectable.
+  if(avatarType==="mage"||(avatarType==="wanderer"&&avatarId==="crystal-witch")){
+    addMesh(player,new THREE.CylinderGeometry(0.43,0.43,0.07,24),mantle,[0,1.78,0]);
     addMesh(player,new THREE.ConeGeometry(0.34,0.68,16),mantle,[0,2.12,0]);
     addMesh(player,new THREE.TorusGeometry(0.25,0.035,8,28),trim,[0,1.93,0]);
-  }else if(avatarId==="astral-knight"||avatarId==="celestial-guardian"){
+  }else if(avatarType==="guardian"||(avatarType==="wanderer"&&avatarId==="celestial-guardian")){
+    [-1,1].forEach(side=>{
+      const wing=new THREE.Group();wing.position.set(side*0.27,1.1,-0.13);wing.rotation.z=side*-0.2;player.add(wing);
+      for(let feather=0;feather<3;feather++){
+        const plume=addMesh(wing,new THREE.ConeGeometry(0.14,0.78-feather*0.12,8),feather%2?trim:metal,
+          [side*feather*0.13,0.22-feather*0.12,-0.03],[1,1,0.56]);
+        plume.rotation.z=side*0.68;
+      }
+    });
+    addMesh(player,new THREE.TorusGeometry(0.52,0.035,8,48),trim,[0,2.13,0]);
+  }else if(avatarType==="knight"||(avatarType==="wanderer"&&avatarId==="astral-knight")){
     addMesh(player,new THREE.CylinderGeometry(0.31,0.35,0.12,16),metal,[0,1.74,0]);
     addMesh(player,new THREE.ConeGeometry(0.18,0.48,8),trim,[0,1.99,0]);
-    [-1,1].forEach(side=>{const horn=addMesh(player,new THREE.ConeGeometry(0.09,0.34,8),metal,[side*0.26,1.9,0]);horn.rotation.z=side*0.48});
+    [-1,1].forEach(side=>{
+      const horn=addMesh(player,new THREE.ConeGeometry(0.09,0.34,8),metal,[side*0.26,1.9,0]);
+      horn.rotation.z=side*0.48;
+      addMesh(player,new THREE.SphereGeometry(0.2,16,12),metal,[side*0.29,1.08,-0.015],[1.12,0.56,1.08]);
+      const pauldronTrim=addMesh(player,new THREE.TorusGeometry(0.17,0.025,6,24),trim,[side*0.29,1.12,0.03]);
+      pauldronTrim.rotation.x=Math.PI/2;
+    });
+    addMesh(player,new THREE.SphereGeometry(0.29,18,12),metal,[0,1.0,0.13],[0.9,0.85,0.35]);
+  }else if(avatarType==="priest"||(avatarType==="wanderer"&&avatarId==="moon-priestess")){
+    addMesh(player,new THREE.TorusGeometry(0.36,0.045,8,48),trim,[0,1.9,0.02]);
+    const crescent=addMesh(player,new THREE.TorusGeometry(0.24,0.052,8,36,Math.PI*1.3),metal,[0,2.15,0.05]);
+    crescent.rotation.z=Math.PI*0.62;
+    addMesh(player,new THREE.OctahedronGeometry(0.14,1),trim,[0,2.4,0.05],[0.72,1.25,0.72]);
+    [-1,1].forEach(side=>{
+      const drape=addMesh(player,new THREE.ConeGeometry(0.065,0.74,8),mantle,[side*0.29,1.14,-0.1]);
+      drape.rotation.z=side*0.22;
+    });
   }else{
     addMesh(player,new THREE.CylinderGeometry(0.36,0.28,0.08,24),mantle,[0,1.76,0]);
     addMesh(player,new THREE.ConeGeometry(0.25,0.42,12),mantle,[0,1.98,0]);
     addMesh(player,new THREE.OctahedronGeometry(0.12,1),trim,[0,2.23,0],null,false,false);
   }
+
+  if(avatarType==="mage"){
+    const staff=new THREE.Group();staff.position.set(-0.48,0.34,0.12);staff.rotation.z=0.08;player.add(staff);
+    addMesh(staff,new THREE.CylinderGeometry(0.035,0.055,1.15,10),makeMaterial(0x3b2b48,0.62,0.22),[0,0.55,0]);
+    addMesh(staff,new THREE.TorusGeometry(0.15,0.025,6,24),trim,[0,1.14,0]);
+    addMesh(staff,new THREE.OctahedronGeometry(0.16,1),metal,[0,1.25,0],[0.8,1.35,0.8]);
+  }else if(avatarType==="wanderer"){
+    const satchel=addMesh(player,new THREE.BoxGeometry(0.3,0.34,0.18),mantle,[-0.37,0.72,-0.18]);
+    addMesh(player,new THREE.TorusGeometry(0.14,0.024,6,22),trim,[-0.37,0.76,-0.09]);
+  }
+
   const floatingStar=addMesh(player,new THREE.OctahedronGeometry(0.105,1),trim,[0,2.34,0],null,false,false);
   const halo=addMesh(player,new THREE.TorusGeometry(0.49,0.028,8,44),metal,[0,2.21,0]);
   halo.rotation.x=Math.PI/2;
-  const shoulderGem=addMesh(player,new THREE.OctahedronGeometry(0.075,1),trim,[-0.26,1.08,0.09],null,false,false);
-  const shoulderGem2=addMesh(player,new THREE.OctahedronGeometry(0.075,1),trim,[0.26,1.08,0.09],null,false,false);
+  [-0.26,0.26].forEach(x=>addMesh(player,new THREE.OctahedronGeometry(0.075,1),trim,[x,1.08,0.09],null,false,false));
   player.userData.halo=halo;player.userData.floatingStar=floatingStar;player.userData.walkPhase=0;
   scene.add(player);return player;
 }
+
 
 
 function mount(host) {
@@ -1006,7 +1132,9 @@ function mount(host) {
 
   const starfield = createStarfield(scene, isSmall ? 420 : 760);
   const environment = buildEnvironment(scene);
-  let player = buildPlayer(scene,host.dataset.avatar || "wanderer");
+  let initialCustomization={};
+  try{initialCustomization=JSON.parse(host.dataset.avatarCustomization||"{}")}catch(error){}
+  let player = buildPlayer(scene,host.dataset.avatar || "wanderer",initialCustomization);
   player.position.set(0, 0.68, 33.0);
   camera.position.set(
     player.position.x - Math.sin(cameraState.yaw) * Math.cos(cameraState.pitch) * cameraState.distance,
@@ -1108,11 +1236,15 @@ function mount(host) {
   }
 
   world.onAvatarChange = event => {
-    const avatarId=event.detail&&event.detail.avatarId;
-    if(!avatarId||avatarId===player.userData.avatarId)return;
-    const next=buildPlayer(scene,avatarId);
-    next.position.copy(player.position);next.rotation.copy(player.rotation);next.visible=player.visible;
-    scene.remove(player);player=next;world.player=next;
+    const detail=event.detail||{};
+    const avatarId=detail.avatarId||player.userData.avatarId||"wanderer";
+    const customization={avatarType:detail.avatarType||player.userData.avatarType,appearance:detail.appearance||player.userData.appearance};
+    const previous=player;
+    const next=buildPlayer(scene,avatarId,customization);
+    next.position.copy(previous.position);next.rotation.copy(previous.rotation);next.visible=previous.visible;
+    if(previous.scale)next.scale.copy(previous.scale);
+    player=next;world.player=next;
+    releaseRemoteAvatar({model:previous});
   };
   window.addEventListener("starry-3d-avatar-change",world.onAvatarChange);
 
@@ -1134,14 +1266,18 @@ function mount(host) {
     const x=THREE.MathUtils.clamp(Number(info.x)||0,-environment.playableRadius,environment.playableRadius);
     const z=THREE.MathUtils.clamp(Number(info.z)||0,-environment.playableRadius,environment.playableRadius);
     const avatarId=info.avatarId||"wanderer";
+    const customization={avatarType:info.avatarType||"wanderer",appearance:info.appearance||{}};
+    const appearanceKey=JSON.stringify([avatarId,customization.avatarType,customization.appearance]);
     let entry=world.otherPlayers.get(id);
-    if(!entry||entry.avatarId!==avatarId){
+    if(!entry||entry.appearanceKey!==appearanceKey){
+      const oldEntry=entry;
       if(entry)releaseRemoteAvatar(entry);
-      const model=buildPlayer(scene,avatarId);
+      const model=buildPlayer(scene,avatarId,customization);
       model.scale.setScalar(0.82);
       const nameTag=makeLabelSprite({title:String(info.nickname||"星空旅人").slice(0,12),subtitle:"ONLINE"});
       if(nameTag){nameTag.position.set(0,3.05,0);nameTag.scale.set(2.35,0.64,1);model.add(nameTag)}
-      entry={model,avatarId,target:new THREE.Vector3(x,surfaceAt(x,z)-0.025,z),targetYaw:Number(info.yaw)||0,nickname:info.nickname||"星空旅人"};
+      entry={model,avatarId,appearanceKey,target:new THREE.Vector3(x,surfaceAt(x,z)-0.025,z),targetYaw:Number(info.yaw)||0,nickname:info.nickname||"星空旅人"};
+      if(oldEntry){entry.target.copy(oldEntry.target);entry.model.position.copy(oldEntry.model.position)}
       world.otherPlayers.set(id,entry);
     }
     entry.nickname=info.nickname||entry.nickname;
