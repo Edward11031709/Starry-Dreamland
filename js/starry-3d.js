@@ -1531,7 +1531,7 @@ function mount(host) {
       }else if(target.action&&target.action.startsWith("ride-")){
         if(world.mountedRide){dismountRide();break}
         const ride=environment.rideStations.find(item=>item.action===target.action);
-        if(ride&&rideDistance(ride)<=ride.interactionRadius+5.5)mountRide(ride);
+        if(ride&&rideDistance(ride)<=ride.interactionRadius+0.5)mountRide(ride);
         else if(ride){
           const status=document.getElementById("starry-3d-status");
           if(status)status.textContent="請再靠近「"+ride.name+"」，即可搭乘";
@@ -1671,7 +1671,8 @@ function mount(host) {
       world.nearbyHintLast=t;
       const nearest=environment.rideStations.map(ride=>({ride,distance:rideDistance(ride)})).sort((a,b)=>a.distance-b.distance)[0];
       let hint={label:"互動　E",name:"互動"};
-      if(nearest&&nearest.distance<=nearest.ride.interactionRadius+1.25)hint={label:"搭乘　E",name:nearest.ride.name};
+      if(nearest&&nearest.distance<=nearest.ride.interactionRadius)hint={label:"搭乘　E",name:nearest.ride.name};
+      else if(nearest&&nearest.distance<=nearest.ride.interactionRadius+1.25)hint={label:"靠近設施",name:nearest.ride.name};
       else if(Math.hypot(player.position.x-environment.ticketBooth.position.x,player.position.z-environment.ticketBooth.position.z)<4.5)hint={label:"票亭　E",name:"星夢入園票亭"};
       window.dispatchEvent(new CustomEvent("starry-3d-nearby",{detail:hint}));
     }
