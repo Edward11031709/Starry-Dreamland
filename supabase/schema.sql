@@ -72,8 +72,13 @@ create policy "Players submit records only for themselves"
   to authenticated
   with check ((select auth.uid()) = user_id);
 
--- 個人遊玩紀錄：只回傳登入者自己的紀錄。
-create or replace function public.sd_my_game_records()
+-- Keep elevated aggregate functions out of the exposed Data API schema.
+create schema if not exists private;
+revoke all on schema private from public, anon;
+grant usage on schema private to authenticated;
+
+-- Internal aggregate functions run with database-owner privileges but verify auth.uid().
+create or replace function private.sd_my_game_records()
 returns table (
   record_id bigint,
   game_id text,
@@ -91,12 +96,12 @@ as $$
   select r.id, r.game_id, r.category, r.score, r.status, r.reward, r.created_at
   from public.sd_game_records as r
   where r.user_id = (select auth.uid())
+    and (select auth.uid()) is not null
   order by r.created_at desc
   limit 1000;
 $$;
 
--- 全球排行榜：只公開暱稱與各遊戲最佳分數，不公開 email 或個人遊玩明細。
-create or replace function public.sd_global_best_scores()
+create or replace function private.sd_global_best_scores()
 returns table (
   user_id uuid,
   nickname text,
@@ -105,11 +110,17 @@ returns table (
   best_score integer,
   first_achieved_at timestamptz
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
+begin
+  if (select auth.uid()) is null then
+    raise exception using errcode = '42501', message = 'Authentication required';
+  end if;
+
+  return query
   with eligible as (
     select r.user_id, r.game_id, r.category, r.score, r.created_at
     from public.sd_game_records as r
@@ -136,6 +147,48 @@ as $$
     on f.user_id = b.user_id and f.game_id = b.game_id
   join public.sd_profiles as p
     on p.user_id = b.user_id;
+end;
+$$;
+
+revoke all on function private.sd_my_game_records() from public, anon;
+revoke all on function private.sd_global_best_scores() from public, anon;
+grant execute on function private.sd_my_game_records() to authenticated;
+grant execute on function private.sd_global_best_scores() to authenticated;
+
+-- Public RPC wrappers are invoker functions; the internal privileged functions enforce auth.uid().
+create or replace function public.sd_my_game_records()
+returns table (
+  record_id bigint,
+  game_id text,
+  category text,
+  score integer,
+  status text,
+  reward integer,
+  created_at timestamptz
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select * from private.sd_my_game_records();
+$$;
+
+create or replace function public.sd_global_best_scores()
+returns table (
+  user_id uuid,
+  nickname text,
+  game_id text,
+  category text,
+  best_score integer,
+  first_achieved_at timestamptz
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select * from private.sd_global_best_scores();
 $$;
 
 revoke all on function public.sd_my_game_records() from public, anon;
