@@ -1,10 +1,10 @@
 /*
  * Starry Dreamland GitHub Pages configuration.
- * Default is local-demo; this keeps the first deployment simple.
- * Do not place any Supabase service-role key or private secret in this file.
+ * Publishable keys are intended for browser clients; RLS protects the database.
+ * Never put a Supabase secret/service_role key or database password here.
  */
 window.STARRY_CONFIG = {
-  mode: 'local-demo',
-  supabaseUrl: '',
-  supabaseAnonKey: ''
+  mode: 'supabase',
+  supabaseUrl: 'https://idrzkrsizgyfmihhwlvg.supabase.co',
+  supabasePublishableKey: 'sb_publishable_a83XzXOx46Ms-AgavymG5A_wfjJT4XD'
 };
