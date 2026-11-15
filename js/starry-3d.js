@@ -1091,7 +1091,7 @@ function mount(host) {
   function mountCarousel() {
     if(world.mountedRide)return;
     world.mountedRide=environment.carousel.rideSeat;
-    player.visible=true;player.scale.setScalar(0.72);
+    player.visible=world.cameraMode==="third";player.scale.setScalar(0.72);
     const status=document.getElementById("starry-3d-status");
     if(status)status.textContent="正在乘坐星光旋轉木馬 · 按 E 下車";
   }
@@ -1099,7 +1099,7 @@ function mount(host) {
   function dismountCarousel() {
     if(!world.mountedRide)return;
     world.mountedRide=null;
-    player.visible=true;
+    player.visible=world.cameraMode==="third";
     const root=environment.carousel.root;
     player.scale.setScalar(1);player.position.set(root.position.x+4.25,surfaceAt(root.position.x+4.25,root.position.z)-0.025,root.position.z);
     const status=document.getElementById("starry-3d-status");
@@ -1381,7 +1381,7 @@ function mount(host) {
   host.dataset.status = "ready";
   const fallback = host.querySelector(".starry-3d-fallback");
   if (fallback) fallback.hidden = true;
-  if (status) status.textContent = "WASD 自由探索園區；找到星門即可開始挑戰";
+  if (status) status.textContent = window.matchMedia&&window.matchMedia("(pointer: coarse)").matches ? "左側搖桿移動 · 滑動右側畫面環顧四周 · 互動按鈕使用設施" : "第一人稱自由探索 · 拖曳環顧四周 · E 互動";
   window.dispatchEvent(new CustomEvent("starry-3d-mounted"));
 }
 
