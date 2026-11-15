@@ -871,7 +871,7 @@ function mount(host) {
   host.dataset.status = "ready";
   const fallback = host.querySelector(".starry-3d-fallback");
   if (fallback) fallback.hidden = true;
-  if (status) status.textContent = "點擊三座星門，進入不同的成人挑戰";
+  if (status) status.textContent = "WASD 自由探索園區；找到星門即可開始挑戰";
   window.dispatchEvent(new CustomEvent("starry-3d-mounted"));
 }
 
