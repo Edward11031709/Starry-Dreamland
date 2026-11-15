@@ -180,7 +180,7 @@ function buildObservatory(scene, x, y, z, materials) {
 }
 
 function buildEntranceGate(scene,materials){
-  const gate=new THREE.Group();gate.position.set(0,0.78,39.2);scene.add(gate);
+  const gate=new THREE.Group();gate.position.set(0,0.78,45.0);scene.add(gate);
   [-3.25,3.25].forEach(x=>{
     addMesh(gate,new THREE.BoxGeometry(0.62,3.9,0.82),materials.darkStone,[x,1.95,0]);
     addMesh(gate,new THREE.BoxGeometry(0.86,0.22,1.02),materials.gold,[x,3.9,0]);
@@ -404,7 +404,7 @@ function buildEnvironment(scene) {
     }
   }
   [
-    [[0,39],[0,29],[0,18],[0,9],[0,0],[0,-10],[0,-19]],
+    [[0,44],[0,36],[0,27],[0,18],[0,9],[0,0],[0,-10],[0,-19]],
     [[0,15],[-10,15],[-18,9],[-22,1],[-23,-9],[-25,-19]],
     [[0,15],[10,15],[18,9],[23,1],[25,-8],[25,-18]],
     [[0,-15],[-9,-20],[-20,-21],[-30,-17]],
@@ -636,10 +636,10 @@ function mount(host) {
   scene.fog = new THREE.FogExp2(PALETTE.night, 0.0038);
 
   const isSmall = width < 650;
-  const camera = new THREE.PerspectiveCamera(isSmall ? 50 : 54,width/height,0.1,320);
-  const cameraState = { yaw: 0, pitch: 0.56, distance: isSmall ? 15 : 14.2 };
-  camera.position.set(0, 8.5, 11.5);
-  camera.lookAt(0, 1.2, 8.6);
+  const camera = new THREE.PerspectiveCamera(isSmall ? 62 : 60,width/height,0.1,320);
+  const cameraState = { yaw: 0, pitch: 0.24, distance: isSmall ? 10.2 : 9.5 };
+  camera.position.set(0, 3.2, 42.2);
+  camera.lookAt(0, 1.7, 33.0);
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.0 : 1.25));
   renderer.setSize(width, height, false);
@@ -681,7 +681,14 @@ function mount(host) {
   const starfield = createStarfield(scene, isSmall ? 420 : 760);
   const environment = buildEnvironment(scene);
   const player = buildPlayer(scene);
-  player.position.set(0, 0.60, 29.0);
+  player.position.set(0, 0.60, 33.0);
+  camera.position.set(
+    player.position.x - Math.sin(cameraState.yaw) * Math.cos(cameraState.pitch) * cameraState.distance,
+    player.position.y + Math.sin(cameraState.pitch) * cameraState.distance + 1.0,
+    player.position.z + Math.cos(cameraState.yaw) * Math.cos(cameraState.pitch) * cameraState.distance
+  );
+  camera.lookAt(player.position.x, player.position.y + 1.15, player.position.z);
+
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
@@ -735,7 +742,7 @@ function mount(host) {
       if (Math.abs(dx) + Math.abs(dy) > 3) world.pointerDrag.dragged = true;
       if (world.pointerDrag.dragged) {
         cameraState.yaw -= dx * 0.006;
-        cameraState.pitch = THREE.MathUtils.clamp(cameraState.pitch + dy * 0.004, 0.22, 1.12);
+        cameraState.pitch = THREE.MathUtils.clamp(cameraState.pitch + dy * 0.0035, 0.10, 0.82);
         world.pointerDrag.x = event.clientX;
         world.pointerDrag.y = event.clientY;
         renderer.domElement.style.cursor = "grabbing";
@@ -848,7 +855,7 @@ function mount(host) {
     const h = Math.max(1, Math.floor(entry.contentRect.height));
     const small = w < 650;
     camera.aspect = w / h;
-    cameraState.distance = small ? 15 : 14.2;
+    cameraState.distance = small ? 10.2 : 9.5;
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.0 : 1.25));
     renderer.setSize(w, h, false);
