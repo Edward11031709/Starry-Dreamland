@@ -179,6 +179,119 @@ function buildObservatory(scene, x, y, z, materials) {
   return group;
 }
 
+function buildEntranceGate(scene,materials){
+  const gate=new THREE.Group();gate.position.set(0,0.78,9.35);scene.add(gate);
+  [-3.25,3.25].forEach(x=>{
+    addMesh(gate,new THREE.BoxGeometry(0.62,3.9,0.82),materials.darkStone,[x,1.95,0]);
+    addMesh(gate,new THREE.BoxGeometry(0.86,0.22,1.02),materials.gold,[x,3.9,0]);
+    addMesh(gate,new THREE.SphereGeometry(0.2,16,12),materials.crystal,[x,4.18,0]);
+  });
+  addMesh(gate,new THREE.BoxGeometry(7.05,0.48,0.9),materials.trim,[0,3.87,0]);
+  addMesh(gate,new THREE.BoxGeometry(6.7,0.12,0.98),materials.gold,[0,4.2,0]);
+  const title=makeLabelSprite({title:"星夢夜遊園",subtitle:"STAR DREAMLAND · NIGHT PARK"});
+  if(title){title.position.set(0,4.95,0.2);title.scale.set(5.7,1.55,1);gate.add(title)}
+  [-2.15,2.15].forEach(x=>{const light=new THREE.PointLight(PALETTE.gold,5,4,2);light.position.set(x,3.4,0.5);gate.add(light)});
+  return gate;
+}
+
+function buildTicketBooth(scene,materials,x,z){
+  const booth=new THREE.Group();booth.position.set(x,0.72,z);scene.add(booth);
+  addMesh(booth,new THREE.BoxGeometry(1.9,1.5,1.45),materials.wall,[0,0.85,0]);
+  addMesh(booth,new THREE.BoxGeometry(2.15,0.18,1.65),materials.gold,[0,1.66,0]);
+  const roof=addMesh(booth,new THREE.ConeGeometry(1.35,0.66,4),materials.roof,[0,2.06,0]);roof.rotation.y=Math.PI/4;
+  addMesh(booth,new THREE.BoxGeometry(1.38,0.66,0.1),materials.darkStone,[0,1.12,0.77]);
+  addMesh(booth,new THREE.BoxGeometry(1.12,0.43,0.12),materials.crystal,[0,1.18,0.85],null,false,false);
+  addMesh(booth,new THREE.BoxGeometry(2.02,0.12,0.4),materials.trim,[0,0.92,0.9]);
+  const sign=makeLabelSprite({title:"夜場售票",subtitle:"TICKETS"});
+  if(sign){sign.position.set(0,2.62,0.22);sign.scale.set(2.55,0.7,1);booth.add(sign)}
+  [-1.45,-0.95,0.95,1.45].forEach((x,i)=>{const post=addMesh(booth,new THREE.CylinderGeometry(0.055,0.07,0.64,10),materials.gold,[x,0.36,1.18]);post.rotation.z=i%2?0.08:-0.08});
+  return booth;
+}
+
+function buildCarousel(scene,materials,x,z){
+  const root=new THREE.Group();root.position.set(x,0.78,z);scene.add(root);
+  addMesh(root,new THREE.CylinderGeometry(2.05,2.22,0.34,48),materials.darkStone,[0,0.18,0]);
+  addMesh(root,new THREE.TorusGeometry(2.12,0.11,10,64),materials.gold,[0,0.38,0]).rotation.x=Math.PI/2;
+  const ride=new THREE.Group();ride.position.y=0.42;root.add(ride);
+  addMesh(ride,new THREE.CylinderGeometry(0.16,0.22,3.15,18),materials.silverMetal,[0,1.57,0]);
+  addMesh(ride,new THREE.CylinderGeometry(2.12,0.82,0.38,40),materials.roof,[0,3.18,0]);
+  addMesh(ride,new THREE.CylinderGeometry(2.18,2.18,0.12,40),materials.gold,[0,3.4,0]);
+  addMesh(ride,new THREE.ConeGeometry(0.8,0.72,12),materials.trim,[0,3.94,0]);
+  const animalColors=[0xb8a1df,0xe6c98e,0x86b6d8,0xd69acb,0xa9c6ad,0xe7a98e];
+  for(let i=0;i<6;i++){
+    const a=i/6*Math.PI*2,x=Math.cos(a)*1.42,z=Math.sin(a)*1.42;
+    addMesh(ride,new THREE.CylinderGeometry(0.045,0.055,2.2,8),materials.silver,[x,1.35,z]);
+    const animalMat=makeMaterial(animalColors[i],0.34,0.3);
+    addMesh(ride,new THREE.SphereGeometry(0.34,14,10),animalMat,[x,0.72,z],[1.2,0.7,0.72]);
+    addMesh(ride,new THREE.SphereGeometry(0.19,12,10),animalMat,[x+0.27,0.94,z],[0.72,0.8,0.72]);
+    addMesh(ride,new THREE.ConeGeometry(0.1,0.3,8),materials.gold,[x+0.36,1.12,z],[0.7,1,0.7]);
+  }
+  const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL"});
+  if(sign){sign.position.set(0,4.72,0);sign.scale.set(4.1,1.1,1);root.add(sign)}
+  return {object:ride,axis:"y",speed:0.28};
+}
+
+function buildFerrisWheel(scene,materials,x,y,z){
+  const root=new THREE.Group();root.position.set(x,y,z);scene.add(root);
+  [-0.82,0.82].forEach((sx,i)=>{
+    const leg=addMesh(root,new THREE.BoxGeometry(0.23,3.5,0.28),materials.silverMetal,[sx,1.6,0]);leg.rotation.z=i===0?-0.26:0.26;
+    addMesh(root,new THREE.BoxGeometry(0.62,0.18,0.72),materials.gold,[sx,0.12,0]);
+  });
+  const wheel=new THREE.Group();wheel.position.set(0,3.45,0.18);root.add(wheel);
+  addMesh(wheel,new THREE.TorusGeometry(2.62,0.085,12,80),materials.gold,[0,0,0]);
+  addMesh(wheel,new THREE.TorusGeometry(2.28,0.045,8,72),materials.silver,[0,0,0]);
+  for(let i=0;i<10;i++){
+    const a=i/10*Math.PI*2;
+    const spoke=addMesh(wheel,new THREE.BoxGeometry(0.075,5.18,0.09),materials.silverMetal,[0,0,0]);spoke.rotation.z=a;
+    const cx=Math.cos(a)*2.62,cy=Math.sin(a)*2.62;
+    const gondolaMat=makeMaterial([0x6f8fc5,0xb18bcf,0xd7ad70,0x81a9a0,0xc27ea1][i%5],0.42,0.28);
+    addMesh(wheel,new THREE.BoxGeometry(0.52,0.55,0.46),gondolaMat,[cx,cy-0.08,0.18]);
+    addMesh(wheel,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[cx,cy+0.22,0.18]);
+    addMesh(wheel,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[cx,cy-0.36,0.42]);
+  }
+  const hub=addMesh(wheel,new THREE.CylinderGeometry(0.35,0.35,0.42,20),materials.gold,[0,0,0]);hub.rotation.x=Math.PI/2;
+  const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL"});
+  if(sign){sign.position.set(0,6.6,0.22);sign.scale.set(4.1,1.1,1);root.add(sign)}
+  return {object:wheel,axis:"z",speed:-0.105};
+}
+
+function buildRollerCoaster(scene,materials){
+  const root=new THREE.Group();root.position.set(-7.7,0.72,-6.45);scene.add(root);
+  const points=[[-2.8,0.65,1.8],[-2.3,1.7,0.8],[-1.55,3.7,0.2],[-0.45,4.0,0.1],[0.65,2.0,0.3],[1.55,0.9,1.0],[2.55,2.0,1.8],[3.05,2.55,2.2]];
+  [-0.24,0.24].forEach(offset=>{
+    const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p[0],p[1],p[2]+offset)));
+    const geometry=new THREE.TubeGeometry(curve,96,0.075,8,false);
+    addMesh(root,geometry,materials.gold,null,null,true,false);
+  });
+  points.forEach((p,i)=>{
+    if(i===0||i===2||i===4||i===6){
+      const height=Math.max(0.55,p[1]);
+      addMesh(root,new THREE.CylinderGeometry(0.065,0.09,height,10),materials.darkStone,[p[0],height/2,p[2]],null,true,false);
+      addMesh(root,new THREE.SphereGeometry(0.11,10,8),materials.gold,[p[0],height,p[2]]);
+    }
+  });
+  addMesh(root,new THREE.BoxGeometry(1.25,0.48,0.62),makeMaterial(0x9d6fc1,0.34,0.44),[-1.75,3.96,0.2]);
+  addMesh(root,new THREE.BoxGeometry(1.0,0.12,0.72),materials.gold,[-1.75,4.25,0.2]);
+  for(let i=0;i<3;i++)addMesh(root,new THREE.SphereGeometry(0.13,12,10),materials.silver,[-2.1+i*0.34,4.42,0.2],[0.75,0.75,0.75]);
+  const sign=makeLabelSprite({title:"星際雲霄飛車",subtitle:"COSMIC COASTER"});
+  if(sign){sign.position.set(0,4.9,2.05);sign.scale.set(4.3,1.05,1);root.add(sign)}
+  return root;
+}
+
+function buildArcadeStalls(scene,materials){
+  const stalls=[];
+  [[5.1,6.9,"星際獎品所","PRIZE ARCADE"],[8.25,5.45,"午夜挑戰亭","NIGHT CHALLENGE"]].forEach(([x,z,title,sub])=>{
+    const booth=new THREE.Group();booth.position.set(x,0.72,z);scene.add(booth);
+    addMesh(booth,new THREE.BoxGeometry(1.75,1.55,1.35),materials.darkStone,[0,0.82,0]);
+    addMesh(booth,new THREE.BoxGeometry(1.95,0.18,1.55),materials.gold,[0,1.66,0]);
+    addMesh(booth,new THREE.BoxGeometry(1.36,0.8,0.12),materials.wall,[0,1.0,0.72]);
+    for(let k=0;k<3;k++)addMesh(booth,new THREE.SphereGeometry(0.16,12,10),[materials.crystal,materials.silver,materials.gold][k],[-0.42+k*0.42,1.0,0.84]);
+    const sign=makeLabelSprite({title,subtitle:sub});if(sign){sign.position.set(0,2.28,0.2);sign.scale.set(2.8,0.76,1);booth.add(sign)}
+    stalls.push(booth);
+  });
+  return stalls;
+}
+
 function buildEnvironment(scene) {
   const materials = {
     rock: makeMaterial(0x343b5b, 0.94, 0.04),
@@ -311,6 +424,15 @@ function buildEnvironment(scene) {
     portals.push(buildPortal(scene, gameMeta[i], x, 4.15, materials));
   });
 
+  // A night amusement park grows around the central star plaza.
+  const rides=[];
+  rides.push(buildCarousel(scene,materials,-7.25,0.0));
+  rides.push(buildFerrisWheel(scene,materials,13.1,-3.92,-3.7));
+  buildRollerCoaster(scene,materials);
+  buildTicketBooth(scene,materials,-4.9,7.05);
+  buildEntranceGate(scene,materials);
+  buildArcadeStalls(scene,materials);
+
   // Sculptural lantern trees around the castle garden.
   [[-7.6,-3.3],[-7.8,0.6],[7.6,-3.0],[7.8,0.8],[-5.6,-7.4],[5.4,-7.5]].forEach((p,i) => {
     createTree(island, p[0], p[1], 0.68 + (i % 3) * 0.12, { wood: materials.wood });
@@ -329,7 +451,7 @@ function buildEnvironment(scene) {
     cloud.userData.phase = angle;
   }
 
-  return { materials, island, compass, compassHalo, portals, planet, planetRing, clouds };
+  return { materials, island, compass, compassHalo, portals, planet, planetRing, clouds, rides };
 }
 
 function createStarfield(scene, count = 620) {
@@ -519,6 +641,10 @@ function mount(host) {
     const delta = Math.min(clock.getDelta(), 0.04);
     const t = clock.elapsedTime;
     environment.compass.rotation.y += delta * 0.36;
+    environment.rides.forEach(ride => {
+      if (ride.axis === "y") ride.object.rotation.y += delta * ride.speed;
+      else ride.object.rotation.z += delta * ride.speed;
+    });
     environment.compassHalo.rotation.z += delta * 0.17;
     environment.planet.rotation.y += delta * 0.045;
     environment.planetRing.rotation.z += delta * 0.06;
