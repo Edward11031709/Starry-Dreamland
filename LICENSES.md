@@ -18,3 +18,9 @@
 
 ## 重要
 不要把「素材網站免費瀏覽」當成「所有素材都可任意使用」。每個資產必須逐項確認授權。公開 Repository 不應包含付費素材或授權不明的模型。
+
+## Three.js
+- Three.js r187 (`three@0.187.0`) — https://github.com/mrdoob/three.js
+- License: MIT — https://github.com/mrdoob/three.js/blob/dev/LICENSE
+- Delivery: pinned version from jsDelivr CDN, imported by `js/starry-3d.js`.
+- Use: procedural first-phase 3D central plaza renderer.
