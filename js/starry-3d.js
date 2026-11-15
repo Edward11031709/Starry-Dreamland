@@ -1648,6 +1648,122 @@ function mount(host) {
   window.dispatchEvent(new CustomEvent("starry-3d-mounted"));
 }
 
+const avatarPreviews=new Map();
+
+function disposePreviewModel(model){
+ if(!model)return;
+ model.parent?.remove(model);
+ model.traverse(obj=>{
+  if(obj.geometry)obj.geometry.dispose();
+  if(obj.material){
+   const mats=Array.isArray(obj.material)?obj.material:[obj.material];
+   mats.forEach(mat=>{
+    Object.values(mat).forEach(value=>{if(value&&value.isTexture)value.dispose()});
+    mat.dispose();
+   });
+  }
+ });
+}
+function mountAvatarPreview(host,options={}){
+ if(!host||!host.isConnected)return false;
+ disposeAvatarPreview(host);
+ let renderer;
+ try{
+  renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
+ }catch(error){
+  host.innerHTML='<div class="avatar-preview-fallback">目前裝置無法建立 3D 預覽</div>';
+  console.warn("Avatar preview renderer unavailable:",error);return false;
+ }
+ const width=Math.max(1,host.clientWidth),height=Math.max(1,host.clientHeight);
+ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.4));
+ renderer.setSize(width,height,false);
+ renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.toneMapping=THREE.ACESFilmicToneMapping;
+ renderer.toneMappingExposure=1.16;
+ renderer.setClearColor(0x080e25,0);
+ renderer.domElement.className="avatar-preview-canvas";
+ renderer.domElement.setAttribute("aria-label","旅人角色 3D 即時預覽");
+ host.replaceChildren(renderer.domElement);
+ const scene=new THREE.Scene();
+ const camera=new THREE.PerspectiveCamera(28,width/height,0.1,40);
+ camera.position.set(0,2.38,8.2);camera.lookAt(0,1.12,0);
+ scene.add(new THREE.HemisphereLight(0xdde3ff,0x151329,1.75));
+ const key=new THREE.DirectionalLight(0xffe5c1,2.5);key.position.set(-3,6,5);scene.add(key);
+ const fill=new THREE.DirectionalLight(0x9e8de8,1.25);fill.position.set(4,3,-3);scene.add(fill);
+ const rim=new THREE.PointLight(0x76d7f4,13,12,2);rim.position.set(0,2.7,-2.5);scene.add(rim);
+ const pedestal=new THREE.Group();scene.add(pedestal);
+ const stone=makeMaterial(0x292747,0.34,0.68,{clearcoat:0.9});
+ const gold=makeMaterial(0xf1d18e,0.2,0.85,{clearcoat:1});
+ addMesh(pedestal,new THREE.CylinderGeometry(1.48,1.56,0.2,64),stone,[0,-0.16,0],null,false,true);
+ const rimBand=addMesh(pedestal,new THREE.TorusGeometry(1.48,0.045,10,80),gold,[0,-0.04,0],null,false,false);rimBand.rotation.x=Math.PI/2;
+ const inner=addMesh(pedestal,new THREE.TorusGeometry(1.18,0.018,6,80),makeMaterial(0x9c8bd2,0.25,0.72),[0,-0.045,0],null,false,false);inner.rotation.x=Math.PI/2;
+ const backHalo=addMesh(pedestal,new THREE.TorusGeometry(1.3,0.022,8,72),makeMaterial(0x8d7bd0,0.25,0.7,{emissive:0x51418c,emissiveIntensity:0.55}),[0,1.63,-0.82],null,false,false);
+ backHalo.rotation.y=0.16;
+ const stars=[];
+ for(let i=0;i<8;i++){
+  const a=i/8*Math.PI*2;
+  const star=addMesh(pedestal,new THREE.OctahedronGeometry(0.075,1),gold,
+   [Math.cos(a)*1.2,0.02,Math.sin(a)*1.2],[0.72,1.35,0.72],false,false);
+  stars.push(star);
+ }
+ const preview={host,renderer,scene,camera,pedestal,model:null,clock:new THREE.Clock(),observer:null,options:{}};
+ avatarPreviews.set(host,preview);
+ updateAvatarPreview(host,options);
+ const resize=()=>{
+  if(!host.isConnected)return;
+  const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);
+  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+ };
+ if(typeof ResizeObserver!=="undefined"){preview.observer=new ResizeObserver(resize);preview.observer.observe(host)}
+ else window.addEventListener("resize",resize);
+ preview.resize=resize;
+ renderer.setAnimationLoop(()=>{
+  if(!host.isConnected){disposeAvatarPreview(host);return}
+  const t=preview.clock.getElapsedTime();
+  if(preview.model){
+   preview.model.rotation.y=0.12+Math.sin(t*0.32)*0.2;
+   preview.model.position.y=0.02+Math.sin(t*1.1)*0.025;
+   if(preview.model.userData.halo)preview.model.userData.halo.rotation.z+=0.006;
+   if(preview.model.userData.floatingStar)preview.model.userData.floatingStar.rotation.y+=0.012;
+  }
+  backHalo.rotation.z=Math.sin(t*0.28)*0.08;
+  stars.forEach((star,i)=>{star.rotation.y+=0.008;star.position.y=0.02+Math.sin(t+i)*0.018});
+  renderer.render(scene,camera);
+ });
+ return true;
+}
+function updateAvatarPreview(host,options={}){
+ const preview=avatarPreviews.get(host);
+ if(!preview){return mountAvatarPreview(host,options)}
+ const avatarId=options.avatarId||"wanderer";
+ const avatarType=options.avatarType||"wanderer";
+ const appearance=options.appearance||{};
+ const key=JSON.stringify([avatarId,avatarType,appearance]);
+ if(preview.options.key===key)return true;
+ const next=buildPlayer(preview.scene,avatarId,{avatarType,appearance});
+ next.position.y=0.02;next.scale.setScalar(1.04);
+ if(preview.model)disposePreviewModel(preview.model);
+ preview.model=next;preview.options={key,avatarId,avatarType,appearance};
+ return true;
+}
+function disposeAvatarPreview(host){
+ const preview=avatarPreviews.get(host);if(!preview)return;
+ preview.renderer.setAnimationLoop(null);
+ if(preview.observer)preview.observer.disconnect();
+ else if(preview.resize)window.removeEventListener("resize",preview.resize);
+ if(preview.model)disposePreviewModel(preview.model);
+ preview.scene.traverse(obj=>{
+  if(obj.geometry)obj.geometry.dispose();
+  if(obj.material){
+   const mats=Array.isArray(obj.material)?obj.material:[obj.material];
+   mats.forEach(mat=>{Object.values(mat).forEach(value=>{if(value&&value.isTexture)value.dispose()});mat.dispose()});
+  }
+ });
+ preview.renderer.dispose();
+ if(preview.renderer.domElement.parentNode)preview.renderer.domElement.parentNode.removeChild(preview.renderer.domElement);
+ avatarPreviews.delete(host);
+}
+
 function dispose() {
   disposeWorld(activeWorld);
   activeWorld = null;
@@ -1671,7 +1787,7 @@ async function loadThreeEngine() {
   for (const url of sources) {
     try {
       THREE = await importWithTimeout(url);
-      window.Starry3D = { mount, dispose };
+      window.Starry3D = { mount, dispose, mountAvatarPreview, updateAvatarPreview, disposeAvatarPreview };
       window.dispatchEvent(new Event("starry-3d-ready"));
       return;
     } catch (error) {
