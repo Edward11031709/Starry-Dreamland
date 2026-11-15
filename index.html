@@ -268,13 +268,12 @@ function wardrobe(){
  const owned=Array.isArray(p.ownedAvatarIds)?p.ownedAvatarIds:["wanderer"];
  const activeId=p.avatarId||"wanderer";
  const balance=Number(p.avatarPoints??p.adultPoints)||0;
- const icons={"wanderer":"✦","moon-priestess":"☾","nebula-prince":"✧","crystal-witch":"◇","astral-knight":"⚔","celestial-guardian":"☼"};
  const cards=AVATARS.map(a=>{
   const has=owned.includes(a.id),current=activeId===a.id;
   const action=has
    ? '<button class="btn '+(current?"alt":"")+'" data-avatar-equip="'+a.id+'" '+(current?"disabled":"")+'>'+(current?"目前使用中":"套用造型")+'</button>'
    : '<button class="btn" data-avatar-unlock="'+a.id+'">解鎖造型 · '+a.cost+' ✦</button>';
-  return '<article class="avatar-card '+(current?"current":"")+'"><div class="avatar-preview avatar-'+a.id+'"><span>'+icons[a.id]+'</span></div><div class="avatar-rarity">'+a.rarity+'</div><h3>'+a.name+(current?'　✦':'')+'</h3><p>'+a.description+'</p><div class="avatar-price">'+(has?"已擁有":a.cost===0?"免費造型":a.cost+" 星塵")+'</div>'+action+'</article>';
+  return '<article class="avatar-card '+(current?"current":"")+'"><div class="avatar-preview avatar-'+a.id+'"><span class="avatar-figure"><i class="avatar-cape"></i><i class="avatar-body"></i><i class="avatar-head"></i><i class="avatar-crown"></i></span></div><div class="avatar-rarity">'+a.rarity+'</div><h3>'+a.name+(current?'　✦':'')+'</h3><p>'+a.description+'</p><div class="avatar-price">'+(has?"已擁有":a.cost===0?"免費造型":a.cost+" 星塵")+'</div>'+action+'</article>';
  }).join("");
  shell('<section class="hero"><div class="eyebrow">TRAVELER ATELIER · AVATAR WARDROBE</div><h1>星幻旅人衣櫥</h1><p>挑選你的旅人姿態。每款造型都有專屬服裝、頭飾與色彩；稀有造型可用成人星塵解鎖，管理員身份不會改變造型價格。</p></section><div class="wardrobe-balance"><span>目前使用造型：<b>'+esc(AVATARS.find(a=>a.id===activeId)?.name||"星旅者")+'</b></span><span>可用星塵：<b>'+balance+' ✦</b></span></div><section class="wardrobe-grid">'+cards+'</section><div class="panel" style="margin-top:18px"><p style="margin:0;color:var(--muted);font-size:12px;line-height:1.8">造型解鎖會永久保存在你的帳號。購買後可以隨時切換，不會影響遊戲成績或排行榜分數。</p><button class="btn alt" data-page="home" style="margin-top:12px">返回星夢廣場</button></div>');
 }
