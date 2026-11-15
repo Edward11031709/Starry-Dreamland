@@ -33,6 +33,9 @@ create index if not exists sd_game_records_user_created_idx
 create index if not exists sd_game_records_game_score_idx
   on public.sd_game_records (game_id, score desc, created_at asc);
 
+-- Explicit schema/table/sequence privileges are required by the Data API.
+grant usage on schema public to authenticated;
+
 alter table public.sd_profiles enable row level security;
 alter table public.sd_game_records enable row level security;
 
@@ -42,6 +45,7 @@ revoke all on table public.sd_game_records from anon, authenticated;
 grant select, insert, update on table public.sd_profiles to authenticated;
 grant insert (user_id, game_id, category, score, status, reward)
   on table public.sd_game_records to authenticated;
+grant usage, select on sequence public.sd_game_records_id_seq to authenticated;
 
 drop policy if exists "Players read their own profile" on public.sd_profiles;
 create policy "Players read their own profile"
