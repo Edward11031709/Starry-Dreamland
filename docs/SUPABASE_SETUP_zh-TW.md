@@ -1,73 +1,76 @@
 # 星夢樂園｜Supabase 全球帳號與雲端排行榜設定
 
-這份文件說明如何將 GitHub Pages 上的星夢樂園接上 Supabase。網站目前仍處於本機展示登入模式；尚未設定專案及前端整合前，請不要把它當成已啟用的全球帳號。
+## 目前連線狀態
 
-## 1. 建立免費 Supabase 專案
+Supabase 專案已建立，資料庫遷移已成功套用，並已接入網站程式。
 
-1. 開啟 https://supabase.com/dashboard 並登入。
-2. 若第一次使用，建立一個 Organization。
-3. 選擇 **New project**。
-4. 專案名稱填入 `starry-dreamland`。
-5. Plan 選 **Free**。
-6. Region 建議選 **Northeast Asia (Tokyo)**（若沒有此選項，選 **APAC / Southeast Asia (Singapore)**）。資料庫建立後不能直接改區域；要換區域需建立新專案並搬遷資料。
-7. 設定一組新的、唯一且夠長的 Database Password，妥善保存在自己的密碼管理器。**不要把這個資料庫密碼傳給協作者或貼進 GitHub。**
-8. 按 **Create new project**，等待 Dashboard 顯示專案可用。
+- 專案名稱：`Starry-Dreamland`
+- 區域：Tokyo（`ap-northeast-1`）
+- 專案目前狀態：`ACTIVE_HEALTHY`
+- 資料表：`public.sd_profiles`、`public.sd_game_records`
+- 兩張資料表都已啟用 RLS。
+- 內部 `SECURITY DEFINER` 函式放在不對外公開的 `private` schema；前端呼叫的 `public` RPC wrapper 為 `SECURITY INVOKER`。
+- Supabase Security Advisor 與 Health Advisor 目前沒有警告。
+- 網站使用固定版本 `@supabase/supabase-js@2.119.0`，並透過 CDN ESM 載入。
 
-Free Plan 目前可建立最多 2 個 active free projects。免費專案在 7 天低活動後可能暫停；暫停後可在 1 年內從 Dashboard 按 **Resume project** 恢復。
+## 1. 已完成：雲端資料庫
 
-## 2. 在資料庫建立星夢樂園資料表
+已建立以下內容：
+- `sd_profiles`：Supabase Auth 使用者 ID、旅人暱稱、建立時間。
+- `sd_game_records`：遊戲 ID、成人／星芽分類、分數、結果狀態、獎勵及時間。
+- RLS 政策：使用者只能讀取／更新自己的個人資料，只能新增自己的遊戲紀錄。
+- 個人紀錄 RPC：`sd_my_game_records()`。
+- 全球最佳成績 RPC：`sd_global_best_scores()`，只回傳玩家暱稱及各遊戲最佳成績。
+- 高權限函式存放在未公開的 `private` schema，且檢查登入使用者身分。
 
-1. 開啟專案的 **SQL Editor**。
-2. 按 **New query**。
-3. 開啟 Repository 中的 [supabase/schema.sql](../supabase/schema.sql)，複製完整內容。
-4. 貼到 SQL Editor，按 **Run**。
-5. 確認畫面沒有紅色錯誤，再開啟 **Table Editor**，檢查是否出現：
-   - `sd_profiles`
-   - `sd_game_records`
+完整 SQL 位於 [supabase/schema.sql](../supabase/schema.sql)。
 
-這份 SQL 會建立玩家暱稱、個人遊戲紀錄、成人／星芽分區、RLS 權限及排行榜函式。
+## 2. 已完成：網站程式連線
 
-## 3. 設定登入後的返回網址
+- `config.js` 已設定 Project URL 及公開 Publishable key。
+- `js/supabase-client.js` 透過固定版本 CDN 載入 Supabase JavaScript SDK。
+- 登入頁面支援電子郵件註冊、登入、登出及密碼重設。
+- 登入後會載入雲端暱稱及個人遊玩紀錄。
+- 每次遊戲結束會把成績寫入 `sd_game_records`。
+- 全球排行榜讀取 `sd_global_best_scores()`。
+- 成人星塵與星芽星塵分開計算。
 
-到 **Authentication → URL Configuration**：
+Publishable key 是設計給瀏覽器使用的公開金鑰；RLS 才是資料保護邊界。不要把 Secret key、`service_role`、資料庫密碼或 JWT 私密金鑰放進公開 Repository。
+
+## 3. 仍須由專案擁有者設定一次：登入返回網址
+
+開啟 Supabase Dashboard → Authentication → URL Configuration：
 
 - **Site URL** 設為：
   `https://edward11031709.github.io/Starry-Dreamland/`
 - **Redirect URLs** 加入同一個完整網址：
   `https://edward11031709.github.io/Starry-Dreamland/`
 
-這能讓電子郵件驗證與密碼重設連回星夢樂園。Supabase 只會接受允許清單內的 redirect URL。
+儲存後，電子郵件驗證及密碼重設連結才會返回正式網站。此專案管理連線目前未提供 Auth URL Configuration 的寫入操作，因此這一步需要你在 Dashboard 手動完成。
 
-## 4. 取得網站用的公開連線資訊
+## 4. 電子郵件寄送
 
-在專案上方按 **Connect**，或進入 **Project Settings → API Keys**：
+Email provider 可用於註冊及登入。建議保留 Email confirmation。Supabase 內建測試郵件服務有寄送限制，適合初期測試；公開營運前建議設定自有 SMTP，並按需要設定 CAPTCHA 及 Auth rate limits。
 
-- 複製 **Project URL**。
-- 複製 **Publishable key**（通常以 `sb_publishable_` 開頭）。
+## 5. 實際測試順序
 
-這兩項會用來讓公開網頁連線。Publishable key 本來就會出現在瀏覽器程式中；安全性依靠本文件建立的 RLS 權限。**不要複製 Secret key（`sb_secret_`）、舊版 `service_role` key、資料庫密碼或 JWT 私密金鑰。**
+完成第 3 節後：
 
-先不要把任何金鑰貼進公開留言、截圖或 GitHub Issue。你可以只回報「Project 已建立、SQL 成功」，之後再依照安全步驟設定網站連線。
+1. 開啟正式網站並按 Ctrl + F5。
+2. 使用自己的電子郵件及至少 8 個字元的密碼註冊，填入遊戲暱稱。
+3. 到信箱開啟 Supabase 驗證郵件，返回正式網站。
+4. 登入後完成一局成人挑戰，查看成人星塵與遊玩紀錄是否更新。
+5. 再完成一局星芽遊戲，確認只增加星芽星塵。
+6. 在另一個瀏覽器／裝置使用同一帳號登入，確認紀錄同步。
+7. 開啟排行榜，確認成人與星芽榜分開。
 
-## 5. 驗證信設定
+## 6. 舊本機資料
 
-Email 登入預設已啟用；建議保留 Email confirmation，讓玩家先驗證電子郵件再登入。
+舊版展示帳號與紀錄仍保存在原本的瀏覽器 localStorage；它們不會自動寫入新雲端帳號。請先確認登入及雲端同步正常，再決定是否需要另外製作本機資料匯入功能。
 
-Supabase 內建測試郵件服務有寄送限制（目前文件列出每小時 2 封），適合初期測試。要正式開放大量玩家註冊時，應設定自己的 SMTP 郵件服務，並完成 CAPTCHA／Auth rate limits 等防濫用設定。
+## 7. 重要安全限制
 
-## 6. 完成網站整合（需在專案建立後進行）
-
-目前 Repository 的 `config.js` 是空白 `local-demo` 模式，網站尚未載入 Supabase SDK。建立專案及執行 SQL 後，才進行以下程式整合：
-
-- 載入 Supabase JavaScript client，接上 Project URL 與 Publishable key。
-- 電子郵件註冊、驗證、登入、登出及重設密碼。
-- 以 Supabase Auth user ID 建立／讀取 `sd_profiles`。
-- 把成人及星芽紀錄分別寫入 `sd_game_records`。
-- 個人紀錄讀取 `sd_my_game_records()`；全球排行榜讀取 `sd_global_best_scores()`。
-- 保留成人／星芽獨立積分，並規劃本機展示資料轉入帳號的方式。
-
-**重要限制：** 目前分數仍由瀏覽器計算，RLS 能限制使用者資料存取，但無法完全阻止玩家自行修改前端程式偽造分數。正式競技排行榜仍需伺服器端驗證遊戲結果。
-
-## 7. 資料與兒童隱私
-
-星芽區不需要收集兒童真實姓名、生日、住址或學校。建議使用家長管理的帳號及遊戲暱稱；全球排行榜只顯示暱稱與分數，不公開 email 或聯絡方式。
+- RLS 能限制誰讀寫資料，但前端仍可被修改。現階段遊戲分數由瀏覽器計算，玩家有機會偽造分數。
+- 正式競技排行榜需再加入伺服器端驗證／計分函式。
+- 星芽區不需要兒童真實姓名、生日、住址或學校。建議使用家長管理的帳號與遊戲暱稱；排行榜只公開暱稱和分數。
+- 免費 Supabase 專案在低活動時可能暫停；請保留定期備份，並留意 Dashboard 通知。
