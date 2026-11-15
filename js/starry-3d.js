@@ -258,7 +258,6 @@ function clearChatBubble(model){
  model.remove(bubble);
  if(bubble.material?.map)bubble.material.map.dispose();
  if(bubble.material)bubble.material.dispose();
- bubble.geometry?.dispose();
  model.userData.chatBubble=null;model.userData.chatBubbleUntil=0;
 }
 function showChatBubble(model,message,until){
