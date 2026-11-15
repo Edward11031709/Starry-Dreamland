@@ -676,6 +676,7 @@ function disposeWorld(world) {
   if (world.resizeObserver) world.resizeObserver.disconnect();
   if (world.canvas) {
     world.canvas.removeEventListener("wheel", world.onWheel);
+    if(world.onAvatarChange)window.removeEventListener("starry-3d-avatar-change",world.onAvatarChange);
     world.canvas.removeEventListener("pointerdown", world.onPointerDown);
     world.canvas.removeEventListener("pointermove", world.onPointerMove);
     world.canvas.removeEventListener("pointerup", world.onPointerUp);
@@ -848,7 +849,7 @@ function mount(host) {
 
   const starfield = createStarfield(scene, isSmall ? 420 : 760);
   const environment = buildEnvironment(scene);
-  const player = buildPlayer(scene);
+  let player = buildPlayer(scene,host.dataset.avatar || "wanderer");
   player.position.set(0, 0.60, 33.0);
   camera.position.set(
     player.position.x - Math.sin(cameraState.yaw) * Math.cos(cameraState.pitch) * cameraState.distance,
@@ -863,26 +864,83 @@ function mount(host) {
   const world = {
     host, scene, renderer, camera, starfield, environment,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
-    cameraState, keys: new Set(), pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
+    cameraState, keys: new Set(), mountedRide: null, minimapLast: 0,
+    pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
     running: true, frame: 0, lastTime: 0
   };
   activeWorld = world;
 
-  function findPortal(object) {
+  function findTarget(object) {
     let current = object;
     while (current) {
-      if (current.userData && current.userData.gameId) return current.userData.gameId;
+      if (current.userData && current.userData.gameId) return { type: "game", gameId: current.userData.gameId };
+      if (current.userData && current.userData.action) return { type: "action", action: current.userData.action };
       current = current.parent;
     }
     return null;
   }
 
+  function surfaceAt(x,z) {
+    let surface = 0.70;
+    environment.terrainZones.forEach(zone => {
+      if (Math.hypot(x-zone.x,z-zone.z) <= zone.radius) surface = Math.max(surface,zone.surfaceY);
+    });
+    environment.walkSegments.forEach(seg => {
+      const dx=seg.x2-seg.x1,dz=seg.z2-seg.z1,lenSq=dx*dx+dz*dz;
+      const t=lenSq?THREE.MathUtils.clamp(((x-seg.x1)*dx+(z-seg.z1)*dz)/lenSq,0,1):0;
+      const px=seg.x1+t*dx,pz=seg.z1+t*dz;
+      if(Math.hypot(x-px,z-pz)<=seg.width/2+0.28)surface=Math.max(surface,seg.surfaceY);
+    });
+    return surface;
+  }
+
+  function blockedAt(x,z) {
+    return environment.colliders.some(collider => Math.hypot(x-collider.x,z-collider.z) < collider.radius + 0.48);
+  }
+
+  function mountCarousel() {
+    if(world.mountedRide)return;
+    world.mountedRide=environment.carousel.rideSeat;
+    player.visible=false;
+    const status=document.getElementById("starry-3d-status");
+    if(status)status.textContent="正在乘坐星光旋轉木馬 · 按 E 下車";
+  }
+
+  function dismountCarousel() {
+    if(!world.mountedRide)return;
+    world.mountedRide=null;
+    player.visible=true;
+    const root=environment.carousel.root;
+    player.position.set(root.position.x+4.25,surfaceAt(root.position.x+4.25,root.position.z)-0.105,root.position.z);
+    const status=document.getElementById("starry-3d-status");
+    if(status)status.textContent="WASD 探索園區 · 找到設施按 E 互動";
+  }
+
+  world.onAvatarChange = event => {
+    const avatarId=event.detail&&event.detail.avatarId;
+    if(!avatarId||avatarId===player.userData.avatarId)return;
+    const next=buildPlayer(scene,avatarId);
+    next.position.copy(player.position);next.rotation.copy(player.rotation);next.visible=player.visible;
+    scene.remove(player);player=next;world.player=next;
+  };
+  window.addEventListener("starry-3d-avatar-change",world.onAvatarChange);
+
   world.onKeyDown = event => {
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target && event.target.tagName)) return;
     const key = event.key.toLowerCase();
-    if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(key)) {
+    if(key==="e"){
       event.preventDefault();
-      world.keys.add(key);
+      if(world.mountedRide){dismountCarousel();return}
+      const p=player.position,ride=environment.carousel.root.position,booth=environment.ticketBooth.position;
+      if(Math.hypot(p.x-ride.x,p.z-ride.z)<5.4){mountCarousel();return}
+      if(Math.hypot(p.x-booth.x,p.z-booth.z)<4.2){
+        window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"ticket-booth"}}));
+        return;
+      }
+    }
+    if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(key)) {
+      if(world.mountedRide)return;
+      event.preventDefault();world.keys.add(key);
     }
   };
   world.onKeyUp = event => world.keys.delete(event.key.toLowerCase());
@@ -921,8 +979,8 @@ function mount(host) {
     pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
-    const hits = raycaster.intersectObjects(environment.portals, true);
-    renderer.domElement.style.cursor = hits.some(hit => findPortal(hit.object)) ? "pointer" : "grab";
+    const hits = raycaster.intersectObjects(environment.interactables, true);
+    renderer.domElement.style.cursor = hits.some(hit => findTarget(hit.object)) ? "pointer" : "grab";
   };
 
   world.onPointerUp = event => {
@@ -935,13 +993,18 @@ function mount(host) {
     pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
-    const hits = raycaster.intersectObjects(environment.portals, true);
+    const hits = raycaster.intersectObjects(environment.interactables, true);
     for (const hit of hits) {
-      const gameId = findPortal(hit.object);
-      if (gameId) {
-        window.dispatchEvent(new CustomEvent("starry-3d-portal", { detail: { gameId } }));
-        break;
+      const target=findTarget(hit.object);
+      if(!target)continue;
+      if(target.type==="game"){
+        window.dispatchEvent(new CustomEvent("starry-3d-portal",{detail:{gameId:target.gameId}}));
+      }else if(target.action==="ride-carousel"){
+        if(world.mountedRide)dismountCarousel();else mountCarousel();
+      }else{
+        window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:target.action}}));
       }
+      break;
     }
   };
 
@@ -976,24 +1039,39 @@ function mount(host) {
     if (world.keys.has("s") || world.keys.has("arrowdown")) move.sub(forward);
     if (world.keys.has("d") || world.keys.has("arrowright")) move.add(right);
     if (world.keys.has("a") || world.keys.has("arrowleft")) move.sub(right);
-    const moving = move.lengthSq() > 0;
-    if (moving) {
-      move.normalize();
-      const speed = world.keys.has("shift") ? 9.0 : 6.2;
-      player.position.addScaledVector(move, speed * delta);
-      const radius = Math.hypot(player.position.x, player.position.z);
-      const limit = environment.playableRadius || 41.2;
-      if (radius > limit) {
-        player.position.x *= limit / radius;
-        player.position.z *= limit / radius;
+    if(world.mountedRide){
+      const mountedPosition=new THREE.Vector3();
+      world.mountedRide.getWorldPosition(mountedPosition);
+      player.position.copy(mountedPosition);
+      player.position.y+=0.2;
+      world.keys.clear();
+    }else{
+      const moving = move.lengthSq() > 0;
+      if (moving) {
+        move.normalize();
+        const speed = world.keys.has("shift") ? 8.2 : 5.4;
+        const step=speed*delta;
+        let nextX=player.position.x+move.x*step;
+        let nextZ=player.position.z+move.z*step;
+        const limit=environment.playableRadius||41.2;
+        const clampRadius=(x,z)=>{
+          const radius=Math.hypot(x,z);
+          if(radius>limit)return {x:x*limit/radius,z:z*limit/radius};
+          return {x,z};
+        };
+        let candidate=clampRadius(nextX,player.position.z);
+        if(!blockedAt(candidate.x,candidate.z))player.position.x=candidate.x;
+        candidate=clampRadius(player.position.x,nextZ);
+        if(!blockedAt(candidate.x,candidate.z))player.position.z=candidate.z;
+        player.rotation.y=Math.atan2(move.x,move.z);
+        player.userData.walkPhase+=delta*9;
       }
-      player.rotation.y = Math.atan2(move.x, move.z);
-      player.userData.walkPhase += delta * 9;
-      player.position.y = 0.60 + Math.abs(Math.sin(player.userData.walkPhase)) * 0.055;
-    } else {
-      player.position.y = THREE.MathUtils.lerp(player.position.y, 0.60, Math.min(1, delta * 8));
+      const ground=surfaceAt(player.position.x,player.position.z);
+      const bob=moving?Math.abs(Math.sin(player.userData.walkPhase))*0.045:0;
+      player.position.y=THREE.MathUtils.lerp(player.position.y,ground-0.105+bob,Math.min(1,delta*12));
     }
     player.userData.halo.rotation.z += delta * 0.45;
+    if(player.userData.floatingStar)player.userData.floatingStar.rotation.y+=delta*0.75;
     const horizontalDistance = Math.cos(cameraState.pitch) * cameraState.distance;
     const desiredCamera = new THREE.Vector3(
       player.position.x - Math.sin(cameraState.yaw) * horizontalDistance,
@@ -1012,6 +1090,10 @@ function mount(host) {
       motion.core.material.opacity = 0.17 + (Math.sin(t * 1.5 + motion.phase) + 1) * 0.08;
       if (motion.aura) motion.aura.intensity = 8 + (Math.sin(t * 1.8 + motion.phase) + 1) * 2.5;
     });
+    if(t-world.minimapLast>0.15){
+      world.minimapLast=t;
+      window.dispatchEvent(new CustomEvent("starry-3d-map",{detail:{x:player.position.x,z:player.position.z,yaw:cameraState.yaw}}));
+    }
     renderer.render(scene, camera);
   };
   renderer.setAnimationLoop(world.renderFrame);
