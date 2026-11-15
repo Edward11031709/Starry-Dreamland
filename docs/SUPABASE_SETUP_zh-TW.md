@@ -1,43 +1,73 @@
-# 星夢樂園｜全球帳號與雲端排行榜設定
+# 星夢樂園｜Supabase 全球帳號與雲端排行榜設定
 
-本文件是下一階段接通全球帳號時使用的設定說明。**目前公開網站仍是本機展示登入**；這份 SQL 不會自行建立 Supabase 專案，也不會讓網站在尚未設定金鑰時假裝已經有全球帳號。
+這份文件說明如何將 GitHub Pages 上的星夢樂園接上 Supabase。網站目前仍處於本機展示登入模式；尚未設定專案及前端整合前，請不要把它當成已啟用的全球帳號。
 
-## 建議架構
+## 1. 建立免費 Supabase 專案
 
-- GitHub Pages：繼續發布遊戲介面，全球玩家使用同一個網址。
-- Supabase Auth：處理電子郵件／密碼登入、註冊及驗證信。
-- Supabase Database：儲存帳號暱稱、遊戲紀錄及全球排行榜。
-- 成人挑戰與星芽探索：資料表使用 category 分開，兩邊分開計分與排名。
+1. 開啟 https://supabase.com/dashboard 並登入。
+2. 若第一次使用，建立一個 Organization。
+3. 選擇 **New project**。
+4. 專案名稱填入 `starry-dreamland`。
+5. Plan 選 **Free**。
+6. Region 建議選 **Northeast Asia (Tokyo)**（若沒有此選項，選 **APAC / Southeast Asia (Singapore)**）。資料庫建立後不能直接改區域；要換區域需建立新專案並搬遷資料。
+7. 設定一組新的、唯一且夠長的 Database Password，妥善保存在自己的密碼管理器。**不要把這個資料庫密碼傳給協作者或貼進 GitHub。**
+8. 按 **Create new project**，等待 Dashboard 顯示專案可用。
 
-Supabase 免費方案目前提供 50,000 月活躍使用者、每個專案 500 MB 資料庫及 5 GB egress；免費專案閒置一週後可能暫停。請以官方價格頁面為準：https://supabase.com/pricing
+Free Plan 目前可建立最多 2 個 active free projects。免費專案在 7 天低活動後可能暫停；暫停後可在 1 年內從 Dashboard 按 **Resume project** 恢復。
 
-## 一次性建立雲端專案
+## 2. 在資料庫建立星夢樂園資料表
 
-1. 前往 https://supabase.com/ 建立帳號並新增一個 Free 專案。
-2. 專案建立後，在 **Project Settings → API** 找到 Project URL 與 publishable/anon key。
-3. 在 **SQL Editor** 執行 Repository 中的 `supabase/schema.sql`。
-4. 在 **Authentication → URL Configuration**，將 Site URL 設為：
-   `https://edward11031709.github.io/Starry-Dreamland/`
-5. 把同一個公開網址加入 Redirect URLs。
-6. 保留電子郵件驗證；設定完成後，網站登入流程再接入 Supabase。
+1. 開啟專案的 **SQL Editor**。
+2. 按 **New query**。
+3. 開啟 Repository 中的 [supabase/schema.sql](../supabase/schema.sql)，複製完整內容。
+4. 貼到 SQL Editor，按 **Run**。
+5. 確認畫面沒有紅色錯誤，再開啟 **Table Editor**，檢查是否出現：
+   - `sd_profiles`
+   - `sd_game_records`
 
-## 安全規則
+這份 SQL 會建立玩家暱稱、個人遊戲紀錄、成人／星芽分區、RLS 權限及排行榜函式。
 
-- 公開網站只可使用 publishable/anon key。它本來就是瀏覽器端使用的公開金鑰，安全性必須依靠 RLS。
-- **絕對不要**把 `service_role`、secret key、資料庫密碼或管理員憑證放進 `config.js`、HTML、GitHub 或聊天訊息。
-- SQL 已啟用 RLS。個人資料及遊玩明細只允許本人讀取；新增紀錄時只能以自己的 user ID 寫入。全球排行榜透過資料庫函式只回傳玩家暱稱與每款遊戲最佳分數，不回傳電子郵件。
-- 目前的瀏覽器遊戲仍由前端計算分數。即使使用登入與 RLS，仍不能完全防止玩家修改瀏覽器程式、偽造自己的分數。若要做正式競技排名，下一階段必須增加伺服器端關卡驗證／計分函式。
+## 3. 設定登入後的返回網址
 
-## 設定完成後要做的網站整合
+到 **Authentication → URL Configuration**：
 
-目前 `config.js` 保留空白設定，沒有啟用雲端模式。等 Supabase 專案建立後，才把 Project URL 與公開 publishable/anon key 寫進設定，並完成以下功能：
+- **Site URL** 設為：
+  `https://edward11031709.github.io/Starry-Dreamland/`
+- **Redirect URLs** 加入同一個完整網址：
+  `https://edward11031709.github.io/Starry-Dreamland/`
 
+這能讓電子郵件驗證與密碼重設連回星夢樂園。Supabase 只會接受允許清單內的 redirect URL。
+
+## 4. 取得網站用的公開連線資訊
+
+在專案上方按 **Connect**，或進入 **Project Settings → API Keys**：
+
+- 複製 **Project URL**。
+- 複製 **Publishable key**（通常以 `sb_publishable_` 開頭）。
+
+這兩項會用來讓公開網頁連線。Publishable key 本來就會出現在瀏覽器程式中；安全性依靠本文件建立的 RLS 權限。**不要複製 Secret key（`sb_secret_`）、舊版 `service_role` key、資料庫密碼或 JWT 私密金鑰。**
+
+先不要把任何金鑰貼進公開留言、截圖或 GitHub Issue。你可以只回報「Project 已建立、SQL 成功」，之後再依照安全步驟設定網站連線。
+
+## 5. 驗證信設定
+
+Email 登入預設已啟用；建議保留 Email confirmation，讓玩家先驗證電子郵件再登入。
+
+Supabase 內建測試郵件服務有寄送限制（目前文件列出每小時 2 封），適合初期測試。要正式開放大量玩家註冊時，應設定自己的 SMTP 郵件服務，並完成 CAPTCHA／Auth rate limits 等防濫用設定。
+
+## 6. 完成網站整合（需在專案建立後進行）
+
+目前 Repository 的 `config.js` 是空白 `local-demo` 模式，網站尚未載入 Supabase SDK。建立專案及執行 SQL 後，才進行以下程式整合：
+
+- 載入 Supabase JavaScript client，接上 Project URL 與 Publishable key。
 - 電子郵件註冊、驗證、登入、登出及重設密碼。
-- 登入後載入雲端暱稱、成人／星芽星塵及個人遊玩紀錄。
-- 每次完成挑戰後同步紀錄。
-- 排行榜改讀取全球最佳成績。
-- 本機展示模式保留為離線／測試備援。
+- 以 Supabase Auth user ID 建立／讀取 `sd_profiles`。
+- 把成人及星芽紀錄分別寫入 `sd_game_records`。
+- 個人紀錄讀取 `sd_my_game_records()`；全球排行榜讀取 `sd_global_best_scores()`。
+- 保留成人／星芽獨立積分，並規劃本機展示資料轉入帳號的方式。
 
-## 兒童資料提醒
+**重要限制：** 目前分數仍由瀏覽器計算，RLS 能限制使用者資料存取，但無法完全阻止玩家自行修改前端程式偽造分數。正式競技排行榜仍需伺服器端驗證遊戲結果。
 
-星芽區不需要收集兒童姓名、生日、住址或學校。建議以家長管理的帳號建立玩家暱稱，排行榜只公開暱稱與分數，不公開 email 或任何聯絡資料。
+## 7. 資料與兒童隱私
+
+星芽區不需要收集兒童真實姓名、生日、住址或學校。建議使用家長管理的帳號及遊戲暱稱；全球排行榜只顯示暱稱與分數，不公開 email 或聯絡方式。
