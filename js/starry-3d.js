@@ -785,6 +785,8 @@ function mount(host) {
   document.addEventListener("visibilitychange", world.visibilityHandler);
 
   host.dataset.status = "ready";
+  const fallback = host.querySelector(".starry-3d-fallback");
+  if (fallback) fallback.hidden = true;
   if (status) status.textContent = "點擊三座星門，進入不同的成人挑戰";
   window.dispatchEvent(new CustomEvent("starry-3d-mounted"));
 }
@@ -794,14 +796,33 @@ function dispose() {
   activeWorld = null;
 }
 
+async function importWithTimeout(url, timeoutMs = 12000) {
+  return Promise.race([
+    import(url),
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("3D 引擎載入逾時：" + url)), timeoutMs);
+    })
+  ]);
+}
+
 async function loadThreeEngine() {
-  try {
-    THREE = await import("https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js");
-    window.Starry3D = { mount, dispose };
-    window.dispatchEvent(new Event("starry-3d-ready"));
-  } catch (error) {
-    window.STARRY_3D_ERROR = error && error.message ? error.message : String(error);
-    window.dispatchEvent(new Event("starry-3d-error"));
+  const sources = [
+    "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+    "https://unpkg.com/three@0.187.0/build/three.module.js"
+  ];
+  let lastError = null;
+  for (const url of sources) {
+    try {
+      THREE = await importWithTimeout(url);
+      window.Starry3D = { mount, dispose };
+      window.dispatchEvent(new Event("starry-3d-ready"));
+      return;
+    } catch (error) {
+      lastError = error;
+      console.warn("Starry Dreamland: 3D engine source failed:", url, error);
+    }
   }
+  window.STARRY_3D_ERROR = lastError && lastError.message ? lastError.message : String(lastError || "未知載入錯誤");
+  window.dispatchEvent(new Event("starry-3d-error"));
 }
 loadThreeEngine();
