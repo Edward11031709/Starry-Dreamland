@@ -47,6 +47,41 @@
 
 /* Starry fantasy park overlay and avatar wardrobe */
 
+.park-social-panel{margin:18px 0 24px;padding:20px;border:1px solid #bda9e377;border-radius:23px;background:linear-gradient(145deg,#171c40ee,#0b142eee);box-shadow:0 18px 48px #0005}
+.park-social-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:16px}
+.park-social-heading small{font-size:9px;letter-spacing:3px;color:#aaa4d0}
+.park-social-heading h2{margin:5px 0;color:#f2dba7;font:600 24px Georgia,"Noto Serif TC",serif}
+.park-social-heading p{margin:0;color:#b9b8d2;font-size:12px}
+.park-online-count{white-space:nowrap;border:1px solid #d6c38c66;border-radius:99px;padding:8px 12px;color:#f4dca8;background:#3b315022;font-size:11px}
+.park-social-layout{display:grid;grid-template-columns:minmax(190px,.78fr) minmax(0,1.6fr);gap:14px}
+.park-online-panel,.park-chat-panel{min-width:0;border:1px solid #bdaadd44;border-radius:16px;background:#0e1733a8;padding:14px}
+.park-online-panel h3{margin:0 0 12px;color:#dcd3f0;font-size:13px}
+#parkPlayers{display:flex;flex-direction:column;gap:8px;max-height:230px;overflow:auto}
+.park-online-person{display:grid;grid-template-columns:25px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;padding:8px 9px;border-radius:11px;background:#ffffff08}
+.park-online-orb{grid-row:1/3;width:25px;height:25px;border:1px solid #e6ca8d88;border-radius:50%;display:grid;place-items:center;color:#f1d18e;background:#a18ad222;font-size:12px}
+.park-online-person b{color:#eee4ca;font-size:12px;font-weight:650}
+.park-online-person small{color:#91c9c0;font-size:9px;margin-top:2px}
+.park-chat-panel{display:flex;flex-direction:column;min-height:250px}
+.park-chat-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:10px;border-bottom:1px solid #bdaadd33}
+.park-chat-top b{color:#e9d8b0;font-size:12px}
+.park-chat-top span{color:#9cb9b8;font-size:10px}
+.park-chat-messages{height:190px;overflow:auto;padding:12px 2px;display:flex;flex-direction:column;gap:9px}
+.chat-placeholder{padding:14px;color:#9298bb;font-size:11px;text-align:center;line-height:1.7}
+.park-chat-message{max-width:min(92%,520px);padding:9px 12px;border:1px solid #c7b4e044;border-radius:13px;background:linear-gradient(145deg,#28254b,#121c39);align-self:flex-start}
+.park-chat-message-top{display:flex;align-items:center;gap:12px}
+.park-chat-message-top b{font-size:10px;color:#f1d18e}
+.park-chat-message-top time{font-size:9px;color:#8189ad}
+.park-chat-message p{margin:5px 0 0;color:#e5e4f2;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.park-chat-form{display:flex;gap:8px;padding-top:10px;border-top:1px solid #bdaadd33}
+.park-chat-form input{min-width:0;flex:1;border:1px solid #9f8bc766;border-radius:99px;padding:10px 14px;background:#090f25;color:#f4efff;font-size:12px;outline:none}
+.park-chat-form input:focus{border-color:#e9d39b}
+.park-chat-form input:disabled{opacity:.45;cursor:not-allowed}
+.park-chat-form button{flex:0 0 auto}
+.park-chat-form button:disabled{opacity:.45;cursor:not-allowed}
+.map-visitor{fill:#69d7e9;stroke:#edfbff;stroke-width:.55;filter:drop-shadow(0 0 1.8px #69d7e9)}
+@media(max-width:760px){.park-social-panel{padding:14px;border-radius:18px}.park-social-layout{grid-template-columns:1fr}.park-online-panel{padding:12px}.park-chat-panel{min-height:230px}.park-chat-messages{height:170px}.park-social-heading h2{font-size:20px}.park-social-heading p{max-width:240px;font-size:10px}.park-online-count{font-size:9px;padding:7px 9px}}
+
+
 .map-expand-button{border:1px solid #ddc48c77;border-radius:99px;background:#282347;color:#f4dca8;font-size:8px;padding:3px 7px;letter-spacing:.5px;pointer-events:auto}
 .map-north{fill:none;stroke:#f3d99e;stroke-width:.75;stroke-linecap:round;stroke-linejoin:round}
 .map-north text{fill:#f3d99e;font-size:3.1px;text-anchor:middle;stroke:none;font-weight:bold}
@@ -154,7 +189,7 @@ const cloudMode=!!(window.STARRY_CONFIG&&window.STARRY_CONFIG.mode==="supabase")
 let sb=window.SD_SUPABASE||null,cloudUser=null,cloudBusy=false;
 let parkChannel=null,parkSocialStarting=false,parkMoveSentAt=0,parkMoveLast=null;
 let parkLocalPosition={x:0,z:33,yaw:0};
-let parkRemoteMap=new Map();
+let parkRemoteMap=new Map(),parkPresencePlayers=[];
 const parkSessionId=(window.crypto&&typeof window.crypto.randomUUID==="function")?window.crypto.randomUUID():("visitor-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2));
 
 function read(){let data;try{data=Object.assign({player:null,players:[],records:[]},JSON.parse(localStorage.getItem(STORE)||"{}"))}catch(e){data={player:null,players:[],records:[]}}data.players.forEach(p=>{const records=data.records.filter(r=>r.uid===p.id);if(typeof p.adultPoints!=="number")p.adultPoints=records.filter(r=>!KIDS_GAME_IDS.includes(r.game)).reduce((s,r)=>s+(Number(r.reward)||0),0);if(typeof p.kidsPoints!=="number")p.kidsPoints=records.filter(r=>KIDS_GAME_IDS.includes(r.game)).reduce((s,r)=>s+(Number(r.reward)||0),0);p.points=p.adultPoints});return data}
@@ -211,7 +246,7 @@ async function loadCloudPlayer(user,nicknameHint=""){
  header();
  home();
 }
-function cloudGuestPreview(){cloudUser=null;const id="guest-preview-"+Date.now();state.players=[{id,name:"訪客旅人",adultPoints:0,kidsPoints:0,points:0,created:Date.now()}];state.player=id;state.records=[];render()}
+function cloudGuestPreview(){stopParkSocial();cloudUser=null;const id="guest-preview-"+Date.now();state.players=[{id,name:"訪客旅人",adultPoints:0,kidsPoints:0,points:0,created:Date.now()}];state.player=id;state.records=[];render()}
 async function cloudLogin(){
  if(cloudBusy)return;cloudBusy=true;
  const values=authFormValues();
@@ -259,7 +294,7 @@ async function bootCloud(){
   if(data.session?.user)await loadCloudPlayer(data.session.user);
   else{cloudUser=null;state.player=null;state.players=[];state.records=[];login()}
   sb.auth.onAuthStateChange((event,session)=>{
-   if(event==="SIGNED_OUT"){cloudUser=null;state.player=null;state.players=[];state.records=[];login()}
+   if(event==="SIGNED_OUT"){stopParkSocial();cloudUser=null;state.player=null;state.players=[];state.records=[];login()}
    if(event==="PASSWORD_RECOVERY")showPasswordRecovery();
   });
  }catch(error){cloudUser=null;state.player=null;state.players=[];state.records=[];login();authMessage("無法讀取登入狀態："+friendlyAuthError(error),true)}
@@ -372,7 +407,8 @@ async function startParkSocial(){
    Object.values(state).flat().forEach(p=>{
     if(p&&p.sessionId&&!seen.has(p.sessionId)){seen.add(p.sessionId);players.push(p)}
    });
-   renderParkOnline(players);renderParkVisitorMarkers(players);
+   parkPresencePlayers=players;parkRemoteMap=new Map(players.filter(p=>p&&p.sessionId&&p.sessionId!==parkSessionId).map(p=>[p.sessionId,p]));
+   renderParkOnline(players);renderParkVisitorMarkers([...parkRemoteMap.values()]);
    window.dispatchEvent(new CustomEvent("starry-3d-players",{detail:{players}}));
   })
   .on("broadcast",{event:"player_move"},({payload})=>{
@@ -447,6 +483,7 @@ function home(){nav("home");header();shell('<section class="hero"><div class="ey
   <circle cx="8.25" cy="5.45" r="1.4" class="map-service"/><text x="8.25" y="3.1" class="map-label">補給</text>
   <circle cx="5.1" cy="6.9" r="1.4" class="map-service"/><text x="5.1" y="10.1" class="map-label">兌換</text>
   <g class="map-north" transform="translate(34 -35)"><path d="M0 5 L0 -5 M0 -5 L-2 -1 M0 -5 L2 -1"/><text x="0" y="-7">N</text></g>
+  <g id="parkMapVisitors"></g>
   <g id="parkMapPlayer" class="map-player" transform="translate(0 33)">
    <circle r="3.1"/><path d="M0 -7 L-2.2 -1.3 L2.2 -1.3 Z"/>
   </g>
@@ -508,7 +545,7 @@ async function equipAvatar(id){
  }
  p.avatarId=id;save();
  window.dispatchEvent(new CustomEvent("starry-3d-avatar-change",{detail:{avatarId:id}}));
- header();wardrobe();
+ refreshParkPresence();header();wardrobe();
 }
 
 function instructions(id){const d={moon:["月相共鳴","月亮會以不同速度與節奏穿越星軌。依照提示區判斷時機，完成 12 至 15 拍的動態節奏挑戰。","☾"],cipher:["星域解碼","破解由 7 種符號組成的 4 位不重複密碼。每次提交都會回報位置正確數與符號正確但位置錯誤數；最多 8 次推理機會。","⌘"],orbit:["軌道接線","旋轉 5 × 5 星際節點，將左側起點接通右側出口。管線方向與隨機路線每局都不同。","⌁"],constellation:["星座校準","45 秒內依序連接 8 顆目標星。星點位置與順序每局都會改變；點錯會扣分。","✧"],maze:["引力迷航","使用方向鍵或畫面按鈕移動光球，收集兩枚星塵碎片後抵達出口。迷宮每次重新生成。","◈"],"shooting-range":["霓虹神射手","在 24 秒內命中六個依序亮起的目標。誤按會扣分；結束後會列出六輪正解與你的反應紀錄。","◎"],"mirror-house":["幻影鏡屋","觀察三輪逐漸變長的光影序列，再依序點擊四種符號。每次結束都會揭曉所有關卡的完整正解。","◇"]}[id];if(!d)return;const kids=KIDS_GAME_IDS.includes(id);nav(kids?"children":"home");shell('<section class="hero"><div class="eyebrow">'+(kids?"LITTLE STARLAND":"ADVANCED STAR CHALLENGE")+'</div><h1>'+d[0]+'</h1><p>'+d[1]+'</p></section><div class="panel" style="max-width:700px;margin:auto;text-align:center"><div style="font-size:65px;color:var(--gold)">'+d[2]+'</div><p style="color:var(--muted);line-height:1.8">'+(kids?"這款遊戲的獎勵會累積到星芽星塵，不會影響成人排行榜。":"挑戰分數會累積到成人星塵。每局題目或節奏都會變化。")+'</p><button class="btn" data-launch="'+id+'">開始挑戰</button> <button class="btn alt" data-page="'+(kids?"children":"home")+'">返回'+(kids?"星芽探索區":"星夢廣場")+'</button></div>')}
@@ -682,8 +719,9 @@ function childMemory(){let faces=["✦","☾","✧"],cards=faces.concat(faces).s
 async function rank(){nav("leaderboard");const labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};let entries=[];if(cloudMode&&cloudUser){if(!sb){say("雲端連線尚未就緒。");return}const {data,error}=await sb.rpc("sd_global_best_scores");if(error){shell('<section class="hero"><h1>星塵排行榜</h1><p>目前無法載入全球排行榜。</p></section><div class="panel">'+esc(friendlyAuthError(error))+'</div>');return}entries=(data||[]).map(r=>({uid:r.user_id,name:r.nickname,game:r.game_id,category:r.category,score:Number(r.best_score)||0,time:Date.parse(r.first_achieved_at)||Date.now()}))}else{state.players.forEach(p=>{[...ADULT_GAME_IDS,...KIDS_GAME_IDS].forEach(g=>{const eligible=state.records.filter(r=>r.uid===p.id&&r.game===g&&r.status!=="abandoned"&&r.status!=="failed");const score=Math.max(0,...eligible.map(r=>r.score));const first=eligible.filter(r=>r.score===score).sort((a,b)=>a.time-b.time)[0];entries.push({uid:p.id,name:p.name,game:g,category:KIDS_GAME_IDS.includes(g)?"kids":"adult",score,time:first?first.time:(p.created||0)})})})}function overall(games){const map=new Map();entries.filter(e=>games.includes(e.game)).forEach(e=>{let r=map.get(e.uid);if(!r){r={uid:e.uid,name:e.name,total:0,best:{},reachedAt:0};map.set(e.uid,r)}r.best[e.game]=e.score;r.total+=e.score;r.reachedAt=Math.max(r.reachedAt,e.time)});return [...map.values()].sort((a,b)=>b.total-a.total||a.reachedAt-b.reachedAt)}function overallTable(rows){return '<table class="table"><thead><tr><th>排名</th><th>旅人</th><th>總分</th></tr></thead><tbody>'+(rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.name)+'</td><td>'+r.total+'</td></tr>').join("")||'<tr><td colspan="3">目前還沒有排行資料</td></tr>')+'</tbody></table>'}function gameCards(games){return '<section class="cards" style="margin-top:15px">'+games.map(g=>{const rr=entries.filter(e=>e.game===g).sort((a,b)=>b.score-a.score||a.time-b.time).slice(0,5);return '<article class="card"><h3>'+labels[g]+'</h3><table class="table"><tbody>'+(rr.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td>'+x.score+'</td></tr>').join("")||'<tr><td colspan="3">尚無紀錄</td></tr>')+'</tbody></table></article>'}).join("")+'</section>'}const adults=overall(ADULT_GAME_IDS),kids=overall(KIDS_GAME_IDS);shell('<section class="hero"><div class="eyebrow">STAR DUST RANKING</div><h1>星塵排行榜</h1><p>'+(cloudMode&&cloudUser?"全球旅人即時排行榜；":cloudMode?"訪客展示模式，登入後可查看全球排行榜；":"目前為本機展示排行榜；")+'成人挑戰與星芽探索分開排行，同分時以較早達成者優先。</p>'+(me()?.isAdmin?'<p class="admin-ranking-note">管理員模式：此帳號成績不會被納入全球排行榜。</p>':'')+'</section><div class="panel"><h3 style="color:var(--gold)">成人挑戰總排行</h3>'+overallTable(adults)+'</div>'+gameCards(ADULT_GAME_IDS)+'<div class="panel" style="margin-top:18px"><h3 style="color:#f5d7ed">星芽探索總排行</h3>'+overallTable(kids)+'</div>'+gameCards(KIDS_GAME_IDS))}
 function history(){nav("history");let rs=state.records.filter(r=>r.uid===me().id).slice().reverse(),labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};shell('<section class="hero"><div class="eyebrow">MY STAR JOURNEY</div><h1>我的遊玩紀錄</h1><p>成人挑戰及星芽探索各自記錄，不會混在一起。</p></section><div class="stats"><div class="stat"><small>成人星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div></div><div class="panel"><table class="table"><thead><tr><th>分區</th><th>遊戲</th><th>分數</th><th>狀態</th><th>星塵</th></tr></thead><tbody>'+(rs.map(r=>'<tr><td>'+(KIDS_GAME_IDS.includes(r.game)?"星芽":"成人")+'</td><td>'+(labels[r.game]||r.game)+'</td><td>'+r.score+'</td><td>'+({completed:"完成",timed_out:"時間到",abandoned:"提前退出",failed:"尚未破解"}[r.status]||r.status)+'</td><td>+'+r.reward+' ✦</td></tr>').join("")||'<tr><td colspan="5">目前還沒有遊玩紀錄。</td></tr>')+'</tbody></table></div>')}
 function render(){if(!me()){login();return}home()}
+document.addEventListener("submit",e=>{if(e.target&&e.target.id==="parkChatForm"){e.preventDefault();sendParkChat()}});
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.mapExpand!==undefined){openParkMap();return}if(b.dataset.mapClose!==undefined){document.getElementById("parkMapModal")?.remove();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
-document.getElementById("logout").onclick=async()=>{stop();if(cloudMode&&sb){const {error}=await sb.auth.signOut();if(error)say("登出時發生問題："+friendlyAuthError(error))}cloudUser=null;state.player=null;state.players=[];state.records=[];save();render()};
+document.getElementById("logout").onclick=async()=>{stop();await stopParkSocial();if(cloudMode&&sb){const {error}=await sb.auth.signOut();if(error)say("登出時發生問題："+friendlyAuthError(error))}cloudUser=null;state.player=null;state.players=[];state.records=[];save();render()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&active)result(0,"abandoned",active.id)});
 window.addEventListener("starry-supabase-ready",bootCloud);
 window.addEventListener("starry-3d-ready",()=>{const host=document.getElementById("starry-3d");if(host&&window.Starry3D)window.Starry3D.mount(host)});
@@ -691,10 +729,32 @@ window.addEventListener("starry-3d-error",()=>{const host=document.getElementByI
 window.addEventListener("starry-3d-portal",event=>{const gameId=event.detail&&event.detail.gameId;if(gameId&&ADULT_GAME_IDS.includes(gameId))start(gameId)});
 window.addEventListener("starry-3d-map",event=>{
  const d=event.detail;if(!d)return;
- const x=Math.max(-41,Math.min(41,Number(d.x)||0)),z=Math.max(-43,Math.min(43,Number(d.z)||0));
+ const x=Math.max(-41,Math.min(41,Number(d.x)||0)),z=Math.max(-43,Math.min(43,Number(d.z)||0)),yaw=Number(d.yaw)||0;
  document.querySelectorAll(".map-player").forEach(marker=>{
-  marker.setAttribute("transform","translate("+x+" "+z+") rotate("+(-Number(d.yaw||0)*180/Math.PI)+")");
+  marker.setAttribute("transform","translate("+x+" "+z+") rotate("+(-yaw*180/Math.PI)+")");
  });
+ parkLocalPosition={x,z,yaw};
+ if(parkChannel&&cloudUser&&!me()?.isAdmin){
+  const now=Date.now();
+  if(now-parkMoveSentAt>500){
+   parkMoveSentAt=now;
+   const payload={...currentParkPresence(),x,z,yaw};
+   parkMoveLast={x,z,yaw};
+   parkChannel.send({type:"broadcast",event:"player_move",payload}).catch(error=>console.warn("Player position broadcast failed:",error));
+  }
+ }
+});
+window.addEventListener("starry-3d-players",event=>{
+ parkPresencePlayers=event.detail&&Array.isArray(event.detail.players)?event.detail.players:[];
+ parkRemoteMap=new Map(parkPresencePlayers.filter(p=>p&&p.sessionId&&p.sessionId!==parkSessionId).map(p=>[p.sessionId,p]));
+ renderParkVisitorMarkers([...parkRemoteMap.values()]);
+});
+window.addEventListener("starry-3d-player-move",event=>{
+ const p=event.detail&&event.detail.player;if(!p||!p.sessionId||p.sessionId===parkSessionId)return;
+ parkRemoteMap.set(p.sessionId,p);renderParkVisitorMarkers([...parkRemoteMap.values()]);
+});
+window.addEventListener("starry-3d-mounted",()=>{
+ if(parkPresencePlayers.length)window.dispatchEvent(new CustomEvent("starry-3d-players",{detail:{players:parkPresencePlayers}}));
 });
 function openParkMap(){
  if(document.getElementById("parkMapModal"))return;
