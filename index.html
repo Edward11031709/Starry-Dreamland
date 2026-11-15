@@ -322,6 +322,21 @@ const AVATAR_OPTIONS={
  accentColor:[{id:"#f1d18e",name:"淡金光"},{id:"#8c75d6",name:"紫晶光"},{id:"#65c5e3",name:"冰藍光"},{id:"#e69cca",name:"櫻霧光"},{id:"#a9d5b1",name:"薄荷光"},{id:"#d8e1f5",name:"星銀光"}]
 };
 const DEFAULT_APPEARANCE={hairStyle:"long",hairColor:"#30263f",skinTone:"#f0d5c1",accentColor:"#f1d18e"};
+const PARK_DISCOVERIES=[
+ {id:"entrance_gate",name:"星夢入口",description:"穿過星環拱門，正式踏入夜遊園。"},
+ {id:"stardream_ticket_booth",name:"星夢票亭",description:"在入口旁確認今晚的園區訊息。"},
+ {id:"astral_plaza",name:"星象中庭",description:"在中央星盤感受浮島的星光脈動。"},
+ {id:"star_dream_castle",name:"星夢城堡",description:"抬頭欣賞彩繪星窗與多層塔樓。"},
+ {id:"starlight_carnival",name:"星光嘉年華",description:"走到旋轉木馬與嘉年華花園。"},
+ {id:"moonlight_teacups",name:"月光茶苑",description:"靠近旋轉的星月茶杯。"},
+ {id:"galaxy_drop_tower",name:"星際自由落體",description:"走到高聳的銀河升降塔前。"},
+ {id:"galaxy_ferris_wheel",name:"星河摩天輪",description:"找到遠處的星河觀景座艙。"},
+ {id:"stargazer_observatory",name:"星辰觀測站",description:"抵達遠端浮島上的天文圓頂。"},
+ {id:"cosmic_coaster",name:"星際雲霄飛車",description:"找到蜿蜒的星際軌道與列車。"},
+ {id:"neon_shooting_gallery",name:"霓虹神射手",description:"走到霓虹靶場的大廳門前。"},
+ {id:"phantom_mirror_house",name:"幻影鏡屋",description:"抵達鏡面建築外的入口。"}
+];
+let parkDiscoveryPending=new Set();
 let atelierPreviewOutfit="wanderer";
 let state=read(),clock=null,frame=null,active=null;
 const cloudMode=!!(window.STARRY_CONFIG&&window.STARRY_CONFIG.mode==="supabase");
@@ -333,7 +348,7 @@ const parkSessionId=(window.crypto&&typeof window.crypto.randomUUID==="function"
 
 function read(){let data;try{data=Object.assign({player:null,players:[],records:[]},JSON.parse(localStorage.getItem(STORE)||"{}"))}catch(e){data={player:null,players:[],records:[]}}data.players.forEach(p=>{const records=data.records.filter(r=>r.uid===p.id);if(typeof p.adultPoints!=="number")p.adultPoints=records.filter(r=>!KIDS_GAME_IDS.includes(r.game)).reduce((s,r)=>s+(Number(r.reward)||0),0);if(typeof p.kidsPoints!=="number")p.kidsPoints=records.filter(r=>KIDS_GAME_IDS.includes(r.game)).reduce((s,r)=>s+(Number(r.reward)||0),0);p.points=p.adultPoints});return data}
 function save(){state.players.forEach(p=>p.points=Number(p.adultPoints)||0);if(!cloudMode)localStorage.setItem(STORE,JSON.stringify(state))}
-function me(){const p=state.players.find(p=>p.id===state.player);if(p){p.avatarType=p.avatarType||"wanderer";p.appearance=Object.assign({},DEFAULT_APPEARANCE,p.appearance||{})}return p}
+function me(){const p=state.players.find(p=>p.id===state.player);if(p){p.avatarType=p.avatarType||"wanderer";p.appearance=Object.assign({},DEFAULT_APPEARANCE,p.appearance||{});p.parkDiscoveries=Array.isArray(p.parkDiscoveries)?p.parkDiscoveries:[]}return p}
 function total(){return me()?Number(me().adultPoints)||0:0}
 function kidsTotal(){return me()?Number(me().kidsPoints)||0:0}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -359,14 +374,16 @@ async function loadCloudPlayer(user,nicknameHint=""){
   if(insertError)throw insertError;
   actualProfile=inserted;
  }
- const [{data:rows,error:recordsError},{data:avatarRows,error:avatarError},{data:isAdmin,error:adminError}]=await Promise.all([
+ const [{data:rows,error:recordsError},{data:avatarRows,error:avatarError},{data:isAdmin,error:adminError},{data:discoveryRows,error:discoveryError}]=await Promise.all([
   sb.rpc("sd_my_game_records"),
   sb.rpc("sd_avatar_state"),
-  sb.rpc("sd_is_admin")
+  sb.rpc("sd_is_admin"),
+  sb.rpc("sd_my_park_discoveries")
  ]);
  if(recordsError)throw recordsError;
  if(avatarError)throw avatarError;
  if(adminError)throw adminError;
+ if(discoveryError)throw discoveryError;
  const records=(rows||[]).map(r=>({id:r.record_id,uid:user.id,name:actualProfile.nickname,game:r.game_id,category:r.category,score:Number(r.score)||0,status:r.status,reward:Number(r.reward)||0,time:Date.parse(r.created_at)||Date.now()}));
  const adultPoints=records.filter(r=>r.category==="adult").reduce((sum,r)=>sum+r.reward,0);
  const kidsPoints=records.filter(r=>r.category==="kids").reduce((sum,r)=>sum+r.reward,0);
@@ -380,6 +397,7 @@ async function loadCloudPlayer(user,nicknameHint=""){
   appearance:Object.assign({},DEFAULT_APPEARANCE,actualProfile.appearance||{}),
   ownedAvatarIds:actualProfile.owned_avatar_ids||avatarState?.owned_avatar_ids||["wanderer"],
   avatarPoints:Number(avatarState?.points_balance)||0,
+  parkDiscoveries:(discoveryRows||[]).map(row=>row.discovery_id),
   isAdmin:isAdmin===true
  }];
  state.player=user.id;
