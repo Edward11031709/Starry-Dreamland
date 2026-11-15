@@ -1,25 +1,37 @@
 # Starry Dreamland｜星夢樂園
 
-**A browser-based, third-person fantasy theme park with mini-games and cloud profiles.**
+**A browser-based, first-person fantasy theme park with interactive rides, mini-games and cloud profiles.**
 
 Live website: https://edward11031709.github.io/Starry-Dreamland/
 
 ## Current experience
 
-The homepage contains an explorable Three.js night park, viewed from behind the player at the entrance. Players can walk with WASD / arrow keys, run with Shift, rotate the camera by dragging, and zoom with the mouse wheel.
+The homepage contains an explorable Three.js night park, opening at eye level from the player's own viewpoint. Players can walk with WASD / arrow keys, run with Shift, rotate their view by dragging, and zoom with the mouse wheel. A camera toggle switches to third-person so players can admire their avatar.
 
 The park is built from procedural geometry and original materials, with the supplied concept board guiding its deep-indigo night sky, violet crystal accents, silver architecture, warm gold illumination and ornate fantasy silhouettes. It includes a multi-spire castle, observatory, themed ride districts, lantern-lit paths, floating gardens, a starfield and a distant ringed planet. The center plaza uses a low-profile astral compass inlay; the floating island underside now tapers down below the walkable deck instead of protruding through the surface.
 
 - An interactive 2D guide map sits at the upper-left of the park view. It shows the entrance, castle, rides, games, service points, the player's position and nearby online visitors; the map can be expanded for a full view.
 - The entrance is framed by a curved celestial arch. The castle has more detailed towers, illuminated windows, portico columns and orbital star ornaments; garden trees use layered crystal-evergreen forms.
 - Attraction signs are attached to their matching models rather than scattered overhead.
-- The carousel has visible horses and a ride interaction; click it or press E nearby to board or leave.
+- Five rides can be boarded and exited: the Starlight Carousel, Moonlight Teacups, Galaxy Ferris Wheel, Galaxy Drop Tower and Cosmic Coaster. Approach a ride and press E (or the mobile Interact button), or click the ride when close enough. While seated, the player follows the moving seat, gondola, platform or coaster cart; interact again to dismount at a nearby safe spot.
 - The ticket booth is a service point for park information, not a mini-game entrance.
 - Shooting and mirror-memory challenges have their own dedicated building façades.
 - Movement uses walk-surface height metadata for paths and plazas and approximate circular blockers for attractions, the castle, the observatory and trees.
 - If WebGL or the CDN is unavailable, the HTML game cards remain available.
 
 The scene is still a procedural 3D prototype, not a finished photorealistic asset pack. Collision is currently an intentionally lightweight approximation rather than a full physics engine. Visual and gameplay review in a real browser/WebGL session is still needed.
+
+## Interactive attraction rides
+
+All five park rides expose an actual boarding point and a safe dismount point:
+
+- **星光旋轉木馬** — board one of the moving carousel seats.
+- **星月茶杯** — ride one of the rotating teacups as the platform turns.
+- **星河摩天輪** — ride a gondola that travels around the wheel.
+- **星際自由落體** — ride the lift platform as it rises and falls.
+- **星際雲霄飛車** — board the cart as it travels back and forth along the coaster curve.
+
+On desktop, walk close and press E, or click a ride when nearby. On mobile, approach and use the contextual Interact button. The interaction label changes between approaching, boarding and dismounting. Dismounting searches for a nearby walkable position outside the ride's collision boundary.
 
 ## Mobile and first-person controls
 
