@@ -476,9 +476,9 @@ function createStarfield(scene, count = 620) {
     new THREE.Color(0xe5b9ee)
   ];
   for (let i = 0; i < count; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 100;
-    positions[i * 3 + 1] = 6 + Math.random() * 42;
-    positions[i * 3 + 2] = -48 + Math.random() * 75;
+    positions[i * 3] = (Math.random() - 0.5) * 260;
+    positions[i * 3 + 1] = 8 + Math.random() * 82;
+    positions[i * 3 + 2] = -150 + Math.random() * 250;
     const c = palette[Math.floor(Math.random() * palette.length)];
     colors[i * 3] = c.r;
     colors[i * 3 + 1] = c.g;
@@ -500,6 +500,7 @@ function disposeWorld(world) {
   if (!world) return;
   if (world.resizeObserver) world.resizeObserver.disconnect();
   if (world.canvas) {
+    world.canvas.removeEventListener("wheel", world.onWheel);
     world.canvas.removeEventListener("pointerdown", world.onPointerDown);
     world.canvas.removeEventListener("pointermove", world.onPointerMove);
     world.canvas.removeEventListener("pointerup", world.onPointerUp);
@@ -578,11 +579,11 @@ function mount(host) {
   const height = Math.max(1, host.clientHeight);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PALETTE.night);
-  scene.fog = new THREE.FogExp2(PALETTE.night, 0.011);
+  scene.fog = new THREE.FogExp2(PALETTE.night, 0.0038);
 
   const isSmall = width < 650;
-  const camera = new THREE.PerspectiveCamera(isSmall ? 48 : 52,width/height,0.1,150);
-  const cameraState = { yaw: 0, pitch: 0.58, distance: isSmall ? 13.5 : 12.5 };
+  const camera = new THREE.PerspectiveCamera(isSmall ? 50 : 54,width/height,0.1,320);
+  const cameraState = { yaw: 0, pitch: 0.56, distance: isSmall ? 15 : 14.2 };
   camera.position.set(0, 8.5, 11.5);
   camera.lookAt(0, 1.2, 8.6);
 
@@ -594,7 +595,7 @@ function mount(host) {
   renderer.shadowMap.enabled = false;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = "starry-3d-canvas";
-  renderer.domElement.setAttribute("aria-label", "可點擊三座星門的立體星夢廣場");
+  renderer.domElement.setAttribute("aria-label", "可自由探索星夢夜遊園、漫遊各主題園區並點擊挑戰星門");
   host.appendChild(renderer.domElement);
 
   const hemisphere = new THREE.HemisphereLight(0xdbe3ff, 0x28223f, 2.05);
@@ -623,10 +624,10 @@ function mount(host) {
   blueLight.position.set(-7, 4, 5);
   scene.add(blueLight);
 
-  const starfield = createStarfield(scene, isSmall ? 180 : 320);
+  const starfield = createStarfield(scene, isSmall ? 420 : 760);
   const environment = buildEnvironment(scene);
   const player = buildPlayer(scene);
-  player.position.set(0, 0.78, 8.6);
+  player.position.set(0, 0.60, 29.0);
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
@@ -660,6 +661,12 @@ function mount(host) {
   window.addEventListener("keydown", world.onKeyDown, { passive: false });
   window.addEventListener("keyup", world.onKeyUp);
   window.addEventListener("blur", world.onBlur);
+
+  world.onWheel = event => {
+    event.preventDefault();
+    cameraState.distance = THREE.MathUtils.clamp(cameraState.distance + Math.sign(event.deltaY) * 1.1, 8.5, 22);
+  };
+  renderer.domElement.addEventListener("wheel", world.onWheel, { passive: false });
 
   world.onPointerDown = event => {
     world.pointerDrag.down = true;
@@ -740,18 +747,19 @@ function mount(host) {
     const moving = move.lengthSq() > 0;
     if (moving) {
       move.normalize();
-      const speed = world.keys.has("shift") ? 7.2 : 4.8;
+      const speed = world.keys.has("shift") ? 9.0 : 6.2;
       player.position.addScaledVector(move, speed * delta);
       const radius = Math.hypot(player.position.x, player.position.z);
-      if (radius > 10.15) {
-        player.position.x *= 10.15 / radius;
-        player.position.z *= 10.15 / radius;
+      const limit = environment.playableRadius || 41.2;
+      if (radius > limit) {
+        player.position.x *= limit / radius;
+        player.position.z *= limit / radius;
       }
       player.rotation.y = Math.atan2(move.x, move.z);
       player.userData.walkPhase += delta * 9;
-      player.position.y = 0.78 + Math.abs(Math.sin(player.userData.walkPhase)) * 0.055;
+      player.position.y = 0.60 + Math.abs(Math.sin(player.userData.walkPhase)) * 0.055;
     } else {
-      player.position.y = THREE.MathUtils.lerp(player.position.y, 0.78, Math.min(1, delta * 8));
+      player.position.y = THREE.MathUtils.lerp(player.position.y, 0.60, Math.min(1, delta * 8));
     }
     player.userData.halo.rotation.z += delta * 0.45;
     const horizontalDistance = Math.cos(cameraState.pitch) * cameraState.distance;
@@ -783,7 +791,7 @@ function mount(host) {
     const h = Math.max(1, Math.floor(entry.contentRect.height));
     const small = w < 650;
     camera.aspect = w / h;
-    cameraState.distance = small ? 13.5 : 12.5;
+    cameraState.distance = small ? 15 : 14.2;
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.0 : 1.25));
     renderer.setSize(w, h, false);
