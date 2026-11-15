@@ -4,6 +4,16 @@
 
 Live website: https://edward11031709.github.io/Starry-Dreamland/
 
+## Current version: Three.js 3D central plaza — Phase 1
+
+The homepage now includes a real-time 3D central plaza with a fixed angled overhead camera. It features a floating main island, castle, observatory, distant planet, crystals, cloud layer, and three clickable adult-challenge portals.
+
+- Engine: Three.js r187, loaded from a pinned CDN release; no local toolchain is required.
+- Scene: the first spatial prototype uses procedural geometry. **It does not yet contain the final licensed GLB/glTF art models.**
+- If WebGL or the CDN is unavailable, the HTML game cards remain available.
+- A guest preview lets visitors inspect the 3D plaza without signing in; guest scores are not stored.
+- Free movement and camera rotation remain later-stage features.
+
 ## Game zones
 
 ### Adult challenge zone
@@ -21,23 +31,11 @@ Adult Stardust and kids' Stardust are tracked separately. The two zones also hav
 
 ## Global accounts and cloud data
 
-The Supabase project is provisioned and the database schema is installed. The website now includes:
-- Supabase Authentication for email sign-up, sign-in, sign-out, and password reset.
-- Cloud player profiles and game records.
-- Separate adult and kids scores and leaderboards.
-- Row Level Security (RLS) policies for account-owned data.
-- A private schema for privileged internal aggregate functions.
+The Supabase project is provisioned and the database schema is installed. The website includes Supabase email sign-up/sign-in, sign-out, password reset, cloud profiles, game records, and global leaderboards. The project owner still needs to configure Supabase Authentication → URL Configuration with the live site URL before the first verified signup.
 
-Before the first real sign-up, configure Supabase **Authentication → URL Configuration**:
+Only a public Publishable key is used in the browser. Never publish a secret key, service-role key, database password, or administrator credential. Guest-preview scores and legacy local demo scores are not uploaded to cloud accounts.
 
-- Site URL: `https://edward11031709.github.io/Starry-Dreamland/`
-- Add the same full URL to Redirect URLs.
-
-The public browser app uses a Supabase publishable key. Never publish a `sb_secret_`, `service_role`, database password, or other private credential.
-
-Legacy local-demo data remains in the original browser storage and is not automatically imported into cloud accounts. Current scores are calculated in the browser; production competitive rankings will need server-side score validation.
-
-See [Supabase setup and operations (Traditional Chinese)](docs/SUPABASE_SETUP_zh-TW.md) and [the database schema](supabase/schema.sql).
+Current game scores are calculated in the browser; production competitive rankings will need server-side score validation.
 
 ## Randomized rounds
 
@@ -45,12 +43,8 @@ Every play creates a new rhythm, cipher, pipe layout, star position, or maze lay
 
 ## GitHub Pages deployment
 
-The repository contains `.github/workflows/pages.yml`. Pushing to `main` triggers deployment.
+The repository contains a GitHub Actions Pages workflow. Pushing to the main branch triggers deployment. Three.js is loaded from a pinned CDN version; if the CDN is unavailable, the game cards still provide access to the games.
 
-## Visual direction
+## 3D roadmap
 
-- Cinematic, realistic fantasy 3D in deep blue, violet, silver-white, and champagne gold.
-- Start with a fixed angled overhead view of the central plaza.
-- Add the castle, observatory, floating islands, and 3D games gradually.
-- Free movement and camera rotation remain later-stage features.
-- Use only GLB/glTF assets with clear licenses.
+The next stage is to replace the procedural spatial prototype with individually verified, licensed GLB/glTF assets for the castle, observatory, floating islands, and environment. The game stages will then be upgraded gradually. Free movement and camera rotation remain the final stage.
