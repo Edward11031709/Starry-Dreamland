@@ -21,6 +21,19 @@ The park is built from procedural geometry and original materials, with the supp
 
 The scene is still a procedural 3D prototype, not a finished photorealistic asset pack. Collision is currently an intentionally lightweight approximation rather than a full physics engine. Visual and gameplay review in a real browser/WebGL session is still needed.
 
+## Starry Dreamland exploration journal
+
+The park includes a 12-location exploration journal. Discoveries are triggered by walking into real landmark areas; the player must enter the area on foot (riding through a zone does not count), and overlapping zones select the nearest landmark as the player moves between them.
+
+- Entrance Gate and Ticket Booth
+- Astral Plaza and Star Dream Castle
+- Starlight Carnival and Moonlight Teacups
+- Galaxy Drop Tower and Galaxy Ferris Wheel
+- Stargazer Observatory and Cosmic Coaster
+- Neon Shooting Gallery and Phantom Mirror House
+
+The journal shows locked/discovered entries and progress milestones at 4, 8 and 12 locations. It does not award leaderboard points or change ride/game scores. Signed-in progress is stored per account in the non-exposed `private.sd_park_discoveries` table. The browser can only call authenticated RPC wrappers; the private functions validate a fixed discovery catalog, are not executable by `anon`, and direct table grants are revoked. Unauthenticated demo preview keeps the journal in the current session only; signed-in accounts persist progress across sessions and devices.
+
 ## Interactive attraction rides
 
 All five park rides expose an actual boarding point and a safe dismount point:

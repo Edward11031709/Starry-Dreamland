@@ -955,7 +955,21 @@ function buildEnvironment(scene) {
     }),[Math.cos(angle)*radius,-6.1-(i%3)*0.65,Math.sin(angle)*radius],[4.4+(i%3),0.72,2.5],false,false);
     cloud.userData.phase=angle;
   }
-  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,rideStations,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
+    const discoveryZones=[
+    {id:"entrance_gate",name:"星夢入口",description:"穿過星環拱門，正式踏入夜遊園。",x:0,z:45,radius:6.5},
+    {id:"stardream_ticket_booth",name:"星夢票亭",description:"在入口旁確認今晚的園區訊息。",x:-4.8,z:30.5,radius:4.2},
+    {id:"astral_plaza",name:"星象中庭",description:"在中央星盤感受浮島的星光脈動。",x:0,z:0,radius:9.0},
+    {id:"star_dream_castle",name:"星夢城堡",description:"抬頭欣賞彩繪星窗與多層塔樓。",x:0,z:-18.2,radius:7.2},
+    {id:"starlight_carnival",name:"星光嘉年華",description:"走到旋轉木馬與嘉年華花園。",x:-21.5,z:0.7,radius:4.8},
+    {id:"moonlight_teacups",name:"月光茶苑",description:"靠近旋轉的星月茶杯。",x:-13,z:-11.5,radius:4.5},
+    {id:"galaxy_drop_tower",name:"星際自由落體",description:"走到高聳的銀河升降塔前。",x:13,z:-10,radius:4.0},
+    {id:"galaxy_ferris_wheel",name:"星河摩天輪",description:"找到遠處的星河觀景座艙。",x:25,z:-17,radius:4.7},
+    {id:"stargazer_observatory",name:"星辰觀測站",description:"抵達遠端浮島上的天文圓頂。",x:-30,z:-16.5,radius:3.8},
+    {id:"cosmic_coaster",name:"星際雲霄飛車",description:"找到蜿蜒的星際軌道與列車。",x:-24.5,z:-19,radius:5.6},
+    {id:"neon_shooting_gallery",name:"霓虹神射手",description:"走到霓虹靶場的大廳門前。",x:18,z:9,radius:5.2},
+    {id:"phantom_mirror_house",name:"幻影鏡屋",description:"抵達鏡面建築外的入口。",x:-19,z:-8,radius:4.9}
+  ];
+  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,rideStations,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,discoveryZones,playableRadius:41.2};
 }
 
 function createParkMotes(scene,count=56){
@@ -1286,11 +1300,14 @@ function mount(host) {
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
+  let savedDiscoveryIds=[];
+  try{savedDiscoveryIds=JSON.parse(host.dataset.parkDiscoveries||"[]")}catch(error){}
   const world = {
     host, scene, renderer, camera, starfield, parkMotes, environment,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
     cameraState, cameraMode: host.dataset.cameraMode || "first", keys: new Set(),
     touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, mountedRideData:null, minimapLast: 0, nearbyHintLast:0,
+    discoveredZones:new Set(Array.isArray(savedDiscoveryIds)?savedDiscoveryIds:[]),activeDiscoveryZone:null,
     localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
     running: true, frame: 0, lastTime: 0
@@ -1625,6 +1642,25 @@ function mount(host) {
       const ground=surfaceAt(player.position.x,player.position.z);
       const bob=moving?Math.abs(Math.sin(player.userData.walkPhase))*0.045:0;
       player.position.y=THREE.MathUtils.lerp(player.position.y,ground-0.025+bob,Math.min(1,delta*12));
+    }
+    if(world.mountedRide){
+      world.activeDiscoveryZone=null;
+    }else{
+      const nearestZone=environment.discoveryZones
+        .map(zone=>({zone,distance:Math.hypot(player.position.x-zone.x,player.position.z-zone.z)}))
+        .filter(entry=>entry.distance<=entry.zone.radius)
+        .sort((a,b)=>a.distance-b.distance)[0]||null;
+      const activeZoneId=nearestZone?.zone.id||null;
+      if(activeZoneId!==world.activeDiscoveryZone){
+        world.activeDiscoveryZone=activeZoneId;
+        if(nearestZone&&!world.discoveredZones.has(activeZoneId)){
+          const zone=nearestZone.zone;
+          world.discoveredZones.add(zone.id);
+          window.dispatchEvent(new CustomEvent("starry-3d-discovery",{detail:{
+            id:zone.id,name:zone.name,description:zone.description,x:zone.x,z:zone.z
+          }}));
+        }
+      }
     }
     player.userData.halo.rotation.z += delta * 0.45;
     if(player.userData.floatingStar)player.userData.floatingStar.rotation.y+=delta*0.75;
