@@ -751,7 +751,8 @@ function bindParkTouchControls(){
 }
 function renderParkJournal(){
  const p=me();if(!p)return;
- const discovered=new Set(Array.isArray(p.parkDiscoveries)?p.parkDiscoveries:[]);
+ const validIds=Array.isArray(p.parkDiscoveries)?p.parkDiscoveries.filter(id=>PARK_DISCOVERIES.some(item=>item.id===id)):[];
+ const discovered=new Set(validIds);
  const total=PARK_DISCOVERIES.length,count=discovered.size;
  const countEl=document.getElementById("parkDiscoveryCount");
  const progress=document.getElementById("parkDiscoveryProgress");
@@ -787,11 +788,10 @@ async function recordParkDiscovery(detail){
    if(!result||result.discovery_id!==item.id)throw new Error("探索紀錄未能確認");
    p.parkDiscoveries=[...new Set([...p.parkDiscoveries,item.id])];
    renderParkJournal();
-   if(result.newly_discovered)say("✦ 新地點發現："+item.name);
-   const total=Number(result.total_discovered)||p.parkDiscoveries.length;
-   if(result.newly_discovered&&[4,8,12].includes(total)){
-    const title=total===4?"初識星夢":total===8?"星境漫遊者":"星光收藏家";
-    say("探索里程碑達成："+title+"！");
+   if(result.newly_discovered){
+    const total=Number(result.total_discovered)||p.parkDiscoveries.length;
+    const title=total===12?"星光收藏家":total===8?"星境漫遊者":total===4?"初識星夢":"";
+    say("✦ 新地點發現："+item.name+(title?" · 里程碑："+title:""));
    }
   }else{
    p.parkDiscoveries=[...new Set([...p.parkDiscoveries,item.id])];
