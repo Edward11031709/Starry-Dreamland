@@ -154,7 +154,7 @@ function buildCastle(scene,materials){
  const windowMat=new THREE.MeshStandardMaterial({color:0xffe3ad,emissive:0xffbd68,emissiveIntensity:1.55,roughness:0.22,metalness:0.08});
  [-1.95,-0.67,0.67,1.95].forEach(x=>{makeWindow(castle,x,2.62,1.9,0.34,0.82,windowMat);makeWindow(castle,x,1.52,1.9,0.27,0.48,windowMat)});
  addMesh(castle,new THREE.BoxGeometry(1.15,1.68,0.14),materials.darkStone,[0,1.48,1.91]);
- const doorArch=addMesh(castle,new THREE.TorusGeometry(0.59,0.095,10,40),materials.gold,[0,2.21,2.02]);doorArch.rotation.x=Math.PI/2;
+ const doorArch=addMesh(castle,new THREE.TorusGeometry(0.59,0.095,10,40),materials.gold,[0,2.21,2.02]);
  [-0.78,0.78].forEach(x=>{addMesh(castle,new THREE.CylinderGeometry(0.12,0.16,1.9,14),materials.trim,[x,1.42,2]);addMesh(castle,new THREE.CylinderGeometry(0.22,0.22,0.14,14),materials.gold,[x,2.42,2])});
  for(let i=0;i<4;i++){const depth=0.48+i*0.35;addMesh(castle,new THREE.BoxGeometry(2.6+i*0.26,0.16,0.36),i%2?materials.trim:materials.darkStone,[0,0.78-i*0.075,2.15+depth])}
  const crest=addMesh(castle,new THREE.TorusGeometry(0.48,0.055,8,40),materials.gold,[0,5.42,0.92]);crest.rotation.x=Math.PI/2;
