@@ -995,12 +995,12 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   addMesh(player,new THREE.SphereGeometry(0.045,12,10),skin,[0,1.41,0.238],[0.8,0.62,0.7]);
   addMesh(player,new THREE.TorusGeometry(0.285,0.045,8,36),trim,[0,1.68,0]).rotation.x=Math.PI/2;
 
-  // Outfit identity and traveler archetype both change the silhouette.
-  if(avatarId==="crystal-witch"||avatarType==="mage"){
+  // Traveler archetype controls the silhouette; outfits remain independently selectable.
+  if(avatarType==="mage"||(avatarType==="wanderer"&&avatarId==="crystal-witch")){
     const brim=addMesh(player,new THREE.CylinderGeometry(0.43,0.43,0.07,24),mantle,[0,1.78,0]);
     addMesh(player,new THREE.ConeGeometry(0.34,0.68,16),mantle,[0,2.12,0]);
     addMesh(player,new THREE.TorusGeometry(0.25,0.035,8,28),trim,[0,1.93,0]);
-  }else if(avatarId==="astral-knight"||avatarId==="celestial-guardian"||avatarType==="knight"){
+  }else if(avatarType==="guardian"||(avatarType==="wanderer"&&avatarId==="celestial-guardian")){\n    [-1,1].forEach(side=>{\n      const wing=new THREE.Group();wing.position.set(side*0.27,1.1,-0.13);wing.rotation.z=side*-0.2;player.add(wing);\n      for(let feather=0;feather<3;feather++){\n        const plume=addMesh(wing,new THREE.ConeGeometry(0.14,0.78-feather*0.12,8),feather%2?trim:metal,[side*feather*0.13,0.22-feather*0.12,-0.03],[1,1,0.56]);\n        plume.rotation.z=side*0.68;\n      }\n    });\n    addMesh(player,new THREE.TorusGeometry(0.52,0.035,8,48),trim,[0,2.13,0]);\n  }else if(avatarType==="knight"||(avatarType==="wanderer"&&avatarId==="astral-knight")){
     addMesh(player,new THREE.CylinderGeometry(0.31,0.35,0.12,16),metal,[0,1.74,0]);
     addMesh(player,new THREE.ConeGeometry(0.18,0.48,8),trim,[0,1.99,0]);
     [-1,1].forEach(side=>{
@@ -1020,16 +1020,21 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
       const drape=addMesh(player,new THREE.ConeGeometry(0.065,0.74,8),mantle,[side*0.29,1.14,-0.1]);
       drape.rotation.z=side*0.22;
     });
-  }else if(avatarType==="guardian"||avatarId==="celestial-guardian"){
+  }else if(avatarType==="priest"){
+    addMesh(player,new THREE.TorusGeometry(0.36,0.045,8,48),trim,[0,1.9,0.02]);
+    const crescent=addMesh(player,new THREE.TorusGeometry(0.24,0.052,8,36,Math.PI*1.3),metal,[0,2.15,0.05]);
+    crescent.rotation.z=Math.PI*0.62;
+    addMesh(player,new THREE.OctahedronGeometry(0.14,1),trim,[0,2.4,0.05],[0.72,1.25,0.72]);
     [-1,1].forEach(side=>{
-      const wing=new THREE.Group();wing.position.set(side*0.27,1.1,-0.13);wing.rotation.z=side*-0.2;player.add(wing);
-      for(let feather=0;feather<3;feather++){
-        const plume=addMesh(wing,new THREE.ConeGeometry(0.14,0.78-feather*0.12,8),feather%2?trim:metal,
-          [side*feather*0.13,0.22-feather*0.12,-0.03],[1,1,0.56]);
-        plume.rotation.z=side*0.68;
-      }
+      const drape=addMesh(player,new THREE.ConeGeometry(0.065,0.74,8),mantle,[side*0.29,1.14,-0.1]);
+      drape.rotation.z=side*0.22;
     });
-    addMesh(player,new THREE.TorusGeometry(0.52,0.035,8,48),trim,[0,2.13,0]);
+  }else if(avatarType==="wanderer"&&avatarId==="moon-priestess"){
+    addMesh(player,new THREE.TorusGeometry(0.36,0.045,8,48),trim,[0,1.9,0.02]);
+    const crescent=addMesh(player,new THREE.TorusGeometry(0.24,0.052,8,36,Math.PI*1.3),metal,[0,2.15,0.05]);
+    crescent.rotation.z=Math.PI*0.62;
+    addMesh(player,new THREE.OctahedronGeometry(0.14,1),trim,[0,2.4,0.05],[0.72,1.25,0.72]);
+    [-1,1].forEach(side=>{const drape=addMesh(player,new THREE.ConeGeometry(0.065,0.74,8),mantle,[side*0.29,1.14,-0.1]);drape.rotation.z=side*0.22;});
   }else{
     addMesh(player,new THREE.CylinderGeometry(0.36,0.28,0.08,24),mantle,[0,1.76,0]);
     addMesh(player,new THREE.ConeGeometry(0.25,0.42,12),mantle,[0,1.98,0]);
