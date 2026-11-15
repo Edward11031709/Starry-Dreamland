@@ -19,25 +19,33 @@ Live website: https://edward11031709.github.io/Starry-Dreamland/
 
 Adult Stardust and kids' Stardust are tracked separately. The two zones also have separate leaderboards. The Star Arena is not open yet.
 
+## Global accounts and cloud data
+
+The Supabase project is provisioned and the database schema is installed. The website now includes:
+- Supabase Authentication for email sign-up, sign-in, sign-out, and password reset.
+- Cloud player profiles and game records.
+- Separate adult and kids scores and leaderboards.
+- Row Level Security (RLS) policies for account-owned data.
+- A private schema for privileged internal aggregate functions.
+
+Before the first real sign-up, configure Supabase **Authentication → URL Configuration**:
+
+- Site URL: `https://edward11031709.github.io/Starry-Dreamland/`
+- Add the same full URL to Redirect URLs.
+
+The public browser app uses a Supabase publishable key. Never publish a `sb_secret_`, `service_role`, database password, or other private credential.
+
+Legacy local-demo data remains in the original browser storage and is not automatically imported into cloud accounts. Current scores are calculated in the browser; production competitive rankings will need server-side score validation.
+
+See [Supabase setup and operations (Traditional Chinese)](docs/SUPABASE_SETUP_zh-TW.md) and [the database schema](supabase/schema.sql).
+
 ## Randomized rounds
 
 Every play creates a new rhythm, cipher, pipe layout, star position, or maze layout rather than reusing a fixed level.
 
-## Current data mode and global accounts
-
-The public site still uses browser `localStorage` for demo nicknames, scores, and history. Data stays in the current browser and is not synchronized across devices. Global sign-up/sign-in is **not enabled yet**.
-
-The initial Supabase schema and setup notes are prepared:
-- [Supabase global-account setup (Traditional Chinese)](docs/SUPABASE_SETUP_zh-TW.md)
-- [Supabase schema and RLS SQL](supabase/schema.sql)
-
-To enable global accounts, a Supabase project must be created, the SQL must be run, and the project URL plus public publishable/anon key must be connected to the site. Never publish a `service_role` key or any private secret.
-
-GitHub Pages hosts the static site; Supabase will provide authentication, cross-device data, and shared leaderboards. Fair competitive rankings will need additional server-side score validation.
-
 ## GitHub Pages deployment
 
-The repository contains `.github/workflows/pages.yml`. Pushing to `main` automatically triggers deployment.
+The repository contains `.github/workflows/pages.yml`. Pushing to `main` triggers deployment.
 
 ## Visual direction
 
