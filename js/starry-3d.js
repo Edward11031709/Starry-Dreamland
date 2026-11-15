@@ -460,13 +460,13 @@ function buildCarousel(scene,materials,x,z){
   const rideSeat=new THREE.Group();rideSeat.position.set(1.48,1.34,0);rideSeat.rotation.y=-Math.PI/2;ride.add(rideSeat);
   const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL · RIDE"});
   if(sign){sign.position.set(0,5.12,0);sign.scale.set(4.4,1.16,1);root.add(sign)}
-  return {id:"carousel",root,object:ride,rideSeat,axis:"y",speed:0.24};
+  return {id:"carousel",name:"星光旋轉木馬",action:"ride-carousel",root,object:ride,rideSeat,axis:"y",speed:0.24,interactionRadius:4.75,dismountRadius:4.9};
 }
 
 function buildFerrisWheel(scene,materials,x,y,z){
-  const root=new THREE.Group();root.position.set(x,y,z);scene.add(root);
+  const root=new THREE.Group();root.position.set(x,y,z);root.userData.action="ride-ferris";scene.add(root);
   [-0.82,0.82].forEach((sx,i)=>{
-    const foot=addMesh(root,new THREE.CylinderGeometry(0.34,0.4,0.26,12),materials.darkStone,[sx,0.16,0]);
+    addMesh(root,new THREE.CylinderGeometry(0.34,0.4,0.26,12),materials.darkStone,[sx,0.16,0]);
     addMesh(root,new THREE.TorusGeometry(0.31,0.045,8,28),materials.gold,[sx,0.31,0]).rotation.x=Math.PI/2;
     const leg=addMesh(root,new THREE.BoxGeometry(0.23,3.5,0.28),materials.silverMetal,[sx,1.6,0]);leg.rotation.z=i===0?-0.26:0.26;
     const inlay=addMesh(root,new THREE.BoxGeometry(0.045,3.02,0.045),materials.gold,[sx+(i===0?0.12:-0.12),1.58,0.15]);inlay.rotation.z=i===0?-0.26:0.26;
@@ -476,35 +476,41 @@ function buildFerrisWheel(scene,materials,x,y,z){
   addMesh(wheel,new THREE.TorusGeometry(2.62,0.085,12,80),materials.gold,[0,0,0]);
   addMesh(wheel,new THREE.TorusGeometry(2.28,0.045,8,72),materials.silver,[0,0,0]);
   addMesh(wheel,new THREE.TorusGeometry(2.8,0.028,7,88),materials.crystal,[0,0,0]);
+  let rideSeat=null;const gondolas=[];
   for(let i=0;i<10;i++){
     const a=i/10*Math.PI*2;
     const spoke=addMesh(wheel,new THREE.BoxGeometry(0.075,5.18,0.09),materials.silverMetal,[0,0,0]);spoke.rotation.z=a;
     const pin=addMesh(wheel,new THREE.BoxGeometry(0.025,4.9,0.035),materials.gold,[0,0,0]);pin.rotation.z=a;
     const cx=Math.cos(a)*2.62,cy=Math.sin(a)*2.62;
+    const gondola=new THREE.Group();gondola.position.set(cx,cy,0.18);wheel.add(gondola);gondolas.push(gondola);
     const gondolaMat=makeMaterial([0x6f8fc5,0xb18bcf,0xd7ad70,0x81a9a0,0xc27ea1][i%5],0.42,0.28);
-    addMesh(wheel,new THREE.BoxGeometry(0.52,0.55,0.46),gondolaMat,[cx,cy-0.08,0.18]);
-    addMesh(wheel,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[cx,cy+0.22,0.18]);
-    addMesh(wheel,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[cx-0.28,cy-0.05,0.18]);
-    addMesh(wheel,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[cx+0.28,cy-0.05,0.18]);
-    const canopy=addMesh(wheel,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[cx,cy+0.44,0.18]);canopy.rotation.y=Math.PI/8;
-    addMesh(wheel,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[cx,cy+0.61,0.18],[0.8,1.2,0.8],null,false,false);
-    addMesh(wheel,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[cx,cy-0.36,0.42]);
+    addMesh(gondola,new THREE.BoxGeometry(0.52,0.55,0.46),gondolaMat,[0,-0.08,0]);
+    addMesh(gondola,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[0,0.22,0]);
+    addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[-0.28,-0.05,0]);
+    addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[0.28,-0.05,0]);
+    const canopy=addMesh(gondola,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[0,0.44,0]);canopy.rotation.y=Math.PI/8;
+    addMesh(gondola,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[0,0.61,0],[0.8,1.2,0.8],null,false,false);
+    addMesh(gondola,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[0,-0.36,0.24]);
+    const anchor=new THREE.Group();anchor.position.set(0,-0.1,0.32);gondola.add(anchor);
+    if(i===0)rideSeat=anchor;
   }
   const hub=addMesh(wheel,new THREE.CylinderGeometry(0.42,0.42,0.52,24),materials.gold,[0,0,0]);hub.rotation.x=Math.PI/2;
   addMesh(wheel,new THREE.TorusGeometry(0.49,0.055,8,48),materials.trim,[0,0,0]).rotation.x=Math.PI/2;
   const hubGem=addMesh(wheel,new THREE.OctahedronGeometry(0.28,1),materials.crystal,[0,0,0.32],[0.8,1.15,0.8],null,false,false);hubGem.rotation.z=Math.PI/4;
-  const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL"});
+  const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL · RIDE"});
   if(sign){sign.position.set(0,6.6,0.22);sign.scale.set(4.1,1.1,1);root.add(sign)}
-  return {object:wheel,axis:"z",speed:-0.105};
+  return {id:"ferris",name:"星河摩天輪",action:"ride-ferris",root,object:wheel,rideSeat,gondolas,axis:"z",speed:-0.105,interactionRadius:4.78,dismountRadius:5.5};
 }
 
 function buildRollerCoaster(scene,materials){
-  const root=new THREE.Group();root.position.set(-24.5,0.72,-19.0);scene.add(root);
+  const root=new THREE.Group();root.position.set(-24.5,0.72,-19.0);root.userData.action="ride-coaster";scene.add(root);
   const points=[[-2.8,0.65,1.8],[-2.3,1.7,0.8],[-1.55,3.7,0.2],[-0.45,4.0,0.1],[0.65,2.0,0.3],[1.55,0.9,1.0],[2.55,2.0,1.8],[3.05,2.55,2.2]];
+  const pathPoints=points.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
+  const curve=new THREE.CatmullRomCurve3(pathPoints,false,"centripetal");
   [-0.24,0.24].forEach(offset=>{
-    const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p[0],p[1],p[2]+offset)));
-    const geometry=new THREE.TubeGeometry(curve,96,0.075,8,false);
-    addMesh(root,geometry,materials.gold,null,null,true,false);
+    const railPoints=points.map(p=>new THREE.Vector3(p[0],p[1],p[2]+offset));
+    const railCurve=new THREE.CatmullRomCurve3(railPoints,false,"centripetal");
+    addMesh(root,new THREE.TubeGeometry(railCurve,96,0.075,8,false),materials.gold,null,null,true,false);
   });
   points.forEach((p,i)=>{
     if(i===0||i===2||i===4||i===6){
@@ -516,39 +522,22 @@ function buildRollerCoaster(scene,materials){
   addMesh(root,new THREE.BoxGeometry(1.25,0.48,0.62),makeMaterial(0x9d6fc1,0.34,0.44),[-1.75,3.96,0.2]);
   addMesh(root,new THREE.BoxGeometry(1.0,0.12,0.72),materials.gold,[-1.75,4.25,0.2]);
   for(let i=0;i<3;i++)addMesh(root,new THREE.SphereGeometry(0.13,12,10),materials.silver,[-2.1+i*0.34,4.42,0.2],[0.75,0.75,0.75]);
-  const sign=makeLabelSprite({title:"星際雲霄飛車",subtitle:"COSMIC COASTER"});
-  if(sign){sign.position.set(0,4.9,2.05);sign.scale.set(4.3,1.05,1);root.add(sign)}
-  return root;
-}
-
-function buildArcadeStalls(scene,materials){
-  const stalls=[];
-  [
-    [5.1,6.9,"星塵兌換所","STAR DUST REWARDS"],
-    [8.25,5.45,"旅人補給站","TRAVELER SUPPLY"]
-  ].forEach(([x,z,title,sub],index)=>{
-    const booth=new THREE.Group();booth.position.set(x,0.72,z);scene.add(booth);
-    addMesh(booth,new THREE.CylinderGeometry(1.18,1.28,0.22,32),materials.darkStone,[0,0.11,0]);
-    addMesh(booth,new THREE.BoxGeometry(1.85,1.5,1.42),materials.wall,[0,0.85,0]);
-    addMesh(booth,new THREE.BoxGeometry(2.0,0.15,1.55),materials.gold,[0,1.62,0]);
-    const roof=addMesh(booth,new THREE.ConeGeometry(1.38,0.72,4),materials.roof,[0,2.02,0]);roof.rotation.y=Math.PI/4;
-    addMesh(booth,new THREE.BoxGeometry(1.32,0.76,0.12),materials.darkStone,[0,1.0,0.73]);
-    if(index===0){
-      for(let k=0;k<3;k++)addMesh(booth,new THREE.OctahedronGeometry(0.22,1),[materials.crystal,materials.silver,materials.gold][k],[-0.43+k*0.43,1.05,0.84],null,false,false);
-      addMesh(booth,new THREE.BoxGeometry(1.42,0.12,0.18),materials.gold,[0,0.62,0.9]);
-    }else{
-      addMesh(booth,new THREE.BoxGeometry(0.85,0.62,0.1),materials.wood,[-0.38,1.1,0.84]);
-      addMesh(booth,new THREE.BoxGeometry(0.4,0.28,0.12),materials.crystal,[0.38,1.1,0.84],null,false,false);
-    }
-    const sign=makeLabelSprite({title,subtitle:sub});
-    if(sign){sign.position.set(0,2.58,0.2);sign.scale.set(3.3,0.88,1);booth.add(sign)}
-    stalls.push(booth);
+  const cart=new THREE.Group();root.add(cart);
+  addMesh(cart,new THREE.BoxGeometry(0.9,0.32,0.82),makeMaterial(0x6c5a91,0.28,0.56,{clearcoat:0.88}),[0,0.18,0]);
+  addMesh(cart,new THREE.BoxGeometry(0.82,0.09,0.76),materials.gold,[0,0.38,0]);
+  [-0.26,0.26].forEach(x=>{
+    addMesh(cart,new THREE.BoxGeometry(0.08,0.46,0.09),materials.silverMetal,[x,0.58,-0.28]);
+    addMesh(cart,new THREE.BoxGeometry(0.08,0.46,0.09),materials.silverMetal,[x,0.58,0.28]);
   });
-  return stalls;
+  addMesh(cart,new THREE.BoxGeometry(0.55,0.06,0.08),materials.gold,[0,0.78,0]);
+  const rideSeat=new THREE.Group();rideSeat.position.set(0,0.45,0.04);cart.add(rideSeat);
+  const sign=makeLabelSprite({title:"星際雲霄飛車",subtitle:"COSMIC COASTER · RIDE"});
+  if(sign){sign.position.set(0,4.9,2.05);sign.scale.set(4.3,1.05,1);root.add(sign)}
+  return {id:"coaster",name:"星際雲霄飛車",action:"ride-coaster",root,object:cart,rideSeat,curve,axis:"track",progress:0,direction:1,speed:0.105,interactionRadius:5.72,dismountRadius:6.2};
 }
 
 function buildTeacupRide(scene,materials,x,z){
-  const root=new THREE.Group();root.position.set(x,0.78,z);scene.add(root);
+  const root=new THREE.Group();root.position.set(x,0.78,z);root.userData.action="ride-teacups";scene.add(root);
   addMesh(root,new THREE.CylinderGeometry(2.65,2.82,0.34,48),materials.darkStone,[0,0.18,0]);
   addMesh(root,new THREE.TorusGeometry(2.7,0.11,10,64),materials.gold,[0,0.38,0]).rotation.x=Math.PI/2;
   const ride=new THREE.Group();ride.position.y=0.42;root.add(ride);
@@ -556,6 +545,7 @@ function buildTeacupRide(scene,materials,x,z){
   addMesh(ride,new THREE.CylinderGeometry(1.45,0.48,0.32,32),materials.roof,[0,2.42,0]);
   addMesh(ride,new THREE.ConeGeometry(0.68,0.62,12),materials.gold,[0,2.9,0]);
   const colors=[0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9,0xb59be5,0xe49b82];
+  let rideSeat=null;
   for(let i=0;i<6;i++){
     const a=i/6*Math.PI*2,cup=new THREE.Group();
     cup.position.set(Math.cos(a)*1.72,0.45,Math.sin(a)*1.72);ride.add(cup);
@@ -566,14 +556,15 @@ function buildTeacupRide(scene,materials,x,z){
     addMesh(cup,new THREE.TorusGeometry(0.49,0.028,6,32),materials.gold,[0,0.03,0]).rotation.x=Math.PI/2;
     addMesh(cup,new THREE.SphereGeometry(0.14,12,10),materials.lampGlow,[0,0.62,0],null,false,false);
     addMesh(cup,new THREE.OctahedronGeometry(0.085,1),materials.crystal,[0,0.78,0.18],[0.72,1.2,0.72],null,false,false);
+    if(i===0){rideSeat=new THREE.Group();rideSeat.position.set(0,0.59,0);cup.add(rideSeat)}
   }
-  const sign=makeLabelSprite({title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS"});
+  const sign=makeLabelSprite({title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS · RIDE"});
   if(sign){sign.position.set(0,4.15,0);sign.scale.set(3.5,0.92,1);root.add(sign)}
-  return {object:ride,axis:"y",speed:0.34};
+  return {id:"teacups",name:"星月茶杯",action:"ride-teacups",root,object:ride,rideSeat,axis:"y",speed:0.34,interactionRadius:4.2,dismountRadius:5.0};
 }
 
 function buildDropTower(scene,materials,x,z){
-  const root=new THREE.Group();root.position.set(x,0.78,z);scene.add(root);
+  const root=new THREE.Group();root.position.set(x,0.78,z);root.userData.action="ride-drop";scene.add(root);
   addMesh(root,new THREE.CylinderGeometry(2.2,2.45,0.38,40),materials.darkStone,[0,0.2,0]);
   addMesh(root,new THREE.TorusGeometry(2.28,0.1,8,56),materials.gold,[0,0.42,0]).rotation.x=Math.PI/2;
   addMesh(root,new THREE.CylinderGeometry(0.34,0.52,7.1,16),materials.silverMetal,[0,3.95,0]);
@@ -598,10 +589,13 @@ function buildDropTower(scene,materials,x,z){
       makeMaterial([0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9][i%4],0.38,0.22),
       [Math.cos(a)*0.95,0,Math.sin(a)*0.95]);
   }
-  const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP"});
+  const rideSeat=new THREE.Group();rideSeat.position.set(0,0.24,0);gondola.add(rideSeat);
+  const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP · RIDE"});
   if(sign){sign.position.set(0,8.8,0);sign.scale.set(3.7,0.98,1);root.add(sign)}
-  return {object:gondola,axis:"lift",baseY:1.4,range:3.9,speed:0.82,phase:Math.random()*Math.PI*2};
+  return {id:"drop",name:"星際自由落體",action:"ride-drop",root,object:gondola,rideSeat,axis:"lift",baseY:1.4,range:3.9,speed:0.82,phase:Math.random()*Math.PI*2,interactionRadius:4.0,dismountRadius:5.0};
 }
+
+
 
 function buildShootingGallery(scene,materials,x,z){
   const hall=new THREE.Group();hall.position.set(x,0.78,z);hall.userData.gameId="shooting-range";scene.add(hall);
@@ -894,17 +888,18 @@ function buildEnvironment(scene) {
 
   const rides=[];
   const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);addCollider(-21.5,0.7,3.65,"星光旋轉木馬");
-  rides.push(buildTeacupRide(scene,materials,-13,-11.5));addCollider(-13,-11.5,3.2,"星月茶杯");
-  rides.push(buildDropTower(scene,materials,13,-10));addCollider(13,-10,2.7,"星際自由落體");
-  rides.push(buildFerrisWheel(scene,materials,25,0.78,-17));addCollider(25,-17,3.8,"星河摩天輪");
-  buildRollerCoaster(scene,materials);addCollider(-24.5,-19.0,4.8,"星際雲霄飛車");
+  const teacups=buildTeacupRide(scene,materials,-13,-11.5);rides.push(teacups);addCollider(-13,-11.5,3.2,"星月茶杯");
+  const drop=buildDropTower(scene,materials,13,-10);rides.push(drop);addCollider(13,-10,2.7,"星際自由落體");
+  const ferris=buildFerrisWheel(scene,materials,25,0.78,-17);rides.push(ferris);addCollider(25,-17,3.8,"星河摩天輪");
+  const coaster=buildRollerCoaster(scene,materials);rides.push(coaster);addCollider(-24.5,-19.0,4.8,"星際雲霄飛車");
+  const rideStations=[carousel,teacups,drop,ferris,coaster];
   const ticketBooth=buildTicketBooth(scene,materials,-4.8,30.5);addCollider(-4.8,30.5,2.55,"星夢入園票亭");
   buildEntranceGate(scene,materials);
   const arcadeStalls=buildArcadeStalls(scene,materials);
   addCollider(5.1,6.9,1.35,"星塵兌換所");addCollider(8.25,5.45,1.35,"旅人補給站");
   const shootingGallery=buildShootingGallery(scene,materials,18,9);addCollider(18,9,4.45,"霓虹神射手");
   const mirrorHouse=buildMirrorHouse(scene,materials,-19,-8);addCollider(-19,-8,4.2,"幻影鏡屋");
-  const interactables=[...portals,carousel.root,ticketBooth,shootingGallery,mirrorHouse];
+  const interactables=[...portals,...rideStations.map(ride=>ride.root),ticketBooth,shootingGallery,mirrorHouse];
 
   // Each attraction carries its own sign directly on the matching model.
 
@@ -960,7 +955,7 @@ function buildEnvironment(scene) {
     }),[Math.cos(angle)*radius,-6.1-(i%3)*0.65,Math.sin(angle)*radius],[4.4+(i%3),0.72,2.5],false,false);
     cloud.userData.phase=angle;
   }
-  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
+  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,rideStations,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
 }
 
 function createParkMotes(scene,count=56){
@@ -1295,7 +1290,7 @@ function mount(host) {
     host, scene, renderer, camera, starfield, parkMotes, environment,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
     cameraState, cameraMode: host.dataset.cameraMode || "first", keys: new Set(),
-    touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, minimapLast: 0,
+    touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, mountedRideData:null, minimapLast: 0, nearbyHintLast:0,
     localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
     running: true, frame: 0, lastTime: 0
@@ -1311,13 +1306,48 @@ function mount(host) {
     window.dispatchEvent(new CustomEvent("starry-3d-camera-mode",{detail:{mode:world.cameraMode}}));
   }
 
+  function rideDistance(ride){
+    return Math.hypot(player.position.x-ride.root.position.x,player.position.z-ride.root.position.z);
+  }
+  function mountRide(ride){
+    if(!ride||!ride.rideSeat||world.mountedRide)return;
+    world.mountedRide=ride.rideSeat;world.mountedRideData=ride;
+    player.visible=world.cameraMode==="third";player.scale.setScalar(0.72);
+    world.keys.clear();world.touchMove.x=0;world.touchMove.y=0;world.touchRun=false;
+    const status=document.getElementById("starry-3d-status");
+    if(status)status.textContent="正在搭乘「"+ride.name+"」 · 按互動鍵或 E 下車";
+    window.dispatchEvent(new CustomEvent("starry-3d-nearby",{detail:{label:"下車　E",name:"下車"}}));
+  }
+  function dismountRide(){
+    if(!world.mountedRide)return;
+    const ride=world.mountedRideData;
+    world.mountedRide=null;world.mountedRideData=null;
+    player.visible=world.cameraMode==="third";player.scale.setScalar(1);
+    const root=ride?.root,baseX=root?.position.x??player.position.x,baseZ=root?.position.z??player.position.z;
+    const radius=ride?.dismountRadius||5.0;
+    let exit=null;
+    for(let i=0;i<20;i++){
+      const angle=(i/20)*Math.PI*2+0.24;
+      const x=baseX+Math.cos(angle)*radius,z=baseZ+Math.sin(angle)*radius;
+      if(Math.hypot(x,z)<(environment.playableRadius||41.2)-0.6&&!blockedAt(x,z)){exit={x,z};break}
+    }
+    if(!exit){exit={x:baseX+radius,z:baseZ}}
+    player.position.set(exit.x,surfaceAt(exit.x,exit.z)-0.025,exit.z);
+    const status=document.getElementById("starry-3d-status");
+    if(status)status.textContent="已離開設施 · 繼續探索星夢樂園";
+    window.dispatchEvent(new CustomEvent("starry-3d-nearby",{detail:{label:"互動　E",name:"互動"}}));
+  }
   function interactNearby(){
-    if(world.mountedRide){dismountCarousel();return}
-    const p=player.position,ride=environment.carousel.root.position,booth=environment.ticketBooth.position;
-    if(Math.hypot(p.x-ride.x,p.z-ride.z)<5.4){mountCarousel();return}
-    if(Math.hypot(p.x-booth.x,p.z-booth.z)<4.2){
-      window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"ticket-booth"}}));
-      return;
+    if(world.mountedRide){dismountRide();return}
+    const nearest=environment.rideStations
+      .map(ride=>({ride,distance:rideDistance(ride)}))
+      .sort((a,b)=>a.distance-b.distance)[0];
+    if(nearest&&nearest.distance<=nearest.ride.interactionRadius){
+      mountRide(nearest.ride);return;
+    }
+    const booth=environment.ticketBooth.position;
+    if(Math.hypot(player.position.x-booth.x,player.position.z-booth.z)<4.2){
+      window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"ticket-booth"}}));return;
     }
     window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"nearby-hint"}}));
   }
@@ -1360,24 +1390,6 @@ function mount(host) {
 
   function blockedAt(x,z) {
     return environment.colliders.some(collider => Math.hypot(x-collider.x,z-collider.z) < collider.radius + 0.48);
-  }
-
-  function mountCarousel() {
-    if(world.mountedRide)return;
-    world.mountedRide=environment.carousel.rideSeat;
-    player.visible=world.cameraMode==="third";player.scale.setScalar(0.72);
-    const status=document.getElementById("starry-3d-status");
-    if(status)status.textContent="正在乘坐星光旋轉木馬 · 按 E 下車";
-  }
-
-  function dismountCarousel() {
-    if(!world.mountedRide)return;
-    world.mountedRide=null;
-    player.visible=world.cameraMode==="third";
-    const root=environment.carousel.root;
-    player.scale.setScalar(1);player.position.set(root.position.x+4.25,surfaceAt(root.position.x+4.25,root.position.z)-0.025,root.position.z);
-    const status=document.getElementById("starry-3d-status");
-    if(status)status.textContent="WASD 探索園區 · 找到設施按 E 互動";
   }
 
   world.onAvatarChange = event => {
@@ -1514,9 +1526,16 @@ function mount(host) {
       const target=findTarget(hit.object);
       if(!target)continue;
       if(target.type==="game"){
+        if(world.mountedRide)dismountRide();
         window.dispatchEvent(new CustomEvent("starry-3d-portal",{detail:{gameId:target.gameId}}));
-      }else if(target.action==="ride-carousel"){
-        if(world.mountedRide)dismountCarousel();else mountCarousel();
+      }else if(target.action&&target.action.startsWith("ride-")){
+        if(world.mountedRide){dismountRide();break}
+        const ride=environment.rideStations.find(item=>item.action===target.action);
+        if(ride&&rideDistance(ride)<=ride.interactionRadius+0.5)mountRide(ride);
+        else if(ride){
+          const status=document.getElementById("starry-3d-status");
+          if(status)status.textContent="請再靠近「"+ride.name+"」，即可搭乘";
+        }
       }else{
         window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:target.action}}));
       }
@@ -1540,6 +1559,13 @@ function mount(host) {
       else if (ride.axis === "lift") {
         const wave = (Math.sin(t * ride.speed + ride.phase) + 1) * 0.5;
         ride.object.position.y = ride.baseY + wave * ride.range;
+      } else if(ride.axis==="track"){
+        ride.progress+=delta*ride.speed*ride.direction;
+        if(ride.progress>=1){ride.progress=1;ride.direction=-1}
+        if(ride.progress<=0){ride.progress=0;ride.direction=1}
+        const point=ride.curve.getPointAt(ride.progress),tangent=ride.curve.getTangentAt(ride.progress);
+        ride.object.position.copy(point);
+        ride.object.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),tangent);
       } else ride.object.rotation.z += delta * ride.speed;
     });
     environment.compassHalo.rotation.z += delta * 0.17;
@@ -1568,7 +1594,11 @@ function mount(host) {
       const mountedPosition=new THREE.Vector3();
       world.mountedRide.getWorldPosition(mountedPosition);
       player.position.copy(mountedPosition);
-      player.position.y-=0.18;player.rotation.y=environment.carousel.object.rotation.y;
+      player.position.y-=0.18;
+      if(world.mountedRideData?.axis==="y")player.rotation.y=world.mountedRideData.object.rotation.y;
+      else if(world.mountedRideData?.axis==="track")player.rotation.y=Math.atan2(
+        Math.sin(world.mountedRideData.object.rotation.y),Math.cos(world.mountedRideData.object.rotation.y)
+      );
       world.keys.clear();
     }else{
       const moving = move.lengthSq() > 0;
@@ -1637,6 +1667,15 @@ function mount(host) {
       entry.model.userData.halo.rotation.z+=delta*0.38;
       if(entry.model.userData.floatingStar)entry.model.userData.floatingStar.rotation.y+=delta*0.58;
     });
+    if(!world.mountedRide&&t-world.nearbyHintLast>0.34){
+      world.nearbyHintLast=t;
+      const nearest=environment.rideStations.map(ride=>({ride,distance:rideDistance(ride)})).sort((a,b)=>a.distance-b.distance)[0];
+      let hint={label:"互動　E",name:"互動"};
+      if(nearest&&nearest.distance<=nearest.ride.interactionRadius)hint={label:"搭乘　E",name:nearest.ride.name};
+      else if(nearest&&nearest.distance<=nearest.ride.interactionRadius+1.25)hint={label:"靠近設施",name:nearest.ride.name};
+      else if(Math.hypot(player.position.x-environment.ticketBooth.position.x,player.position.z-environment.ticketBooth.position.z)<4.5)hint={label:"票亭　E",name:"星夢入園票亭"};
+      window.dispatchEvent(new CustomEvent("starry-3d-nearby",{detail:hint}));
+    }
     if(t-world.minimapLast>0.15){
       world.minimapLast=t;
       window.dispatchEvent(new CustomEvent("starry-3d-map",{detail:{x:player.position.x,z:player.position.z,yaw:cameraState.yaw}}));
