@@ -506,11 +506,20 @@ function buildEnvironment(scene) {
     const ring=addMesh(island,new THREE.TorusGeometry(radius,i===1?0.07:0.04,8,112),i===1?materials.gold:materials.trim,[0,0.82+i*0.003,0]);
     ring.rotation.x=Math.PI/2;
   });
-  addMesh(island,new THREE.CylinderGeometry(1.65,1.85,0.22,12),materials.darkStone,[0,0.89,0]);
-  const compass=addMesh(island,new THREE.OctahedronGeometry(1.05,1),materials.crystal,[0,1.95,0],[0.72,1.6,0.72]);
-  compass.rotation.y=Math.PI/4;
-  const compassHalo=addMesh(island,new THREE.TorusGeometry(1.85,0.045,8,64),materials.gold,[0,1.08,0]);
-  compassHalo.rotation.x=Math.PI/2;
+  // Flush celestial compass medallion: decorative, readable, and never blocks the plaza.
+  const compass=new THREE.Group();compass.name="FlushAstralCompass";compass.position.set(0,0.82,0);island.add(compass);
+  addMesh(compass,new THREE.CylinderGeometry(2.15,2.22,0.1,64),materials.darkStone,[0,0,0]);
+  addMesh(compass,new THREE.CylinderGeometry(1.98,2.02,0.045,64),materials.top,[0,0.068,0]);
+  const outerRune=addMesh(compass,new THREE.TorusGeometry(2.0,0.045,8,96),materials.gold,[0,0.095,0]);outerRune.rotation.x=Math.PI/2;
+  const innerRune=addMesh(compass,new THREE.TorusGeometry(1.05,0.028,8,72),materials.trim,[0,0.1,0]);innerRune.rotation.x=Math.PI/2;
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2;
+    const mark=addMesh(compass,new THREE.OctahedronGeometry(i%2?0.12:0.19,0),i%2?materials.trim:materials.crystal,[Math.sin(a)*1.55,0.14,Math.cos(a)*1.55],[0.58,0.32,1.5],false,false);
+    mark.rotation.y=a;
+  }
+  const compassCore=addMesh(compass,new THREE.OctahedronGeometry(0.28,0),materials.gold,[0,0.16,0],[1,0.32,1],false,false);
+  compassCore.rotation.y=Math.PI/4;
+  const compassHalo=addMesh(compass,new THREE.TorusGeometry(1.78,0.025,6,96),materials.crystal,[0,0.13,0]);compassHalo.rotation.x=Math.PI/2;
 
   // Wide illuminated pedestrian routes connect the themed districts.
   function addWalkway(points,width=4.1){
