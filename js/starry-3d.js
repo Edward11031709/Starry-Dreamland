@@ -1239,10 +1239,12 @@ function mount(host) {
     const detail=event.detail||{};
     const avatarId=detail.avatarId||player.userData.avatarId||"wanderer";
     const customization={avatarType:detail.avatarType||player.userData.avatarType,appearance:detail.appearance||player.userData.appearance};
+    const previous=player;
     const next=buildPlayer(scene,avatarId,customization);
-    next.position.copy(player.position);next.rotation.copy(player.rotation);next.visible=player.visible;
-    if(player.scale)next.scale.copy(player.scale);
-    scene.remove(player);player=next;world.player=next;
+    next.position.copy(previous.position);next.rotation.copy(previous.rotation);next.visible=previous.visible;
+    if(previous.scale)next.scale.copy(previous.scale);
+    player=next;world.player=next;
+    releaseRemoteAvatar({model:previous});
   };
   window.addEventListener("starry-3d-avatar-change",world.onAvatarChange);
 
