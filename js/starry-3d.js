@@ -217,6 +217,56 @@ function makeLabelSprite(meta){
  const sprite=new THREE.Sprite(material);sprite.scale.set(4.8,1.3,1);return sprite;
 }
 
+function makeChatBubbleSprite(message){
+ const canvas=document.createElement("canvas");canvas.width=512;canvas.height=192;
+ const ctx=canvas.getContext("2d");if(!ctx)return null;
+ ctx.clearRect(0,0,512,192);
+ ctx.shadowColor="rgba(3,7,24,0.55)";ctx.shadowBlur=20;
+ const gradient=ctx.createLinearGradient(0,8,0,178);
+ gradient.addColorStop(0,"rgba(35,34,72,0.97)");gradient.addColorStop(1,"rgba(10,19,45,0.96)");
+ ctx.fillStyle=gradient;ctx.beginPath();ctx.roundRect(8,8,496,166,26);ctx.fill();ctx.shadowBlur=0;
+ ctx.strokeStyle="rgba(231,207,153,0.95)";ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(10,10,492,162,24);ctx.stroke();
+ // Small tail points toward the speaker without covering the text.
+ ctx.fillStyle="rgba(18,24,54,0.98)";ctx.beginPath();ctx.moveTo(224,166);ctx.lineTo(256,190);ctx.lineTo(278,166);ctx.fill();
+ ctx.strokeStyle="rgba(231,207,153,0.82)";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(224,166);ctx.lineTo(256,190);ctx.lineTo(278,166);ctx.stroke();
+ const raw=String(message||"").replace(/\s+/g," ").trim().slice(0,180);
+ ctx.font='600 30px "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+ ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#fff0cf";
+ const lines=[];let line="";
+ for(const char of raw){
+  const next=line+char;
+  if(ctx.measureText(next).width>438&&line){lines.push(line);line=char;if(lines.length===2)break}
+  else line=next;
+ }
+ if(line&&lines.length<3)lines.push(line);
+ const used=lines.join("").length,remaining=raw.slice(used);
+ if(remaining&&lines.length===3)lines[2]=lines[2].slice(0,Math.max(0,lines[2].length-1))+"…";
+ const top=lines.length===1?92:lines.length===2?76:62;
+ lines.forEach((text,i)=>ctx.fillText(text,256,top+i*39,438));
+ const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+ const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false,sizeAttenuation:true});
+ const sprite=new THREE.Sprite(material);sprite.scale.set(2.85,1.12,1);
+ sprite.position.set(0,3.55,0.02);sprite.renderOrder=10;
+ return sprite;
+}
+
+function clearChatBubble(model){
+ const bubble=model&&model.userData&&model.userData.chatBubble;
+ if(!bubble)return;
+ model.remove(bubble);
+ if(bubble.material?.map)bubble.material.map.dispose();
+ if(bubble.material)bubble.material.dispose();
+ bubble.geometry?.dispose();
+ model.userData.chatBubble=null;model.userData.chatBubbleUntil=0;
+}
+function showChatBubble(model,message,until){
+ if(!model)return;
+ clearChatBubble(model);
+ const bubble=makeChatBubbleSprite(message);if(!bubble)return;
+ model.add(bubble);model.userData.chatBubble=bubble;model.userData.chatBubbleUntil=until;
+}
+
+
 
 function buildPortal(scene,meta,x,z,materials){
  const group=new THREE.Group();group.position.set(x,0.48,z);group.userData.gameId=meta.id;scene.add(group);
@@ -1028,6 +1078,7 @@ function disposeWorld(world) {
     if(world.onAvatarChange)window.removeEventListener("starry-3d-avatar-change",world.onAvatarChange);
     if(world.onRemotePlayers)window.removeEventListener("starry-3d-players",world.onRemotePlayers);
     if(world.onRemoteMove)window.removeEventListener("starry-3d-player-move",world.onRemoteMove);
+    if(world.onParkChat)window.removeEventListener("starry-3d-player-chat",world.onParkChat);
     world.canvas.removeEventListener("pointerdown", world.onPointerDown);
     world.canvas.removeEventListener("pointermove", world.onPointerMove);
     world.canvas.removeEventListener("pointerup", world.onPointerUp);
@@ -1472,8 +1523,15 @@ function mount(host) {
     }
   };
   world.onRemoteMove = event => upsertRemotePlayer(event.detail&&event.detail.player);
+  world.onParkChat = event => {
+    const detail=event.detail||{};
+    if(!detail.sessionId||!detail.message)return;
+    const model=detail.sessionId===world.localUserId?player:world.otherPlayers.get(String(detail.sessionId))?.model;
+    if(model)showChatBubble(model,detail.message,clock.elapsedTime+5.5);
+  };
   window.addEventListener("starry-3d-players",world.onRemotePlayers);
   window.addEventListener("starry-3d-player-move",world.onRemoteMove);
+  window.addEventListener("starry-3d-player-chat",world.onParkChat);
 
   world.onKeyDown = event => {
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target && event.target.tagName)) return;
@@ -1694,7 +1752,9 @@ function mount(host) {
       motion.core.material.opacity = 0.17 + (Math.sin(t * 1.5 + motion.phase) + 1) * 0.08;
       if (motion.aura) motion.aura.intensity = 8 + (Math.sin(t * 1.8 + motion.phase) + 1) * 2.5;
     });
+    if(player.userData.chatBubble&&t>player.userData.chatBubbleUntil)clearChatBubble(player);
     world.otherPlayers.forEach(entry=>{
+      if(entry.model.userData.chatBubble&&t>entry.model.userData.chatBubbleUntil)clearChatBubble(entry.model);
       entry.model.position.lerp(entry.target,Math.min(1,delta*9));
       let angle=entry.targetYaw;
       const current=entry.model.rotation.y;
