@@ -152,6 +152,11 @@ const AVATARS=[
 let state=read(),clock=null,frame=null,active=null;
 const cloudMode=!!(window.STARRY_CONFIG&&window.STARRY_CONFIG.mode==="supabase");
 let sb=window.SD_SUPABASE||null,cloudUser=null,cloudBusy=false;
+let parkChannel=null,parkSocialStarting=false,parkMoveSentAt=0,parkMoveLast=null;
+let parkLocalPosition={x:0,z:33,yaw:0};
+let parkRemoteMap=new Map();
+const parkSessionId=(window.crypto&&typeof window.crypto.randomUUID==="function")?window.crypto.randomUUID():("visitor-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2));
+
 function read(){let data;try{data=Object.assign({player:null,players:[],records:[]},JSON.parse(localStorage.getItem(STORE)||"{}"))}catch(e){data={player:null,players:[],records:[]}}data.players.forEach(p=>{const records=data.records.filter(r=>r.uid===p.id);if(typeof p.adultPoints!=="number")p.adultPoints=records.filter(r=>!KIDS_GAME_IDS.includes(r.game)).reduce((s,r)=>s+(Number(r.reward)||0),0);if(typeof p.kidsPoints!=="number")p.kidsPoints=records.filter(r=>KIDS_GAME_IDS.includes(r.game)).reduce((s,r)=>s+(Number(r.reward)||0),0);p.points=p.adultPoints});return data}
 function save(){state.players.forEach(p=>p.points=Number(p.adultPoints)||0);if(!cloudMode)localStorage.setItem(STORE,JSON.stringify(state))}
 function me(){return state.players.find(p=>p.id===state.player)}
@@ -277,6 +282,146 @@ async function syncCloudRecord(record){
  header();
  const totalEl=document.getElementById("resultTotal");if(totalEl)totalEl.textContent=(KIDS_GAME_IDS.includes(record.game)?kidsTotal():total())+" ✦";
 }
+
+function renderParkSocialGate(kind,message){
+ const online=document.getElementById("parkOnlineCount"),list=document.getElementById("parkPlayers"),feed=document.getElementById("parkChatMessages"),status=document.getElementById("parkChatStatus"),input=document.getElementById("parkChatInput"),send=document.getElementById("parkChatSend");
+ if(online)online.textContent=kind==="admin"?"隱身模式":"尚未連線";
+ if(list)list.innerHTML='<div class="chat-placeholder">'+esc(message)+'</div>';
+ if(feed)feed.innerHTML='<div class="chat-placeholder">'+esc(message)+'</div>';
+ if(status)status.textContent=kind==="admin"?"管理員隱身中":kind==="guest"?"登入雲端帳號後即可加入":"正在連線園區頻道…";
+ if(input)input.disabled=true;if(send)send.disabled=true;
+}
+function appendParkChat(row){
+ const feed=document.getElementById("parkChatMessages");if(!feed||!row)return;
+ if(row.id&&feed.querySelector('[data-chat-id="'+String(row.id)+'"]'))return;
+ const empty=feed.querySelector(".chat-placeholder");if(empty)empty.remove();
+ const item=document.createElement("article");item.className="park-chat-message";
+ if(row.id)item.dataset.chatId=String(row.id);
+ const top=document.createElement("div");top.className="park-chat-message-top";
+ const name=document.createElement("b");name.textContent=String(row.nickname||"星空旅人");
+ const time=document.createElement("time");time.textContent=row.created_at?new Date(row.created_at).toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"}):"剛剛";
+ const body=document.createElement("p");body.textContent=String(row.message||"");
+ top.append(name,time);item.append(top,body);feed.append(item);
+ while(feed.children.length>40)feed.firstElementChild.remove();
+ feed.scrollTop=feed.scrollHeight;
+}
+function renderParkOnline(players){
+ const online=document.getElementById("parkOnlineCount"),list=document.getElementById("parkPlayers");
+ if(!online||!list)return;
+ const unique=new Map();
+ (players||[]).forEach(p=>{if(p&&p.sessionId)unique.set(p.sessionId,p)});
+ const rows=[...unique.values()];
+ online.textContent=rows.length+" 位旅人在線";
+ list.innerHTML="";
+ if(!rows.length){list.innerHTML='<div class="chat-placeholder">目前沒有其他旅人在線，等等看星門是否有人抵達。</div>';return}
+ rows.slice(0,12).forEach(p=>{
+  const item=document.createElement("div");item.className="park-online-person";
+  const orb=document.createElement("span");orb.className="park-online-orb";orb.textContent="✦";
+  const name=document.createElement("b");name.textContent=(p.sessionId===parkSessionId?"你 · ":"")+String(p.nickname||"星空旅人");
+  const state=document.createElement("small");state.textContent=p.sessionId===parkSessionId?"正在探索":"在線探索中";
+  item.append(orb,name,state);list.append(item);
+ });
+}
+function renderParkVisitorMarkers(players){
+ const group=document.getElementById("parkMapVisitors");if(!group)return;
+ group.replaceChildren();
+ (players||[]).forEach(p=>{
+  if(!p||p.sessionId===parkSessionId)return;
+  const x=Math.max(-41,Math.min(41,Number(p.x)||0)),z=Math.max(-43,Math.min(43,Number(p.z)||0));
+  const dot=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  dot.setAttribute("cx",String(x));dot.setAttribute("cy",String(z));dot.setAttribute("r","1.55");dot.setAttribute("class","map-visitor");
+  const title=document.createElementNS("http://www.w3.org/2000/svg","title");title.textContent=String(p.nickname||"旅人");dot.append(title);group.append(dot);
+ });
+}
+function currentParkPresence(){
+ const p=me();return {
+  sessionId:parkSessionId,nickname:p?.name||"星空旅人",avatarId:p?.avatarId||"wanderer",
+  x:parkLocalPosition.x,z:parkLocalPosition.z,yaw:parkLocalPosition.yaw,
+  onlineAt:new Date().toISOString()
+ };
+}
+async function refreshParkPresence(){
+ if(!parkChannel||!cloudUser||me()?.isAdmin)return;
+ try{await parkChannel.track(currentParkPresence())}catch(error){console.warn("Park presence update failed:",error)}
+}
+async function loadParkChatHistory(){
+ if(!sb||!parkChannel||me()?.isAdmin)return;
+ const {data,error}=await sb.from("sd_chat_messages")
+  .select("id,nickname,message,created_at")
+  .order("created_at",{ascending:false}).limit(40);
+ if(error){const status=document.getElementById("parkChatStatus");if(status)status.textContent="聊天紀錄暫時無法載入";console.warn("Park chat history failed:",error);return}
+ const feed=document.getElementById("parkChatMessages");if(feed)feed.innerHTML="";
+ (data||[]).slice().reverse().forEach(appendParkChat);
+ if(!data?.length){const feed=document.getElementById("parkChatMessages");if(feed)feed.innerHTML='<div class="chat-placeholder">夜色正好，向其他旅人打聲招呼吧。</div>'}
+}
+async function startParkSocial(){
+ const feed=document.getElementById("parkChatMessages");if(!feed)return;
+ if(!cloudMode||!cloudUser){renderParkSocialGate("guest","登入遊戲帳號後，就能在園區遇見其他旅人並即時聊天。");return}
+ if(me()?.isAdmin){renderParkSocialGate("admin","管理員隱身模式已啟用：你的角色、在線狀態與聊天紀錄不會公開。");renderParkVisitorMarkers([]);window.dispatchEvent(new CustomEvent("starry-3d-players",{detail:{players:[]}}));return}
+ if(parkChannel){await loadParkChatHistory();return}
+ if(parkSocialStarting)return;
+ parkSocialStarting=true;
+ const status=document.getElementById("parkChatStatus");if(status)status.textContent="正在連接星夢園區…";
+ const channel=sb.channel("park:lobby",{
+  config:{private:true,presence:{key:parkSessionId},broadcast:{ack:false,self:false}}
+ });
+ parkChannel=channel;
+ channel
+  .on("presence",{event:"sync"},()=>{
+   const state=channel.presenceState(),players=[],seen=new Set();
+   Object.values(state).flat().forEach(p=>{
+    if(p&&p.sessionId&&!seen.has(p.sessionId)){seen.add(p.sessionId);players.push(p)}
+   });
+   renderParkOnline(players);renderParkVisitorMarkers(players);
+   window.dispatchEvent(new CustomEvent("starry-3d-players",{detail:{players}}));
+  })
+  .on("broadcast",{event:"player_move"},({payload})=>{
+   if(!payload||!payload.sessionId||payload.sessionId===parkSessionId)return;
+   parkRemoteMap.set(payload.sessionId,payload);
+   renderParkVisitorMarkers([...parkRemoteMap.values()]);
+   window.dispatchEvent(new CustomEvent("starry-3d-player-move",{detail:{player:payload}}));
+  })
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"sd_chat_messages"},payload=>{
+   if(payload&&payload.new)appendParkChat(payload.new);
+  })
+  .subscribe(async state=>{
+   if(state==="SUBSCRIBED"){
+    parkSocialStarting=false;
+    try{
+     await channel.track(currentParkPresence());
+     if(status)status.textContent="已連線 · 你正在星夢樂園中";
+     const input=document.getElementById("parkChatInput"),send=document.getElementById("parkChatSend");
+     if(input)input.disabled=false;if(send)send.disabled=false;
+     await loadParkChatHistory();
+    }catch(error){if(status)status.textContent="已加入園區，但同步狀態失敗";console.warn("Park channel setup failed:",error)}
+   }else if(state==="CHANNEL_ERROR"||state==="TIMED_OUT"||state==="CLOSED"){
+    parkSocialStarting=false;
+    if(status)status.textContent="園區連線中斷，請重新整理頁面再試";
+   }
+  });
+}
+async function sendParkChat(){
+ if(!parkChannel||!sb||!cloudUser||me()?.isAdmin)return;
+ const input=document.getElementById("parkChatInput");if(!input)return;
+ const message=input.value.trim();
+ if(!message){input.focus();return}
+ if(message.length>180){say("聊天訊息最多 180 個字。");return}
+ const send=document.getElementById("parkChatSend");if(send)send.disabled=true;
+ const {data,error}=await sb.from("sd_chat_messages")
+  .insert({user_id:cloudUser.id,message})
+  .select("id,nickname,message,created_at").single();
+ if(error){say("訊息未能送出："+friendlyAuthError(error))}
+ else{appendParkChat(data);input.value=""}
+ if(send)send.disabled=false;
+ input.focus();
+}
+async function stopParkSocial(){
+ const channel=parkChannel;parkChannel=null;parkSocialStarting=false;parkMoveLast=null;parkRemoteMap.clear();
+ if(channel&&sb){try{await channel.untrack()}catch(e){}try{await sb.removeChannel(channel)}catch(e){}}
+ renderParkVisitorMarkers([]);
+ window.dispatchEvent(new CustomEvent("starry-3d-players",{detail:{players:[]}}));
+}
+
 function home(){nav("home");header();shell('<section class="hero"><div class="eyebrow">STAR DREAMLAND · AFTER DARK</div><h1>星夢夜遊園</h1><p>入夜後才開始的成人星際遊樂園。登上雲霄飛車、挑戰霓虹靶場、穿越鏡屋密室，在城堡燈火之間展開夜間冒險。</p></section><section class="plaza plaza-3d" id="starry-plaza"><div id="starry-3d" class="starry-3d-stage" aria-label="星夢樂園 3D 中央廣場"><div class="starry-3d-fallback"><strong>星夢廣場準備中</strong><span>正在載入 3D 場景；若暫時無法顯示，仍可從下方遊戲入口開始挑戰。</span></div></div><aside class="park-minimap" aria-label="星夢樂園地圖">
  <div class="park-map-heading"><span>✦ 園區導覽</span><button class="map-expand-button" data-map-expand aria-label="放大園區地圖">放大 ↗</button></div>
  <svg class="park-map-svg" viewBox="-44 -48 88 96" role="img" aria-label="星夢樂園設施位置簡圖">
@@ -308,7 +453,13 @@ function home(){nav("home");header();shell('<section class="hero"><div class="ey
  </svg>
  <div class="park-map-legend"><span><i class="legend-ride"></i>設施</span><span><i class="legend-game"></i>遊戲場</span><span><i class="legend-player"></i>玩家</span></div>
 </aside>
-<div class="plaza-topline"><span class="plaza-tag">✦ OPEN WORLD NIGHT PARK</span><span class="plaza-camera">入口第三人稱視角</span></div><div class="locked">✧ 星際競技館<br><small>尚未開放 · COMING SOON</small></div><div id="starry-3d-status" class="plaza-status">正在喚醒星夢廣場…</div><div class="plaza-controls"><span>WASD／方向鍵：移動</span><span>Shift：奔跑</span><span>E：互動／下車</span><span>拖曳：旋轉視角</span><span>滾輪：調整遠近</span></div><div class="caption">✦ STAR DREAMLAND　／　自由探索夜遊園</div></section><div class="wardrobe-entry"><div><b>旅人造型衣櫥</b><small>更換你的星幻旅人造型，或使用星塵解鎖稀有外觀。</small></div><button class="btn sm" data-wardrobe>開啟衣櫥</button></div><div class="head"><div><h2>成人夜遊設施</h2><p>每項設施都有獨立玩法、隨機關卡與成人星塵紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">☾</div><h3>月相共鳴</h3><p>在不規則節奏中判斷月光時機，連續命中可取得更高分數。</p><button class="btn sm" data-game="moon">進入挑戰</button></article><article class="card"><div class="art">⌘</div><h3>星域解碼</h3><p>從符號位置與命中數量推理四位密碼，線索不會直接揭露答案。</p><button class="btn sm" data-game="cipher">進入挑戰</button></article><article class="card"><div class="art">⌁</div><h3>軌道接線</h3><p>旋轉不同形狀的節點，將起點接通出口；路線每次重新生成。</p><button class="btn sm" data-game="orbit">進入挑戰</button></article></section><div class="head"><div><h2>夜間限定設施</h2><p>兩款新增遊戲都會在每次結束時完整公開正解與操作紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">◎</div><h3>霓虹神射手</h3><p>24 秒反應靶場，依序命中六個亮起的目標，考驗專注力與反應速度。</p><button class="btn sm" data-game="shooting-range">進入靶場</button></article><article class="card"><div class="art">◇</div><h3>幻影鏡屋</h3><p>三輪漸進式光影記憶試煉，記住符號順序，穿越鏡面長廊。</p><button class="btn sm" data-game="mirror-house">進入鏡屋</button></article></section><div class="head"><div><h2>旅人資料</h2><p>'+(cloudMode&&!cloudUser?"目前為訪客預覽，遊玩不會儲存成績；按右上角「登入／註冊」即可連接全球帳號。":"成人與星芽星塵分開計算；雲端帳號會同步保存在不同裝置。")+'</p></div></div><div class="stats"><div class="stat"><small>玩家暱稱</small><b>'+esc(me().name)+'</b></div><div class="stat"><small>成人星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div><div class="stat"><small>成人挑戰</small><b>'+state.records.filter(r=>r.uid===me().id&&ADULT_GAME_IDS.includes(r.game)).length+'</b></div></div><div class="footer">Starry Dreamland · 星夢樂園　｜　成人挑戰與星芽探索分開計分</div>');const host=document.getElementById("starry-3d");if(host&&me())host.dataset.avatar=me().avatarId||"wanderer";if(window.Starry3D&&host)window.Starry3D.mount(host)}
+<div class="plaza-topline"><span class="plaza-tag">✦ OPEN WORLD NIGHT PARK</span><span class="plaza-camera">入口第三人稱視角</span></div><div class="locked">✧ 星際競技館<br><small>尚未開放 · COMING SOON</small></div><div id="starry-3d-status" class="plaza-status">正在喚醒星夢廣場…</div><div class="plaza-controls"><span>WASD／方向鍵：移動</span><span>Shift：奔跑</span><span>E：互動／下車</span><span>拖曳：旋轉視角</span><span>滾輪：調整遠近</span></div><div class="caption">✦ STAR DREAMLAND　／　自由探索夜遊園</div></section><section class="park-social-panel">
+ <div class="park-social-heading"><div><small>LIVE PARK LOUNGE</small><h2>旅人會客廳</h2><p>在園區碰見其他旅人，也可以在這裡即時聊天。</p></div><span id="parkOnlineCount" class="park-online-count">尚未連線</span></div>
+ <div class="park-social-layout">
+  <aside class="park-online-panel"><h3>✦ 在線旅人</h3><div id="parkPlayers"><div class="chat-placeholder">載入在線名單…</div></div></aside>
+  <div class="park-chat-panel"><div class="park-chat-top"><b>星夢廣場公共頻道</b><span id="parkChatStatus">準備連線…</span></div><div id="parkChatMessages" class="park-chat-messages"><div class="chat-placeholder">登入後即可開始聊天。</div></div><form id="parkChatForm" class="park-chat-form"><input id="parkChatInput" maxlength="180" placeholder="向其他旅人打聲招呼…" autocomplete="off" disabled/><button id="parkChatSend" class="btn sm" type="submit" disabled>傳送</button></form></div>
+ </div>
+</section><div class="wardrobe-entry"><div><b>旅人造型衣櫥</b><small>更換你的星幻旅人造型，或使用星塵解鎖稀有外觀。</small></div><button class="btn sm" data-wardrobe>開啟衣櫥</button></div><div class="head"><div><h2>成人夜遊設施</h2><p>每項設施都有獨立玩法、隨機關卡與成人星塵紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">☾</div><h3>月相共鳴</h3><p>在不規則節奏中判斷月光時機，連續命中可取得更高分數。</p><button class="btn sm" data-game="moon">進入挑戰</button></article><article class="card"><div class="art">⌘</div><h3>星域解碼</h3><p>從符號位置與命中數量推理四位密碼，線索不會直接揭露答案。</p><button class="btn sm" data-game="cipher">進入挑戰</button></article><article class="card"><div class="art">⌁</div><h3>軌道接線</h3><p>旋轉不同形狀的節點，將起點接通出口；路線每次重新生成。</p><button class="btn sm" data-game="orbit">進入挑戰</button></article></section><div class="head"><div><h2>夜間限定設施</h2><p>兩款新增遊戲都會在每次結束時完整公開正解與操作紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">◎</div><h3>霓虹神射手</h3><p>24 秒反應靶場，依序命中六個亮起的目標，考驗專注力與反應速度。</p><button class="btn sm" data-game="shooting-range">進入靶場</button></article><article class="card"><div class="art">◇</div><h3>幻影鏡屋</h3><p>三輪漸進式光影記憶試煉，記住符號順序，穿越鏡面長廊。</p><button class="btn sm" data-game="mirror-house">進入鏡屋</button></article></section><div class="head"><div><h2>旅人資料</h2><p>'+(cloudMode&&!cloudUser?"目前為訪客預覽，遊玩不會儲存成績；按右上角「登入／註冊」即可連接全球帳號。":"成人與星芽星塵分開計算；雲端帳號會同步保存在不同裝置。")+'</p></div></div><div class="stats"><div class="stat"><small>玩家暱稱</small><b>'+esc(me().name)+'</b></div><div class="stat"><small>成人星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div><div class="stat"><small>成人挑戰</small><b>'+state.records.filter(r=>r.uid===me().id&&ADULT_GAME_IDS.includes(r.game)).length+'</b></div></div><div class="footer">Starry Dreamland · 星夢樂園　｜　成人挑戰與星芽探索分開計分</div>');const host=document.getElementById("starry-3d");if(host&&me()){host.dataset.avatar=me().avatarId||"wanderer";host.dataset.sessionId=parkSessionId}if(window.Starry3D&&host)window.Starry3D.mount(host);startParkSocial()}
 
 function wardrobe(){
  nav("home");header();
