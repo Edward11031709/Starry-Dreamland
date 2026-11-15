@@ -126,10 +126,12 @@ function makeLabelSprite(meta){
  ctx.strokeStyle="rgba(156,139,214,0.78)";ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(23,23,722,162,24);ctx.stroke();
  ctx.fillStyle="#f3dca7";ctx.shadowColor="rgba(255,218,151,0.85)";ctx.shadowBlur=18;
  [[48,104],[720,104]].forEach(([x,y])=>{ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);ctx.fillRect(-7,-7,14,14);ctx.restore()});
- ctx.textAlign="center";ctx.textBaseline="middle";ctx.shadowBlur=18;ctx.fillStyle="#fff0c9";
- ctx.font="bold 54px 'Noto Serif TC','Noto Sans TC',serif";ctx.fillText(meta.title,384,78);
- ctx.shadowBlur=0;ctx.fillStyle="#c9c1e7";ctx.font="26px Georgia,serif";ctx.letterSpacing="5px";ctx.fillText(meta.subtitle,384,145);
- const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+ ctx.textAlign="center";ctx.textBaseline="middle";ctx.fontKerning="normal";ctx.shadowBlur=18;ctx.fillStyle="#fff0c9";
+ const titleFamily='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Noto Sans CJK TC",sans-serif';
+ let titleSize=54;do{ctx.font='700 '+titleSize+'px '+titleFamily;if(ctx.measureText(String(meta.title||"")).width<=690)break;titleSize-=2;}while(titleSize>30);
+ ctx.fillText(String(meta.title||""),384,78,690);
+ ctx.shadowBlur=0;ctx.fillStyle="#c9c1e7";ctx.font='500 24px "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';ctx.letterSpacing="2px";ctx.fillText(String(meta.subtitle||""),384,145,700);
+ const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
  const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false,sizeAttenuation:true});
  const sprite=new THREE.Sprite(material);sprite.scale.set(4.8,1.3,1);return sprite;
 }
@@ -832,6 +834,10 @@ function disposeWorld(world) {
     world.canvas.removeEventListener("pointermove", world.onPointerMove);
     world.canvas.removeEventListener("pointerup", world.onPointerUp);
     world.canvas.removeEventListener("pointercancel", world.onPointerUp);
+    window.removeEventListener("starry-3d-camera-toggle",world.onCameraToggle);
+    window.removeEventListener("starry-3d-touch-move",world.onTouchMove);
+    window.removeEventListener("starry-3d-touch-run",world.onTouchRun);
+    window.removeEventListener("starry-3d-touch-interact",world.onTouchInteract);
   }
   if (world.onKeyDown) window.removeEventListener("keydown", world.onKeyDown);
   if (world.onKeyUp) window.removeEventListener("keyup", world.onKeyUp);
@@ -957,7 +963,7 @@ function mount(host) {
 
   const isSmall = width < 650;
   const camera = new THREE.PerspectiveCamera(isSmall ? 62 : 60,width/height,0.1,320);
-  const cameraState = { yaw: 0, pitch: 0.24, distance: isSmall ? 10.2 : 9.5 };
+  const cameraState = { yaw: 0, pitch: 0.035, distance: isSmall ? 10.2 : 9.5 };
   camera.position.set(0, 3.2, 42.2);
   camera.lookAt(0, 1.7, 33.0);
 
@@ -1015,12 +1021,45 @@ function mount(host) {
   const world = {
     host, scene, renderer, camera, starfield, environment,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
-    cameraState, keys: new Set(), mountedRide: null, minimapLast: 0,
+    cameraState, cameraMode: host.dataset.cameraMode || "first", keys: new Set(),
+    touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, minimapLast: 0,
     localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
     running: true, frame: 0, lastTime: 0
   };
   activeWorld = world;
+  player.visible = world.cameraMode !== "first";
+
+  function setCameraMode(mode){
+    world.cameraMode=mode==="third"?"third":"first";
+    cameraState.pitch=world.cameraMode==="third"?0.24:0.035;
+    player.visible=world.cameraMode==="third"&&!world.mountedRide;
+    if(world.mountedRide)player.visible=world.cameraMode==="third";
+    window.dispatchEvent(new CustomEvent("starry-3d-camera-mode",{detail:{mode:world.cameraMode}}));
+  }
+
+  function interactNearby(){
+    if(world.mountedRide){dismountCarousel();return}
+    const p=player.position,ride=environment.carousel.root.position,booth=environment.ticketBooth.position;
+    if(Math.hypot(p.x-ride.x,p.z-ride.z)<5.4){mountCarousel();return}
+    if(Math.hypot(p.x-booth.x,p.z-booth.z)<4.2){
+      window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"ticket-booth"}}));
+      return;
+    }
+    window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"nearby-hint"}}));
+  }
+  world.onCameraToggle=()=>setCameraMode(world.cameraMode==="first"?"third":"first");
+  world.onTouchMove=event=>{
+    const d=event.detail||{};
+    world.touchMove.x=THREE.MathUtils.clamp(Number(d.x)||0,-1,1);
+    world.touchMove.y=THREE.MathUtils.clamp(Number(d.y)||0,-1,1);
+  };
+  world.onTouchRun=event=>{world.touchRun=!!(event.detail&&event.detail.active)};
+  world.onTouchInteract=()=>interactNearby();
+  window.addEventListener("starry-3d-camera-toggle",world.onCameraToggle);
+  window.addEventListener("starry-3d-touch-move",world.onTouchMove);
+  window.addEventListener("starry-3d-touch-run",world.onTouchRun);
+  window.addEventListener("starry-3d-touch-interact",world.onTouchInteract);
 
   function findTarget(object) {
     let current = object;
@@ -1053,7 +1092,7 @@ function mount(host) {
   function mountCarousel() {
     if(world.mountedRide)return;
     world.mountedRide=environment.carousel.rideSeat;
-    player.visible=true;player.scale.setScalar(0.72);
+    player.visible=world.cameraMode==="third";player.scale.setScalar(0.72);
     const status=document.getElementById("starry-3d-status");
     if(status)status.textContent="正在乘坐星光旋轉木馬 · 按 E 下車";
   }
@@ -1061,7 +1100,7 @@ function mount(host) {
   function dismountCarousel() {
     if(!world.mountedRide)return;
     world.mountedRide=null;
-    player.visible=true;
+    player.visible=world.cameraMode==="third";
     const root=environment.carousel.root;
     player.scale.setScalar(1);player.position.set(root.position.x+4.25,surfaceAt(root.position.x+4.25,root.position.z)-0.025,root.position.z);
     const status=document.getElementById("starry-3d-status");
@@ -1129,23 +1168,14 @@ function mount(host) {
   world.onKeyDown = event => {
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target && event.target.tagName)) return;
     const key = event.key.toLowerCase();
-    if(key==="e"){
-      event.preventDefault();
-      if(world.mountedRide){dismountCarousel();return}
-      const p=player.position,ride=environment.carousel.root.position,booth=environment.ticketBooth.position;
-      if(Math.hypot(p.x-ride.x,p.z-ride.z)<5.4){mountCarousel();return}
-      if(Math.hypot(p.x-booth.x,p.z-booth.z)<4.2){
-        window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"ticket-booth"}}));
-        return;
-      }
-    }
+    if(key==="e"){event.preventDefault();interactNearby();return}
     if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(key)) {
       if(world.mountedRide)return;
       event.preventDefault();world.keys.add(key);
     }
   };
   world.onKeyUp = event => world.keys.delete(event.key.toLowerCase());
-  world.onBlur = () => world.keys.clear();
+  world.onBlur = () => {world.keys.clear();world.touchMove.x=0;world.touchMove.y=0;world.touchRun=false};
   window.addEventListener("keydown", world.onKeyDown, { passive: false });
   window.addEventListener("keyup", world.onKeyUp);
   window.addEventListener("blur", world.onBlur);
@@ -1168,8 +1198,12 @@ function mount(host) {
       const dy = event.clientY - world.pointerDrag.y;
       if (Math.abs(dx) + Math.abs(dy) > 3) world.pointerDrag.dragged = true;
       if (world.pointerDrag.dragged) {
-        cameraState.yaw -= dx * 0.006;
-        cameraState.pitch = THREE.MathUtils.clamp(cameraState.pitch + dy * 0.0035, 0.10, 0.82);
+        cameraState.yaw -= dx * (world.cameraMode==="first"?0.0048:0.006);
+        cameraState.pitch = THREE.MathUtils.clamp(
+          cameraState.pitch + dy * 0.0032,
+          world.cameraMode==="first"?-0.62:0.10,
+          world.cameraMode==="first"?0.62:0.82
+        );
         world.pointerDrag.x = event.clientX;
         world.pointerDrag.y = event.clientY;
         renderer.domElement.style.cursor = "grabbing";
@@ -1240,6 +1274,10 @@ function mount(host) {
     if (world.keys.has("s") || world.keys.has("arrowdown")) move.sub(forward);
     if (world.keys.has("d") || world.keys.has("arrowright")) move.add(right);
     if (world.keys.has("a") || world.keys.has("arrowleft")) move.sub(right);
+    if(world.touchMove.x||world.touchMove.y){
+      move.addScaledVector(right,world.touchMove.x);
+      move.addScaledVector(forward,-world.touchMove.y);
+    }
     if(world.mountedRide){
       const mountedPosition=new THREE.Vector3();
       world.mountedRide.getWorldPosition(mountedPosition);
@@ -1250,7 +1288,8 @@ function mount(host) {
       const moving = move.lengthSq() > 0;
       if (moving) {
         move.normalize();
-        const speed = world.keys.has("shift") ? 8.2 : 5.4;
+        if(move.lengthSq()>1)move.normalize();
+        const speed = world.keys.has("shift") || world.touchRun ? 8.2 : 5.4;
         const step=speed*delta;
         let nextX=player.position.x+move.x*step;
         let nextZ=player.position.z+move.z*step;
@@ -1273,14 +1312,26 @@ function mount(host) {
     }
     player.userData.halo.rotation.z += delta * 0.45;
     if(player.userData.floatingStar)player.userData.floatingStar.rotation.y+=delta*0.75;
-    const horizontalDistance = Math.cos(cameraState.pitch) * cameraState.distance;
-    const desiredCamera = new THREE.Vector3(
-      player.position.x - Math.sin(cameraState.yaw) * horizontalDistance,
-      player.position.y + Math.sin(cameraState.pitch) * cameraState.distance + 1.0,
-      player.position.z + Math.cos(cameraState.yaw) * horizontalDistance
-    );
-    camera.position.lerp(desiredCamera, Math.min(1, delta * 5.5));
-    camera.lookAt(player.position.x, player.position.y + 1.15, player.position.z);
+    if(world.cameraMode==="first"){
+      const eye=new THREE.Vector3(player.position.x,player.position.y+1.48,player.position.z);
+      const lookDirection=new THREE.Vector3(
+        -Math.sin(cameraState.yaw)*Math.cos(cameraState.pitch),
+        Math.sin(cameraState.pitch),
+        -Math.cos(cameraState.yaw)*Math.cos(cameraState.pitch)
+      );
+      const lookTarget=eye.clone().addScaledVector(lookDirection,18);
+      camera.position.lerp(eye,Math.min(1,delta*13));
+      camera.lookAt(lookTarget);
+    }else{
+      const horizontalDistance = Math.cos(cameraState.pitch) * cameraState.distance;
+      const desiredCamera = new THREE.Vector3(
+        player.position.x - Math.sin(cameraState.yaw) * horizontalDistance,
+        player.position.y + Math.sin(cameraState.pitch) * cameraState.distance + 1.0,
+        player.position.z + Math.cos(cameraState.yaw) * horizontalDistance
+      );
+      camera.position.lerp(desiredCamera, Math.min(1, delta * 5.5));
+      camera.lookAt(player.position.x, player.position.y + 1.15, player.position.z);
+    }
     environment.portals.forEach((portal, i) => {
       const motion = portal.userData.motion;
       motion.ring.rotation.z = Math.sin(t * 0.5 + motion.phase) * 0.08;
@@ -1331,7 +1382,7 @@ function mount(host) {
   host.dataset.status = "ready";
   const fallback = host.querySelector(".starry-3d-fallback");
   if (fallback) fallback.hidden = true;
-  if (status) status.textContent = "WASD 自由探索園區；找到星門即可開始挑戰";
+  if (status) status.textContent = window.matchMedia&&window.matchMedia("(pointer: coarse)").matches ? "左側搖桿移動 · 滑動右側畫面環顧四周 · 互動按鈕使用設施" : "第一人稱自由探索 · 拖曳環顧四周 · E 互動";
   window.dispatchEvent(new CustomEvent("starry-3d-mounted"));
 }
 
