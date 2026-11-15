@@ -1643,19 +1643,23 @@ function mount(host) {
       const bob=moving?Math.abs(Math.sin(player.userData.walkPhase))*0.045:0;
       player.position.y=THREE.MathUtils.lerp(player.position.y,ground-0.025+bob,Math.min(1,delta*12));
     }
-    const nearestZone=environment.discoveryZones
-      .map(zone=>({zone,distance:Math.hypot(player.position.x-zone.x,player.position.z-zone.z)}))
-      .filter(entry=>entry.distance<=entry.zone.radius)
-      .sort((a,b)=>a.distance-b.distance)[0]||null;
-    const activeZoneId=nearestZone?.zone.id||null;
-    if(activeZoneId!==world.activeDiscoveryZone){
-      world.activeDiscoveryZone=activeZoneId;
-      if(nearestZone&&!world.discoveredZones.has(activeZoneId)){
-        const zone=nearestZone.zone;
-        world.discoveredZones.add(zone.id);
-        window.dispatchEvent(new CustomEvent("starry-3d-discovery",{detail:{
-          id:zone.id,name:zone.name,description:zone.description,x:zone.x,z:zone.z
-        }}));
+    if(world.mountedRide){
+      world.activeDiscoveryZone=null;
+    }else{
+      const nearestZone=environment.discoveryZones
+        .map(zone=>({zone,distance:Math.hypot(player.position.x-zone.x,player.position.z-zone.z)}))
+        .filter(entry=>entry.distance<=entry.zone.radius)
+        .sort((a,b)=>a.distance-b.distance)[0]||null;
+      const activeZoneId=nearestZone?.zone.id||null;
+      if(activeZoneId!==world.activeDiscoveryZone){
+        world.activeDiscoveryZone=activeZoneId;
+        if(nearestZone&&!world.discoveredZones.has(activeZoneId)){
+          const zone=nearestZone.zone;
+          world.discoveredZones.add(zone.id);
+          window.dispatchEvent(new CustomEvent("starry-3d-discovery",{detail:{
+            id:zone.id,name:zone.name,description:zone.description,x:zone.x,z:zone.z
+          }}));
+        }
       }
     }
     player.userData.halo.rotation.z += delta * 0.45;
