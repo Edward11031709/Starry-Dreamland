@@ -1032,6 +1032,7 @@ function mount(host) {
 
   function setCameraMode(mode){
     world.cameraMode=mode==="third"?"third":"first";
+    cameraState.pitch=world.cameraMode==="third"?0.24:0.035;
     player.visible=world.cameraMode==="third"&&!world.mountedRide;
     if(world.mountedRide)player.visible=world.cameraMode==="third";
     window.dispatchEvent(new CustomEvent("starry-3d-camera-mode",{detail:{mode:world.cameraMode}}));
