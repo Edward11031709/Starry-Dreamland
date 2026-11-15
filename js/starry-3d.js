@@ -488,9 +488,14 @@ function disposeWorld(world) {
   if (!world) return;
   if (world.resizeObserver) world.resizeObserver.disconnect();
   if (world.canvas) {
+    world.canvas.removeEventListener("pointerdown", world.onPointerDown);
     world.canvas.removeEventListener("pointermove", world.onPointerMove);
     world.canvas.removeEventListener("pointerup", world.onPointerUp);
+    world.canvas.removeEventListener("pointercancel", world.onPointerUp);
   }
+  if (world.onKeyDown) window.removeEventListener("keydown", world.onKeyDown);
+  if (world.onKeyUp) window.removeEventListener("keyup", world.onKeyUp);
+  if (world.onBlur) window.removeEventListener("blur", world.onBlur);
   if (world.visibilityHandler) document.removeEventListener("visibilitychange", world.visibilityHandler);
   if (world.renderer) {
     world.renderer.setAnimationLoop(null);
@@ -511,6 +516,25 @@ function disposeWorld(world) {
       });
     }
   });
+}
+
+function buildPlayer(scene) {
+  const player = new THREE.Group();
+  player.name = "StarryDreamlandPlayer";
+  const robe = new THREE.MeshStandardMaterial({ color: 0x8d75c9, roughness: 0.48, metalness: 0.12 });
+  const trim = new THREE.MeshStandardMaterial({ color: 0xe9c982, emissive: 0x8b6330, emissiveIntensity: 0.35, roughness: 0.35, metalness: 0.5 });
+  const face = new THREE.MeshStandardMaterial({ color: 0xf1d9c5, roughness: 0.78 });
+  addMesh(player, new THREE.SphereGeometry(0.43, 18, 14), robe, [0, 0.72, 0], [0.78, 1.08, 0.62]);
+  addMesh(player, new THREE.SphereGeometry(0.29, 18, 14), face, [0, 1.48, 0.02]);
+  addMesh(player, new THREE.ConeGeometry(0.3, 0.42, 8), trim, [0, 1.83, 0]);
+  addMesh(player, new THREE.SphereGeometry(0.095, 12, 10), trim, [0, 2.08, 0]);
+  [-0.2, 0.2].forEach(x => addMesh(player, new THREE.SphereGeometry(0.075, 10, 8), trim, [x, 0.18, 0.02]));
+  const halo = addMesh(player, new THREE.TorusGeometry(0.58, 0.035, 8, 36), trim, [0, 2.15, 0]);
+  halo.rotation.x = Math.PI / 2;
+  player.userData.halo = halo;
+  player.userData.walkPhase = 0;
+  scene.add(player);
+  return player;
 }
 
 function mount(host) {
@@ -544,10 +568,11 @@ function mount(host) {
   scene.background = new THREE.Color(PALETTE.night);
   scene.fog = new THREE.FogExp2(PALETTE.night, 0.011);
 
-  const camera = new THREE.PerspectiveCamera(37,width/height,0.1,150);
   const isSmall = width < 650;
-  camera.position.set(isSmall ? 0 : 10.2, isSmall ? 24 : 16.8, isSmall ? 38 : 25.5);
-  camera.lookAt(0, 0.2, -0.65);
+  const camera = new THREE.PerspectiveCamera(isSmall ? 48 : 52,width/height,0.1,150);
+  const cameraState = { yaw: 0, pitch: 0.58, distance: isSmall ? 13.5 : 12.5 };
+  camera.position.set(0, 8.5, 11.5);
+  camera.lookAt(0, 1.2, 8.6);
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.25 : 1.6));
   renderer.setSize(width, height, false);
@@ -588,12 +613,15 @@ function mount(host) {
 
   const starfield = createStarfield(scene, isSmall ? 360 : 620);
   const environment = buildEnvironment(scene);
+  const player = buildPlayer(scene);
+  player.position.set(0, 0.78, 8.6);
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
   const world = {
     host, scene, renderer, camera, starfield, environment,
-    portals: environment.portals, raycaster, pointer, canvas: renderer.domElement,
+    portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
+    cameraState, keys: new Set(), pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
     running: true, frame: 0, lastTime: 0
   };
   activeWorld = world;
@@ -607,7 +635,40 @@ function mount(host) {
     return null;
   }
 
+  world.onKeyDown = event => {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target && event.target.tagName)) return;
+    const key = event.key.toLowerCase();
+    if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(key)) {
+      event.preventDefault();
+      world.keys.add(key);
+    }
+  };
+  world.onKeyUp = event => world.keys.delete(event.key.toLowerCase());
+  world.onBlur = () => world.keys.clear();
+  window.addEventListener("keydown", world.onKeyDown, { passive: false });
+  window.addEventListener("keyup", world.onKeyUp);
+  window.addEventListener("blur", world.onBlur);
+
+  world.onPointerDown = event => {
+    world.pointerDrag.down = true;
+    world.pointerDrag.dragged = false;
+    world.pointerDrag.x = event.clientX;
+    world.pointerDrag.y = event.clientY;
+  };
   world.onPointerMove = event => {
+    if (world.pointerDrag.down) {
+      const dx = event.clientX - world.pointerDrag.x;
+      const dy = event.clientY - world.pointerDrag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 3) world.pointerDrag.dragged = true;
+      if (world.pointerDrag.dragged) {
+        cameraState.yaw -= dx * 0.006;
+        cameraState.pitch = THREE.MathUtils.clamp(cameraState.pitch + dy * 0.004, 0.22, 1.12);
+        world.pointerDrag.x = event.clientX;
+        world.pointerDrag.y = event.clientY;
+        renderer.domElement.style.cursor = "grabbing";
+        return;
+      }
+    }
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -617,7 +678,11 @@ function mount(host) {
   };
 
   world.onPointerUp = event => {
-    if (event.button !== 0) return;
+    const wasDragged = world.pointerDrag.dragged;
+    world.pointerDrag.down = false;
+    world.pointerDrag.dragged = false;
+    renderer.domElement.style.cursor = "grab";
+    if (wasDragged || event.button !== 0) return;
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -632,8 +697,10 @@ function mount(host) {
     }
   };
 
+  renderer.domElement.addEventListener("pointerdown", world.onPointerDown);
   renderer.domElement.addEventListener("pointermove", world.onPointerMove);
   renderer.domElement.addEventListener("pointerup", world.onPointerUp);
+  renderer.domElement.addEventListener("pointercancel", world.onPointerUp);
 
   const clock = new THREE.Clock();
   world.renderFrame = () => {
@@ -651,6 +718,38 @@ function mount(host) {
     environment.clouds.children.forEach((cloud, i) => {
       cloud.position.x += Math.sin(t * 0.12 + cloud.userData.phase) * delta * 0.025;
     });
+    const forward = new THREE.Vector3(-Math.sin(cameraState.yaw), 0, -Math.cos(cameraState.yaw));
+    const right = new THREE.Vector3(Math.cos(cameraState.yaw), 0, -Math.sin(cameraState.yaw));
+    const move = new THREE.Vector3();
+    if (world.keys.has("w") || world.keys.has("arrowup")) move.add(forward);
+    if (world.keys.has("s") || world.keys.has("arrowdown")) move.sub(forward);
+    if (world.keys.has("d") || world.keys.has("arrowright")) move.add(right);
+    if (world.keys.has("a") || world.keys.has("arrowleft")) move.sub(right);
+    const moving = move.lengthSq() > 0;
+    if (moving) {
+      move.normalize();
+      const speed = world.keys.has("shift") ? 7.2 : 4.8;
+      player.position.addScaledVector(move, speed * delta);
+      const radius = Math.hypot(player.position.x, player.position.z);
+      if (radius > 10.15) {
+        player.position.x *= 10.15 / radius;
+        player.position.z *= 10.15 / radius;
+      }
+      player.rotation.y = Math.atan2(move.x, move.z);
+      player.userData.walkPhase += delta * 9;
+      player.position.y = 0.78 + Math.abs(Math.sin(player.userData.walkPhase)) * 0.055;
+    } else {
+      player.position.y = THREE.MathUtils.lerp(player.position.y, 0.78, Math.min(1, delta * 8));
+    }
+    player.userData.halo.rotation.z += delta * 0.45;
+    const horizontalDistance = Math.cos(cameraState.pitch) * cameraState.distance;
+    const desiredCamera = new THREE.Vector3(
+      player.position.x - Math.sin(cameraState.yaw) * horizontalDistance,
+      player.position.y + Math.sin(cameraState.pitch) * cameraState.distance + 1.0,
+      player.position.z + Math.cos(cameraState.yaw) * horizontalDistance
+    );
+    camera.position.lerp(desiredCamera, Math.min(1, delta * 5.5));
+    camera.lookAt(player.position.x, player.position.y + 1.15, player.position.z);
     environment.portals.forEach((portal, i) => {
       const motion = portal.userData.motion;
       motion.ring.rotation.z = Math.sin(t * 0.5 + motion.phase) * 0.08;
@@ -672,7 +771,7 @@ function mount(host) {
     const h = Math.max(1, Math.floor(entry.contentRect.height));
     const small = w < 650;
     camera.aspect = w / h;
-    camera.position.set(small ? 0 : 10.2, small ? 24 : 16.8, small ? 38 : 25.5);
+    cameraState.distance = small ? 13.5 : 12.5;
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.25 : 1.6));
     renderer.setSize(w, h, false);
