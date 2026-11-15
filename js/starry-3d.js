@@ -235,16 +235,30 @@ function buildObservatory(scene, x, y, z, materials) {
 
 function buildEntranceGate(scene,materials){
   const gate=new THREE.Group();gate.position.set(0,0.78,45.0);scene.add(gate);
-  [-3.25,3.25].forEach(x=>{
-    addMesh(gate,new THREE.BoxGeometry(0.62,3.9,0.82),materials.darkStone,[x,1.95,0]);
-    addMesh(gate,new THREE.BoxGeometry(0.86,0.22,1.02),materials.gold,[x,3.9,0]);
-    addMesh(gate,new THREE.SphereGeometry(0.2,16,12),materials.crystal,[x,4.18,0]);
+  [-3.15,3.15].forEach((x,index)=>{
+    addMesh(gate,new THREE.CylinderGeometry(0.33,0.43,4.0,20),materials.darkStone,[x,1.96,0]);
+    addMesh(gate,new THREE.CylinderGeometry(0.53,0.56,0.22,20),materials.gold,[x,0.18,0]);
+    addMesh(gate,new THREE.CylinderGeometry(0.42,0.42,0.13,20),materials.trim,[x,0.34,0]);
+    addMesh(gate,new THREE.CylinderGeometry(0.47,0.47,0.16,20),materials.gold,[x,3.86,0]);
+    addMesh(gate,new THREE.TorusGeometry(0.35,0.045,8,32),materials.trim,[x,3.78,0]);
+    addMesh(gate,new THREE.OctahedronGeometry(0.23,1),materials.crystal,[x,4.18,0],[0.74,1.28,0.74],false,false);
+    for(let k=0;k<3;k++){
+      const stripe=addMesh(gate,new THREE.BoxGeometry(0.055,2.65,0.06),materials.gold,[x+(k-1)*0.13,2.0,0.39],null,false,false);
+    }
   });
-  addMesh(gate,new THREE.BoxGeometry(7.05,0.48,0.9),materials.trim,[0,3.87,0]);
-  addMesh(gate,new THREE.BoxGeometry(6.7,0.12,0.98),materials.gold,[0,4.2,0]);
+  // Two nested illuminated arches replace the heavy rectangular lintel.
+  const outer=addMesh(gate,new THREE.TorusGeometry(3.12,0.2,14,88,Math.PI),materials.trim,[0,3.72,0]);
+  const inner=addMesh(gate,new THREE.TorusGeometry(2.86,0.075,10,80,Math.PI),materials.gold,[0,3.72,-0.04]);
+  const innerGlow=addMesh(gate,new THREE.TorusGeometry(2.64,0.028,8,72,Math.PI),materials.crystal,[0,3.72,-0.08]);
+  const keystone=addMesh(gate,new THREE.OctahedronGeometry(0.48,1),materials.crystal,[0,6.9,0.05],[0.8,1.45,0.8],false,false);
+  keystone.rotation.z=Math.PI/4;
+  addMesh(gate,new THREE.TorusGeometry(0.7,0.045,8,48),materials.gold,[0,6.18,0.05]);
   const title=makeLabelSprite({title:"星夢夜遊園",subtitle:"STAR DREAMLAND · NIGHT PARK"});
-  if(title){title.position.set(0,4.95,0.2);title.scale.set(5.7,1.55,1);gate.add(title)}
-  [-2.15,2.15].forEach(x=>{const light=new THREE.PointLight(PALETTE.gold,5,4,2);light.position.set(x,3.4,0.5);gate.add(light)});
+  if(title){title.position.set(0,5.48,0.28);title.scale.set(5.45,1.42,1);gate.add(title)}
+  [-2.25,2.25].forEach(x=>{
+    const light=new THREE.PointLight(PALETTE.gold,7,5,2);light.position.set(x,3.2,0.55);gate.add(light);
+  });
+  const crownLight=new THREE.PointLight(PALETTE.violet,12,8,2);crownLight.position.set(0,5.8,-0.1);gate.add(crownLight);
   return gate;
 }
 
@@ -934,17 +948,17 @@ function mount(host) {
   renderer.setSize(width, height, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.toneMappingExposure = 1.08;
   renderer.shadowMap.enabled = false;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = "starry-3d-canvas";
   renderer.domElement.setAttribute("aria-label", "可自由探索星夢夜遊園、漫遊各主題園區並點擊挑戰星門");
   host.appendChild(renderer.domElement);
 
-  const hemisphere = new THREE.HemisphereLight(0xdbe3ff, 0x28223f, 2.05);
+  const hemisphere = new THREE.HemisphereLight(0xbfcdfd, 0x171329, 1.55);
   scene.add(hemisphere);
 
-  const moonLight = new THREE.DirectionalLight(0xffe8ca, 2.55);
+  const moonLight = new THREE.DirectionalLight(0xffe5c4, 1.95);
   moonLight.position.set(-11, 20, 15);
   moonLight.castShadow = false;
   moonLight.shadow.mapSize.set(1024, 1024);
@@ -955,15 +969,15 @@ function mount(host) {
   moonLight.shadow.bias = -0.00035;
   scene.add(moonLight);
 
-  const fillLight = new THREE.DirectionalLight(0x9ba9ff, 1.55);
+  const fillLight = new THREE.DirectionalLight(0x9188dd, 1.05);
   fillLight.position.set(12, 8, -12);
   scene.add(fillLight);
 
-  const warmLight = new THREE.PointLight(0xe6b66f, 42, 24, 2);
+  const warmLight = new THREE.PointLight(0xe9be7a, 28, 26, 2);
   warmLight.position.set(0, 7, -4);
   scene.add(warmLight);
 
-  const blueLight = new THREE.PointLight(0x6b92ef, 30, 26, 2);
+  const blueLight = new THREE.PointLight(0x6d80dc, 23, 28, 2);
   blueLight.position.set(-7, 4, 5);
   scene.add(blueLight);
 
