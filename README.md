@@ -45,6 +45,12 @@ Signed-in non-admin players can join the shared park lounge:
 
 The Realtime channel uses the private `park:lobby` topic. Confirm the Supabase Realtime project setting permits private channels and does not permit public access before opening the multiplayer park to other visitors. A real second-player browser session is still required to validate the end-to-end online experience.
 
+## High-fidelity park art and live avatar preview
+
+The park's stone walls, roofs, walkways and plazas now use generated repeating surface patterns with subtle bump detail. The main moon light casts real-time soft shadows (higher resolution on desktop and reduced resolution on smaller viewports). Crystal evergreen trees have faceted layered canopies, the castle has additional carved tower ribs and a stained-glass astral rose window, and the central plaza has fine flush star-compass inlays. A restrained layer of floating star motes adds depth without using placeholder people.
+
+The Traveler Atelier includes an actual Three.js 3D preview using the same player model as the park. Drag the preview to rotate the character, change archetype and appearance controls for immediate updates, and preview any outfit—including locked outfits—before deciding to equip or unlock it. Previewing does not spend Star Dust.
+
 ## Real-player visibility and deferred NPCs
 
 No ambient or placeholder visitor characters are spawned in the park. The only other humanoid characters shown in the 3D world are authenticated, currently online, non-admin players received through Supabase Realtime. Offline names, demo silhouettes and scripted crowd models are not rendered.
