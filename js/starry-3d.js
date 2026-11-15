@@ -460,7 +460,7 @@ function buildCarousel(scene,materials,x,z){
   const rideSeat=new THREE.Group();rideSeat.position.set(1.48,1.34,0);rideSeat.rotation.y=-Math.PI/2;ride.add(rideSeat);
   const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL · RIDE"});
   if(sign){sign.position.set(0,5.12,0);sign.scale.set(4.4,1.16,1);root.add(sign)}
-  return {id:"carousel",root,object:ride,rideSeat,axis:"y",speed:0.24};
+  return {id:"carousel",name:"星光旋轉木馬",action:"ride-carousel",root,object:ride,rideSeat,axis:"y",speed:0.24,interactionRadius:4.2,dismountRadius:4.9};
 }
 
 function buildFerrisWheel(scene,materials,x,y,z){
@@ -1290,7 +1290,7 @@ function mount(host) {
     host, scene, renderer, camera, starfield, parkMotes, environment,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
     cameraState, cameraMode: host.dataset.cameraMode || "first", keys: new Set(),
-    touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, minimapLast: 0,
+    touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, mountedRideData:null, minimapLast: 0, nearbyHintLast:0,
     localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
     running: true, frame: 0, lastTime: 0
@@ -1306,13 +1306,48 @@ function mount(host) {
     window.dispatchEvent(new CustomEvent("starry-3d-camera-mode",{detail:{mode:world.cameraMode}}));
   }
 
+  function rideDistance(ride){
+    return Math.hypot(player.position.x-ride.root.position.x,player.position.z-ride.root.position.z);
+  }
+  function mountRide(ride){
+    if(!ride||!ride.rideSeat||world.mountedRide)return;
+    world.mountedRide=ride.rideSeat;world.mountedRideData=ride;
+    player.visible=world.cameraMode==="third";player.scale.setScalar(0.72);
+    world.keys.clear();world.touchMove.x=0;world.touchMove.y=0;world.touchRun=false;
+    const status=document.getElementById("starry-3d-status");
+    if(status)status.textContent="正在搭乘「"+ride.name+"」 · 按互動鍵或 E 下車";
+    window.dispatchEvent(new CustomEvent("starry-3d-nearby",{detail:{label:"下車　E",name:"下車"}}));
+  }
+  function dismountRide(){
+    if(!world.mountedRide)return;
+    const ride=world.mountedRideData;
+    world.mountedRide=null;world.mountedRideData=null;
+    player.visible=world.cameraMode==="third";player.scale.setScalar(1);
+    const root=ride?.root,baseX=root?.position.x??player.position.x,baseZ=root?.position.z??player.position.z;
+    const radius=ride?.dismountRadius||5.0;
+    let exit=null;
+    for(let i=0;i<20;i++){
+      const angle=(i/20)*Math.PI*2+0.24;
+      const x=baseX+Math.cos(angle)*radius,z=baseZ+Math.sin(angle)*radius;
+      if(Math.hypot(x,z)<(environment.playableRadius||41.2)-0.6&&!blockedAt(x,z)){exit={x,z};break}
+    }
+    if(!exit){exit={x:baseX+radius,z:baseZ}}
+    player.position.set(exit.x,surfaceAt(exit.x,exit.z)-0.025,exit.z);
+    const status=document.getElementById("starry-3d-status");
+    if(status)status.textContent="已離開設施 · 繼續探索星夢樂園";
+    window.dispatchEvent(new CustomEvent("starry-3d-nearby",{detail:{label:"互動　E",name:"互動"}}));
+  }
   function interactNearby(){
-    if(world.mountedRide){dismountCarousel();return}
-    const p=player.position,ride=environment.carousel.root.position,booth=environment.ticketBooth.position;
-    if(Math.hypot(p.x-ride.x,p.z-ride.z)<5.4){mountCarousel();return}
-    if(Math.hypot(p.x-booth.x,p.z-booth.z)<4.2){
-      window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"ticket-booth"}}));
-      return;
+    if(world.mountedRide){dismountRide();return}
+    const nearest=environment.rideStations
+      .map(ride=>({ride,distance:rideDistance(ride)}))
+      .sort((a,b)=>a.distance-b.distance)[0];
+    if(nearest&&nearest.distance<=nearest.ride.interactionRadius){
+      mountRide(nearest.ride);return;
+    }
+    const booth=environment.ticketBooth.position;
+    if(Math.hypot(player.position.x-booth.x,player.position.z-booth.z)<4.2){
+      window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"ticket-booth"}}));return;
     }
     window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:"nearby-hint"}}));
   }
@@ -1355,24 +1390,6 @@ function mount(host) {
 
   function blockedAt(x,z) {
     return environment.colliders.some(collider => Math.hypot(x-collider.x,z-collider.z) < collider.radius + 0.48);
-  }
-
-  function mountCarousel() {
-    if(world.mountedRide)return;
-    world.mountedRide=environment.carousel.rideSeat;
-    player.visible=world.cameraMode==="third";player.scale.setScalar(0.72);
-    const status=document.getElementById("starry-3d-status");
-    if(status)status.textContent="正在乘坐星光旋轉木馬 · 按 E 下車";
-  }
-
-  function dismountCarousel() {
-    if(!world.mountedRide)return;
-    world.mountedRide=null;
-    player.visible=world.cameraMode==="third";
-    const root=environment.carousel.root;
-    player.scale.setScalar(1);player.position.set(root.position.x+4.25,surfaceAt(root.position.x+4.25,root.position.z)-0.025,root.position.z);
-    const status=document.getElementById("starry-3d-status");
-    if(status)status.textContent="WASD 探索園區 · 找到設施按 E 互動";
   }
 
   world.onAvatarChange = event => {
@@ -1510,8 +1527,14 @@ function mount(host) {
       if(!target)continue;
       if(target.type==="game"){
         window.dispatchEvent(new CustomEvent("starry-3d-portal",{detail:{gameId:target.gameId}}));
-      }else if(target.action==="ride-carousel"){
-        if(world.mountedRide)dismountCarousel();else mountCarousel();
+      }else if(target.action&&target.action.startsWith("ride-")){
+        if(world.mountedRide){dismountRide();break}
+        const ride=environment.rideStations.find(item=>item.action===target.action);
+        if(ride&&rideDistance(ride)<=ride.interactionRadius+5.5)mountRide(ride);
+        else if(ride){
+          const status=document.getElementById("starry-3d-status");
+          if(status)status.textContent="請再靠近「"+ride.name+"」，即可搭乘";
+        }
       }else{
         window.dispatchEvent(new CustomEvent("starry-3d-action",{detail:{action:target.action}}));
       }
@@ -1535,6 +1558,13 @@ function mount(host) {
       else if (ride.axis === "lift") {
         const wave = (Math.sin(t * ride.speed + ride.phase) + 1) * 0.5;
         ride.object.position.y = ride.baseY + wave * ride.range;
+      } else if(ride.axis==="track"){
+        ride.progress+=delta*ride.speed*ride.direction;
+        if(ride.progress>=1){ride.progress=1;ride.direction=-1}
+        if(ride.progress<=0){ride.progress=0;ride.direction=1}
+        const point=ride.curve.getPointAt(ride.progress),tangent=ride.curve.getTangentAt(ride.progress);
+        ride.object.position.copy(point);
+        ride.object.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),tangent);
       } else ride.object.rotation.z += delta * ride.speed;
     });
     environment.compassHalo.rotation.z += delta * 0.17;
@@ -1563,7 +1593,11 @@ function mount(host) {
       const mountedPosition=new THREE.Vector3();
       world.mountedRide.getWorldPosition(mountedPosition);
       player.position.copy(mountedPosition);
-      player.position.y-=0.18;player.rotation.y=environment.carousel.object.rotation.y;
+      player.position.y-=0.18;
+      if(world.mountedRideData?.axis==="y")player.rotation.y=world.mountedRideData.object.rotation.y;
+      else if(world.mountedRideData?.axis==="track")player.rotation.y=Math.atan2(
+        Math.sin(world.mountedRideData.object.rotation.y),Math.cos(world.mountedRideData.object.rotation.y)
+      );
       world.keys.clear();
     }else{
       const moving = move.lengthSq() > 0;
@@ -1632,6 +1666,14 @@ function mount(host) {
       entry.model.userData.halo.rotation.z+=delta*0.38;
       if(entry.model.userData.floatingStar)entry.model.userData.floatingStar.rotation.y+=delta*0.58;
     });
+    if(!world.mountedRide&&t-world.nearbyHintLast>0.34){
+      world.nearbyHintLast=t;
+      const nearest=environment.rideStations.map(ride=>({ride,distance:rideDistance(ride)})).sort((a,b)=>a.distance-b.distance)[0];
+      let hint={label:"互動　E",name:"互動"};
+      if(nearest&&nearest.distance<=nearest.ride.interactionRadius+1.25)hint={label:"搭乘　E",name:nearest.ride.name};
+      else if(Math.hypot(player.position.x-environment.ticketBooth.position.x,player.position.z-environment.ticketBooth.position.z)<4.5)hint={label:"票亭　E",name:"星夢入園票亭"};
+      window.dispatchEvent(new CustomEvent("starry-3d-nearby",{detail:hint}));
+    }
     if(t-world.minimapLast>0.15){
       world.minimapLast=t;
       window.dispatchEvent(new CustomEvent("starry-3d-map",{detail:{x:player.position.x,z:player.position.z,yaw:cameraState.yaw}}));
