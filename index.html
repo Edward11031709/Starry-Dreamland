@@ -682,6 +682,13 @@ function bindParkTouchControls(){
   runButton.addEventListener("pointerdown",event=>{event.preventDefault();try{runButton.setPointerCapture(event.pointerId)}catch(error){}setRun(true)});
   ["pointerup","pointercancel","lostpointercapture"].forEach(name=>runButton.addEventListener(name,()=>setRun(false)));
  }
+ if(!window.__parkNearbyListener){
+  window.__parkNearbyListener=true;
+  window.addEventListener("starry-3d-nearby",event=>{
+   const button=document.querySelector("[data-park-interact]");
+   if(button)button.textContent=event.detail?.label||"互動　E";
+  });
+ }
  if(!window.__parkFullscreenListener){
   window.__parkFullscreenListener=true;
   document.addEventListener("fullscreenchange",updateParkFullscreenButton);
