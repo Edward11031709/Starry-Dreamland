@@ -1706,7 +1706,23 @@ function mountAvatarPreview(host,options={}){
    [Math.cos(a)*1.2,0.02,Math.sin(a)*1.2],[0.72,1.35,0.72],false,false);
   stars.push(star);
  }
- const preview={host,renderer,scene,camera,pedestal,model:null,clock:new THREE.Clock(),observer:null,options:{}};
+ const preview={host,renderer,scene,camera,pedestal,model:null,clock:new THREE.Clock(),observer:null,options:{},manualYaw:0,manualPitch:0,pointer:{down:false,x:0,y:0}};
+ preview.onPointerDown=event=>{
+  preview.pointer.down=true;preview.pointer.x=event.clientX;preview.pointer.y=event.clientY;
+  try{renderer.domElement.setPointerCapture(event.pointerId)}catch(error){}
+ };
+ preview.onPointerMove=event=>{
+  if(!preview.pointer.down)return;
+  const dx=event.clientX-preview.pointer.x,dy=event.clientY-preview.pointer.y;
+  preview.pointer.x=event.clientX;preview.pointer.y=event.clientY;
+  preview.manualYaw+=dx*0.009;
+  preview.manualPitch=THREE.MathUtils.clamp(preview.manualPitch+dy*0.003,-0.22,0.22);
+ };
+ preview.onPointerUp=()=>{preview.pointer.down=false};
+ renderer.domElement.addEventListener("pointerdown",preview.onPointerDown);
+ renderer.domElement.addEventListener("pointermove",preview.onPointerMove);
+ renderer.domElement.addEventListener("pointerup",preview.onPointerUp);
+ renderer.domElement.addEventListener("pointercancel",preview.onPointerUp);
  avatarPreviews.set(host,preview);
  updateAvatarPreview(host,options);
  const resize=()=>{
@@ -1721,7 +1737,8 @@ function mountAvatarPreview(host,options={}){
   if(!host.isConnected){disposeAvatarPreview(host);return}
   const t=preview.clock.getElapsedTime();
   if(preview.model){
-   preview.model.rotation.y=0.12+Math.sin(t*0.32)*0.2;
+   preview.model.rotation.y=preview.manualYaw+Math.sin(t*0.32)*0.035;
+   preview.model.rotation.x=preview.manualPitch;
    preview.model.position.y=0.02+Math.sin(t*1.1)*0.025;
    if(preview.model.userData.halo)preview.model.userData.halo.rotation.z+=0.006;
    if(preview.model.userData.floatingStar)preview.model.userData.floatingStar.rotation.y+=0.012;
@@ -1749,6 +1766,10 @@ function updateAvatarPreview(host,options={}){
 function disposeAvatarPreview(host){
  const preview=avatarPreviews.get(host);if(!preview)return;
  preview.renderer.setAnimationLoop(null);
+ preview.renderer.domElement.removeEventListener("pointerdown",preview.onPointerDown);
+ preview.renderer.domElement.removeEventListener("pointermove",preview.onPointerMove);
+ preview.renderer.domElement.removeEventListener("pointerup",preview.onPointerUp);
+ preview.renderer.domElement.removeEventListener("pointercancel",preview.onPointerUp);
  if(preview.observer)preview.observer.disconnect();
  else if(preview.resize)window.removeEventListener("resize",preview.resize);
  if(preview.model)disposePreviewModel(preview.model);
