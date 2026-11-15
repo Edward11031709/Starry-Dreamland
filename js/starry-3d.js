@@ -460,7 +460,7 @@ function buildCarousel(scene,materials,x,z){
   const rideSeat=new THREE.Group();rideSeat.position.set(1.48,1.34,0);rideSeat.rotation.y=-Math.PI/2;ride.add(rideSeat);
   const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL · RIDE"});
   if(sign){sign.position.set(0,5.12,0);sign.scale.set(4.4,1.16,1);root.add(sign)}
-  return {id:"carousel",name:"星光旋轉木馬",action:"ride-carousel",root,object:ride,rideSeat,axis:"y",speed:0.24,interactionRadius:4.2,dismountRadius:4.9};
+  return {id:"carousel",name:"星光旋轉木馬",action:"ride-carousel",root,object:ride,rideSeat,axis:"y",speed:0.24,interactionRadius:4.75,dismountRadius:4.9};
 }
 
 function buildFerrisWheel(scene,materials,x,y,z){
@@ -499,7 +499,7 @@ function buildFerrisWheel(scene,materials,x,y,z){
   const hubGem=addMesh(wheel,new THREE.OctahedronGeometry(0.28,1),materials.crystal,[0,0,0.32],[0.8,1.15,0.8],null,false,false);hubGem.rotation.z=Math.PI/4;
   const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL · RIDE"});
   if(sign){sign.position.set(0,6.6,0.22);sign.scale.set(4.1,1.1,1);root.add(sign)}
-  return {id:"ferris",name:"星河摩天輪",action:"ride-ferris",root,object:wheel,rideSeat,gondolas,axis:"z",speed:-0.105,interactionRadius:4.6,dismountRadius:5.5};
+  return {id:"ferris",name:"星河摩天輪",action:"ride-ferris",root,object:wheel,rideSeat,gondolas,axis:"z",speed:-0.105,interactionRadius:4.78,dismountRadius:5.5};
 }
 
 function buildRollerCoaster(scene,materials){
@@ -533,7 +533,7 @@ function buildRollerCoaster(scene,materials){
   const rideSeat=new THREE.Group();rideSeat.position.set(0,0.45,0.04);cart.add(rideSeat);
   const sign=makeLabelSprite({title:"星際雲霄飛車",subtitle:"COSMIC COASTER · RIDE"});
   if(sign){sign.position.set(0,4.9,2.05);sign.scale.set(4.3,1.05,1);root.add(sign)}
-  return {id:"coaster",name:"星際雲霄飛車",action:"ride-coaster",root,object:cart,rideSeat,curve,axis:"track",progress:0,direction:1,speed:0.105,interactionRadius:5.0,dismountRadius:6.2};
+  return {id:"coaster",name:"星際雲霄飛車",action:"ride-coaster",root,object:cart,rideSeat,curve,axis:"track",progress:0,direction:1,speed:0.105,interactionRadius:5.72,dismountRadius:6.2};
 }
 
 function buildTeacupRide(scene,materials,x,z){
