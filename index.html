@@ -47,6 +47,22 @@
 
 /* Starry fantasy park overlay and avatar wardrobe */
 
+.map-expand-button{border:1px solid #ddc48c77;border-radius:99px;background:#282347;color:#f4dca8;font-size:8px;padding:3px 7px;letter-spacing:.5px;pointer-events:auto}
+.map-north{fill:none;stroke:#f3d99e;stroke-width:.75;stroke-linecap:round;stroke-linejoin:round}
+.map-north text{fill:#f3d99e;font-size:3.1px;text-anchor:middle;stroke:none;font-weight:bold}
+.park-minimap{pointer-events:auto}
+.park-map-modal{position:fixed;z-index:100;inset:0;display:grid;place-items:center;padding:18px;background:#050817dd;backdrop-filter:blur(12px)}
+.park-map-modal-panel{width:min(680px,96vw);max-height:92vh;overflow:auto;border:1px solid #ddc38c88;border-radius:26px;padding:24px;background:linear-gradient(155deg,#171d40,#080f28);box-shadow:0 25px 90px #000a,0 0 55px #9c84df33}
+.park-map-modal-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.park-map-modal-heading small{color:#aaa4d0;font-size:9px;letter-spacing:3px}
+.park-map-modal-heading h2{margin:6px 0 0;color:#f2dba7;font:600 26px Georgia,"Noto Serif TC",serif}
+.park-map-svg-large{display:block;width:min(100%,540px);max-height:64vh;margin:10px auto}
+.park-map-svg-large .map-label{font-size:2.7px}
+.park-map-note{margin:12px 0 0;color:#b9b8d2;font-size:12px;line-height:1.7;text-align:center}
+.park-map-modal-panel .park-map-legend{font-size:11px;gap:18px}
+@media(max-width:760px){.park-map-modal-panel{padding:16px;border-radius:20px}.park-map-modal-heading h2{font-size:20px}.park-map-svg-large{max-height:58vh}.map-expand-button{font-size:8px}}
+
+
 .avatar-preview{position:relative;overflow:hidden;perspective:400px}
 .avatar-figure{position:relative;display:block;width:76px;height:110px;filter:drop-shadow(0 8px 10px #070b21aa);animation:avatarFloat 3.6s ease-in-out infinite}
 .avatar-figure i{position:absolute;display:block}
@@ -262,7 +278,7 @@ async function syncCloudRecord(record){
  const totalEl=document.getElementById("resultTotal");if(totalEl)totalEl.textContent=(KIDS_GAME_IDS.includes(record.game)?kidsTotal():total())+" ✦";
 }
 function home(){nav("home");header();shell('<section class="hero"><div class="eyebrow">STAR DREAMLAND · AFTER DARK</div><h1>星夢夜遊園</h1><p>入夜後才開始的成人星際遊樂園。登上雲霄飛車、挑戰霓虹靶場、穿越鏡屋密室，在城堡燈火之間展開夜間冒險。</p></section><section class="plaza plaza-3d" id="starry-plaza"><div id="starry-3d" class="starry-3d-stage" aria-label="星夢樂園 3D 中央廣場"><div class="starry-3d-fallback"><strong>星夢廣場準備中</strong><span>正在載入 3D 場景；若暫時無法顯示，仍可從下方遊戲入口開始挑戰。</span></div></div><aside class="park-minimap" aria-label="星夢樂園地圖">
- <div class="park-map-heading"><span>✦ 園區導覽</span><small>YOU ARE HERE</small></div>
+ <div class="park-map-heading"><span>✦ 園區導覽</span><button class="map-expand-button" data-map-expand aria-label="放大園區地圖">放大 ↗</button></div>
  <svg class="park-map-svg" viewBox="-44 -48 88 96" role="img" aria-label="星夢樂園設施位置簡圖">
   <circle cx="0" cy="0" r="42" class="map-island"/>
   <path class="map-path" d="M0 44 L0 36 L0 27 L0 18 L0 9 L0 0 L0 -10 L0 -19"/>
@@ -279,6 +295,13 @@ function home(){nav("home");header();shell('<section class="hero"><div class="ey
   <circle cx="18" cy="9" r="2.8" class="map-game"/><text x="18" y="14" class="map-label">射擊</text>
   <circle cx="-19" cy="-8" r="2.8" class="map-game"/><text x="-19" y="-3" class="map-label">鏡屋</text>
   <circle cx="-4.8" cy="30.5" r="2.6" class="map-service"/><text x="-4.8" y="36" class="map-label">票亭</text>
+  <circle cx="-7.2" cy="8.2" r="1.75" class="map-game"/><circle cx="0" cy="8.2" r="1.75" class="map-game"/><circle cx="7.2" cy="8.2" r="1.75" class="map-game"/>
+  <text x="0" y="4.8" class="map-label">星門挑戰</text>
+  <circle cx="25" cy="-17" r="1.0" class="map-service"/><text x="25" y="-22" class="map-label">雲霄飛車</text>
+  <circle cx="-30" cy="-16.5" r="2.5" class="map-service"/><text x="-30" y="-11" class="map-label">觀測站</text>
+  <circle cx="8.25" cy="5.45" r="1.4" class="map-service"/><text x="8.25" y="3.1" class="map-label">補給</text>
+  <circle cx="5.1" cy="6.9" r="1.4" class="map-service"/><text x="5.1" y="10.1" class="map-label">兌換</text>
+  <g class="map-north" transform="translate(34 -35)"><path d="M0 5 L0 -5 M0 -5 L-2 -1 M0 -5 L2 -1"/><text x="0" y="-7">N</text></g>
   <g id="parkMapPlayer" class="map-player" transform="translate(0 33)">
    <circle r="3.1"/><path d="M0 -7 L-2.2 -1.3 L2.2 -1.3 Z"/>
   </g>
@@ -508,7 +531,7 @@ function childMemory(){let faces=["✦","☾","✧"],cards=faces.concat(faces).s
 async function rank(){nav("leaderboard");const labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};let entries=[];if(cloudMode&&cloudUser){if(!sb){say("雲端連線尚未就緒。");return}const {data,error}=await sb.rpc("sd_global_best_scores");if(error){shell('<section class="hero"><h1>星塵排行榜</h1><p>目前無法載入全球排行榜。</p></section><div class="panel">'+esc(friendlyAuthError(error))+'</div>');return}entries=(data||[]).map(r=>({uid:r.user_id,name:r.nickname,game:r.game_id,category:r.category,score:Number(r.best_score)||0,time:Date.parse(r.first_achieved_at)||Date.now()}))}else{state.players.forEach(p=>{[...ADULT_GAME_IDS,...KIDS_GAME_IDS].forEach(g=>{const eligible=state.records.filter(r=>r.uid===p.id&&r.game===g&&r.status!=="abandoned"&&r.status!=="failed");const score=Math.max(0,...eligible.map(r=>r.score));const first=eligible.filter(r=>r.score===score).sort((a,b)=>a.time-b.time)[0];entries.push({uid:p.id,name:p.name,game:g,category:KIDS_GAME_IDS.includes(g)?"kids":"adult",score,time:first?first.time:(p.created||0)})})})}function overall(games){const map=new Map();entries.filter(e=>games.includes(e.game)).forEach(e=>{let r=map.get(e.uid);if(!r){r={uid:e.uid,name:e.name,total:0,best:{},reachedAt:0};map.set(e.uid,r)}r.best[e.game]=e.score;r.total+=e.score;r.reachedAt=Math.max(r.reachedAt,e.time)});return [...map.values()].sort((a,b)=>b.total-a.total||a.reachedAt-b.reachedAt)}function overallTable(rows){return '<table class="table"><thead><tr><th>排名</th><th>旅人</th><th>總分</th></tr></thead><tbody>'+(rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.name)+'</td><td>'+r.total+'</td></tr>').join("")||'<tr><td colspan="3">目前還沒有排行資料</td></tr>')+'</tbody></table>'}function gameCards(games){return '<section class="cards" style="margin-top:15px">'+games.map(g=>{const rr=entries.filter(e=>e.game===g).sort((a,b)=>b.score-a.score||a.time-b.time).slice(0,5);return '<article class="card"><h3>'+labels[g]+'</h3><table class="table"><tbody>'+(rr.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td>'+x.score+'</td></tr>').join("")||'<tr><td colspan="3">尚無紀錄</td></tr>')+'</tbody></table></article>'}).join("")+'</section>'}const adults=overall(ADULT_GAME_IDS),kids=overall(KIDS_GAME_IDS);shell('<section class="hero"><div class="eyebrow">STAR DUST RANKING</div><h1>星塵排行榜</h1><p>'+(cloudMode&&cloudUser?"全球旅人即時排行榜；":cloudMode?"訪客展示模式，登入後可查看全球排行榜；":"目前為本機展示排行榜；")+'成人挑戰與星芽探索分開排行，同分時以較早達成者優先。</p>'+(me()?.isAdmin?'<p class="admin-ranking-note">管理員模式：此帳號成績不會被納入全球排行榜。</p>':'')+'</section><div class="panel"><h3 style="color:var(--gold)">成人挑戰總排行</h3>'+overallTable(adults)+'</div>'+gameCards(ADULT_GAME_IDS)+'<div class="panel" style="margin-top:18px"><h3 style="color:#f5d7ed">星芽探索總排行</h3>'+overallTable(kids)+'</div>'+gameCards(KIDS_GAME_IDS))}
 function history(){nav("history");let rs=state.records.filter(r=>r.uid===me().id).slice().reverse(),labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};shell('<section class="hero"><div class="eyebrow">MY STAR JOURNEY</div><h1>我的遊玩紀錄</h1><p>成人挑戰及星芽探索各自記錄，不會混在一起。</p></section><div class="stats"><div class="stat"><small>成人星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div></div><div class="panel"><table class="table"><thead><tr><th>分區</th><th>遊戲</th><th>分數</th><th>狀態</th><th>星塵</th></tr></thead><tbody>'+(rs.map(r=>'<tr><td>'+(KIDS_GAME_IDS.includes(r.game)?"星芽":"成人")+'</td><td>'+(labels[r.game]||r.game)+'</td><td>'+r.score+'</td><td>'+({completed:"完成",timed_out:"時間到",abandoned:"提前退出",failed:"尚未破解"}[r.status]||r.status)+'</td><td>+'+r.reward+' ✦</td></tr>').join("")||'<tr><td colspan="5">目前還沒有遊玩紀錄。</td></tr>')+'</tbody></table></div>')}
 function render(){if(!me()){login();return}home()}
-document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.mapExpand!==undefined){openParkMap();return}if(b.dataset.mapClose!==undefined){document.getElementById("parkMapModal")?.remove();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
 document.getElementById("logout").onclick=async()=>{stop();if(cloudMode&&sb){const {error}=await sb.auth.signOut();if(error)say("登出時發生問題："+friendlyAuthError(error))}cloudUser=null;state.player=null;state.players=[];state.records=[];save();render()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&active)result(0,"abandoned",active.id)});
 window.addEventListener("starry-supabase-ready",bootCloud);
@@ -516,11 +539,29 @@ window.addEventListener("starry-3d-ready",()=>{const host=document.getElementByI
 window.addEventListener("starry-3d-error",()=>{const host=document.getElementById("starry-3d"),status=document.getElementById("starry-3d-status");if(host)host.dataset.status="fallback";if(status)status.textContent="3D 元件暫時無法載入；請使用下方遊戲卡片。";const fallback=host?.querySelector(".starry-3d-fallback");if(fallback)fallback.innerHTML="<strong>3D 場景暫時無法載入</strong><span>遊戲入口與雲端資料仍可正常使用，請稍後重新整理。</span>"});
 window.addEventListener("starry-3d-portal",event=>{const gameId=event.detail&&event.detail.gameId;if(gameId&&ADULT_GAME_IDS.includes(gameId))start(gameId)});
 window.addEventListener("starry-3d-map",event=>{
- const marker=document.getElementById("parkMapPlayer"),d=event.detail;
- if(!marker||!d)return;
+ const d=event.detail;if(!d)return;
  const x=Math.max(-41,Math.min(41,Number(d.x)||0)),z=Math.max(-43,Math.min(43,Number(d.z)||0));
- marker.setAttribute("transform","translate("+x+" "+z+") rotate("+(-Number(d.yaw||0)*180/Math.PI)+")");
+ document.querySelectorAll(".map-player").forEach(marker=>{
+  marker.setAttribute("transform","translate("+x+" "+z+") rotate("+(-Number(d.yaw||0)*180/Math.PI)+")");
+ });
 });
+function openParkMap(){
+ if(document.getElementById("parkMapModal"))return;
+ const source=document.querySelector(".park-map-svg");
+ if(!source)return;
+ const modal=document.createElement("div");modal.id="parkMapModal";modal.className="park-map-modal";
+ const panel=document.createElement("div");panel.className="park-map-modal-panel";
+ const heading=document.createElement("div");heading.className="park-map-modal-heading";
+ heading.innerHTML='<div><small>STAR DREAMLAND · PARK GUIDE</small><h2>星夢樂園全區導覽</h2></div><button type="button" class="ghost" data-map-close>關閉 ✕</button>';
+ const map=source.cloneNode(true);map.classList.add("park-map-svg-large");map.removeAttribute("id");
+ const legend=document.querySelector(".park-map-legend")?.cloneNode(true);
+ const note=document.createElement("p");note.className="park-map-note";note.textContent="地圖上方為城堡與遠端園區，下方為入園方向；金色箭頭代表你目前的位置與朝向。";
+ panel.append(heading,map);if(legend)panel.append(legend);panel.append(note);modal.append(panel);
+ modal.addEventListener("click",e=>{if(e.target===modal||e.target.closest("[data-map-close]"))modal.remove()});
+ document.addEventListener("keydown",function closeMap(e){if(e.key==="Escape"){modal.remove();document.removeEventListener("keydown",closeMap)}},{once:true});
+ document.body.append(modal);
+}
+
 window.addEventListener("starry-3d-action",event=>{
  const action=event.detail&&event.detail.action;
  if(action==="ticket-booth")say("星夢入園票亭：歡迎來到星夢樂園！目前開放自由探索；成人遊戲與星芽探索區可從園區入口開始。");
