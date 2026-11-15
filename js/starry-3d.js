@@ -76,13 +76,30 @@ function addCrystal(parent, x, y, z, size, color) {
 
 function createTree(parent,x,z,scale,materials){
  const tree=new THREE.Group();tree.position.set(x,0.62,z);tree.scale.setScalar(scale);parent.add(tree);
- addMesh(tree,new THREE.CylinderGeometry(0.13,0.2,1.28,10),materials.wood,[0,0.62,0]);
- const a=materials.foliageA||makeMaterial(0x30445f,0.94,0.02),b=materials.foliageB||makeMaterial(0x485071,0.92,0.03),c=materials.foliageC||makeMaterial(0x655b83,0.9,0.04);
- addMesh(tree,new THREE.SphereGeometry(0.68,18,14),a,[0,1.42,0],[1,1.12,0.92]);
- addMesh(tree,new THREE.SphereGeometry(0.48,16,12),b,[-0.34,1.78,0.02],[1,1,0.94]);
- addMesh(tree,new THREE.SphereGeometry(0.47,16,12),c,[0.32,1.92,-0.08],[0.96,1,0.92]);
- addMesh(tree,new THREE.SphereGeometry(0.12,10,8),materials.gold,[0.08,2.03,0.38],[1,1,0.75]);return tree;
+ const wood=materials.wood||makeMaterial(0x3b2e4c,0.84,0.12);
+ const a=materials.foliageA||makeMaterial(0x30445f,0.94,0.02);
+ const b=materials.foliageB||makeMaterial(0x485071,0.92,0.03);
+ const c=materials.foliageC||makeMaterial(0x655b83,0.9,0.04);
+ addMesh(tree,new THREE.CylinderGeometry(0.12,0.21,1.58,12),wood,[0,0.78,0]);
+ [0.48,0.92,1.34].forEach((y,i)=>{
+  const radius=[0.72,0.56,0.39][i],height=[0.98,0.86,0.72][i];
+  const layer=addMesh(tree,new THREE.ConeGeometry(radius,height,9,2),[a,b,c][i],[0,y,0]);
+  layer.rotation.y=i*0.28;
+  const collar=addMesh(tree,new THREE.TorusGeometry(radius*0.78,0.027,6,32),materials.gold,[0,y-height*0.32,0]);
+  collar.rotation.x=Math.PI/2;
+  for(let k=0;k<4;k++){
+   const angle=(k/4)*Math.PI*2+i*0.37,rr=radius*0.64;
+   addMesh(tree,new THREE.OctahedronGeometry(0.095+(k%2)*0.025,0),i%2?materials.gold:materials.crystal,
+    [Math.cos(angle)*rr,y+height*0.12,Math.sin(angle)*rr],[0.62,1.25,0.62],false,false);
+  }
+ });
+ const crown=addMesh(tree,new THREE.OctahedronGeometry(0.18,1),materials.crystal,[0,1.93,0],[0.7,1.45,0.7],false,false);
+ crown.rotation.y=Math.PI/4;
+ addMesh(tree,new THREE.TorusGeometry(0.28,0.022,6,32),materials.gold,[0,1.9,0]).rotation.x=Math.PI/2;
+ return tree;
 }
+
+
 function makeIsland(parent, x, y, z, radius, palette) {
   const group = new THREE.Group();
   group.position.set(x, y, z);
@@ -140,33 +157,61 @@ function buildPortal(scene,meta,x,z,materials){
  group.userData.motion={ring,inner,core,crystal,orbit,aura,phase:Math.random()*Math.PI*2};group.traverse(obj=>{obj.userData.gameId=meta.id});return group;
 }
 function buildCastle(scene,materials){
- const castle=new THREE.Group();castle.position.set(0,0.68,-18.2);scene.add(castle);
- addMesh(castle,new THREE.CylinderGeometry(4.7,4.95,0.42,64),materials.darkStone,[0,0.1,0]);
- addMesh(castle,new THREE.TorusGeometry(4.66,0.09,10,72),materials.gold,[0,0.34,0]).rotation.x=Math.PI/2;
- addMesh(castle,new THREE.BoxGeometry(6.3,3.55,3.72),materials.wall,[0,2.1,0]);
- addMesh(castle,new THREE.BoxGeometry(6.55,0.22,3.94),materials.trim,[0,3.98,0]);
- addMesh(castle,new THREE.BoxGeometry(3.5,4.45,3.18),materials.wall,[0,2.58,-0.78]);
- addMesh(castle,new THREE.BoxGeometry(3.72,0.2,3.38),materials.gold,[0,4.86,-0.78]);
- [-2.95,2.95].forEach(x=>[-1.48,1.42].forEach(z=>{
-  addMesh(castle,new THREE.BoxGeometry(0.42,3.35,0.48),materials.darkStone,[x,2.08,z]);
-  addMesh(castle,new THREE.BoxGeometry(0.56,0.18,0.62),materials.gold,[x,3.75,z]);
+ const castle=new THREE.Group();castle.position.set(0,0.68,-18.2);castle.name="StarDreamCastle";scene.add(castle);
+ // Raised courtyard and layered keep foundations.
+ addMesh(castle,new THREE.CylinderGeometry(5.05,5.35,0.46,72),materials.darkStone,[0,0.12,0]);
+ const baseRing=addMesh(castle,new THREE.TorusGeometry(4.98,0.105,10,96),materials.gold,[0,0.38,0]);baseRing.rotation.x=Math.PI/2;
+ addMesh(castle,new THREE.CylinderGeometry(4.65,4.72,0.12,72),materials.top,[0,0.42,0]);
+ addMesh(castle,new THREE.BoxGeometry(6.55,3.65,3.9),materials.wall,[0,2.18,0]);
+ addMesh(castle,new THREE.BoxGeometry(6.82,0.22,4.12),materials.trim,[0,4.12,0]);
+ // Rear keep rises above the curtain wall and carries the tallest star spire.
+ addMesh(castle,new THREE.BoxGeometry(3.75,4.5,3.22),materials.wall,[0,2.72,-0.78]);
+ addMesh(castle,new THREE.BoxGeometry(3.95,0.22,3.44),materials.gold,[0,5.08,-0.78]);
+ [-2.98,2.98].forEach(x=>[-1.52,1.44].forEach(z=>{
+  addMesh(castle,new THREE.BoxGeometry(0.46,3.48,0.5),materials.darkStone,[x,2.18,z]);
+  addMesh(castle,new THREE.BoxGeometry(0.62,0.18,0.66),materials.gold,[x,3.95,z]);
+  addMesh(castle,new THREE.TorusGeometry(0.29,0.045,8,24),materials.trim,[x,3.98,z]);
  }));
- [-2.65,-1.65,-0.65,0.65,1.65,2.65].forEach(x=>[-1.82,1.82].forEach(z=>addMesh(castle,new THREE.BoxGeometry(0.44,0.34,0.42),materials.trim,[x,4.2,z])));
- const towers=[[-3.26,-1.62,3.9,0.88],[3.26,-1.62,3.9,0.88],[-3.3,1.42,3.65,0.8],[3.3,1.42,3.65,0.8],[0,-2.32,5.15,0.78]];
- towers.forEach(t=>addTower(castle,t[0],t[1],0.18,t[2],t[3],materials));
- addMesh(castle,new THREE.CylinderGeometry(1.94,1.78,0.22,12),materials.trim,[0,5.1,-0.78]);
- addMesh(castle,new THREE.ConeGeometry(1.94,1.72,12),materials.roof,[0,6.05,-0.78]);
- addMesh(castle,new THREE.SphereGeometry(0.16,16,12),materials.gold,[0,6.98,-0.78]);
- addMesh(castle,new THREE.CylinderGeometry(0.035,0.055,0.58,8),materials.gold,[0,7.33,-0.78]);
- const windowMat=new THREE.MeshStandardMaterial({color:0xffe3ad,emissive:0xffbd68,emissiveIntensity:1.55,roughness:0.22,metalness:0.08});
- [-1.95,-0.67,0.67,1.95].forEach(x=>{makeWindow(castle,x,2.62,1.9,0.34,0.82,windowMat);makeWindow(castle,x,1.52,1.9,0.27,0.48,windowMat)});
- addMesh(castle,new THREE.BoxGeometry(1.15,1.68,0.14),materials.darkStone,[0,1.48,1.91]);
- const doorArch=addMesh(castle,new THREE.TorusGeometry(0.59,0.095,10,40),materials.gold,[0,2.21,2.02]);
- [-0.78,0.78].forEach(x=>{addMesh(castle,new THREE.CylinderGeometry(0.12,0.16,1.9,14),materials.trim,[x,1.42,2]);addMesh(castle,new THREE.CylinderGeometry(0.22,0.22,0.14,14),materials.gold,[x,2.42,2])});
- for(let i=0;i<4;i++){const depth=0.48+i*0.35;addMesh(castle,new THREE.BoxGeometry(2.6+i*0.26,0.16,0.36),i%2?materials.trim:materials.darkStone,[0,0.78-i*0.075,2.15+depth])}
- const crest=addMesh(castle,new THREE.TorusGeometry(0.48,0.055,8,40),materials.gold,[0,5.42,0.92]);crest.rotation.x=Math.PI/2;
- const star=addMesh(castle,new THREE.OctahedronGeometry(0.28,1),materials.crystal,[0,5.42,0.98],[0.9,1.25,0.9]);star.rotation.z=Math.PI/4;return castle;
+ // Recessed windows with luminous frames and slender mullions.
+ const windowMat=new THREE.MeshStandardMaterial({color:0xffe6bc,emissive:0xffc978,emissiveIntensity:1.8,roughness:0.18,metalness:0.18});
+ [-2.15,-0.72,0.72,2.15].forEach(x=>{
+  [1.52,2.62].forEach(y=>{
+   makeWindow(castle,x,y,1.99,0.34,y>2?0.82:0.48,windowMat);
+   addMesh(castle,new THREE.BoxGeometry(0.045,y>2?0.78:0.45,0.055),materials.gold,[x,y,2.08],null,false,false);
+   const arch=addMesh(castle,new THREE.TorusGeometry(0.23,0.038,7,26,Math.PI),materials.gold,[x,y+(y>2?0.39:0.23),2.03]);arch.rotation.z=Math.PI;
+  });
+ });
+ // Ornate front portico: four columns, capitals and a luminous pointed arch.
+ [-2.45,-0.82,0.82,2.45].forEach(x=>{
+  addMesh(castle,new THREE.CylinderGeometry(0.105,0.15,2.55,14),materials.silverMetal,[x,1.62,2.0]);
+  addMesh(castle,new THREE.CylinderGeometry(0.22,0.22,0.13,16),materials.gold,[x,2.91,2.0]);
+  addMesh(castle,new THREE.CylinderGeometry(0.17,0.17,0.1,16),materials.trim,[x,0.4,2.0]);
+ });
+ addMesh(castle,new THREE.BoxGeometry(1.1,1.72,0.16),materials.darkStone,[0,1.49,2.02]);
+ const doorArch=addMesh(castle,new THREE.TorusGeometry(0.6,0.105,12,48),materials.gold,[0,2.28,2.1]);doorArch.scale.set(1,1.25,1);
+ const doorGlow=addMesh(castle,new THREE.CircleGeometry(0.48,48),new THREE.MeshBasicMaterial({color:0x8a75c6,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false}),[0,1.95,2.08],null,false,false);
+ for(let i=0;i<5;i++){
+  const width=2.7+i*0.22;
+  addMesh(castle,new THREE.BoxGeometry(width,0.16,0.42),i%2?materials.trim:materials.darkStone,[0,0.86-i*0.075,2.35+i*0.39]);
+  addMesh(castle,new THREE.BoxGeometry(width+0.08,0.035,0.46),materials.gold,[0,0.95-i*0.075,2.35+i*0.39],null,false,false);
+ }
+ // Five towers: the rear spire is taller to give the skyline a clear focal point.
+ const towers=[[-3.32,-1.62,4.0,0.9],[3.32,-1.62,4.0,0.9],[-3.34,1.44,3.8,0.84],[3.34,1.44,3.8,0.84],[0,-2.32,7.65,1.02]];
+ towers.forEach(t=>addTower(castle,t[0],t[1],0.2,t[2],t[3],materials,true));
+ // Orbital rings and a star crystal crown enrich the main tower silhouette.
+ const orbitA=addMesh(castle,new THREE.TorusGeometry(1.58,0.052,10,72),materials.gold,[0,7.58,-2.32]);orbitA.rotation.set(0.72,0.28,0.22);
+ const orbitB=addMesh(castle,new THREE.TorusGeometry(1.16,0.032,8,64),materials.crystal,[0,8.34,-2.32]);orbitB.rotation.set(1.16,-0.5,0.12);
+ const crown=addMesh(castle,new THREE.OctahedronGeometry(0.4,1),materials.crystal,[0,9.75,-2.32],[0.75,1.35,0.75]);crown.rotation.z=Math.PI/4;
+ const crest=addMesh(castle,new THREE.TorusGeometry(0.52,0.055,8,48),materials.gold,[0,5.52,0.98]);crest.rotation.x=Math.PI/2;
+ const star=addMesh(castle,new THREE.OctahedronGeometry(0.29,1),materials.crystal,[0,5.52,1.05],[0.9,1.35,0.9]);star.rotation.z=Math.PI/4;
+ const light=new THREE.PointLight(0xb9a5ff,18,20,2);light.position.set(0,5.8,1.5);castle.add(light);
+ const warm=new THREE.PointLight(0xffd58e,13,14,2);warm.position.set(0,3.2,3.4);castle.add(warm);
+ // A low circular garden rail gives the keep a finished base without blocking the path.
+ const courtyardRing=addMesh(castle,new THREE.TorusGeometry(4.34,0.045,8,100),materials.silver,[0,0.54,0]);courtyardRing.rotation.x=Math.PI/2;
+ return castle;
 }
+
+
 function buildObservatory(scene, x, y, z, materials) {
   const group = new THREE.Group();
   group.position.set(x, y, z);
