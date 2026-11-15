@@ -1038,7 +1038,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
 
   if(avatarType==="mage"){
     const staff=new THREE.Group();staff.position.set(-0.48,0.34,0.12);staff.rotation.z=0.08;player.add(staff);
-    addMesh(staff,new THREE.CylinderGeometry(0.035,0.055,1.15,10),woodMaterial,[0,0.55,0]);
+    addMesh(staff,new THREE.CylinderGeometry(0.035,0.055,1.15,10),makeMaterial(0x3b2b48,0.62,0.22),[0,0.55,0]);
     addMesh(staff,new THREE.TorusGeometry(0.15,0.025,6,24),trim,[0,1.14,0]);
     addMesh(staff,new THREE.OctahedronGeometry(0.16,1),metal,[0,1.25,0],[0.8,1.35,0.8]);
   }else if(avatarType==="wanderer"){
@@ -1132,7 +1132,9 @@ function mount(host) {
 
   const starfield = createStarfield(scene, isSmall ? 420 : 760);
   const environment = buildEnvironment(scene);
-  let player = buildPlayer(scene,host.dataset.avatar || "wanderer");
+  let initialCustomization={};
+  try{initialCustomization=JSON.parse(host.dataset.avatarCustomization||"{}")}catch(error){}
+  let player = buildPlayer(scene,host.dataset.avatar || "wanderer",initialCustomization);
   player.position.set(0, 0.68, 33.0);
   camera.position.set(
     player.position.x - Math.sin(cameraState.yaw) * Math.cos(cameraState.pitch) * cameraState.distance,
@@ -1234,10 +1236,12 @@ function mount(host) {
   }
 
   world.onAvatarChange = event => {
-    const avatarId=event.detail&&event.detail.avatarId;
-    if(!avatarId||avatarId===player.userData.avatarId)return;
-    const next=buildPlayer(scene,avatarId);
+    const detail=event.detail||{};
+    const avatarId=detail.avatarId||player.userData.avatarId||"wanderer";
+    const customization={avatarType:detail.avatarType||player.userData.avatarType,appearance:detail.appearance||player.userData.appearance};
+    const next=buildPlayer(scene,avatarId,customization);
     next.position.copy(player.position);next.rotation.copy(player.rotation);next.visible=player.visible;
+    if(player.scale)next.scale.copy(player.scale);
     scene.remove(player);player=next;world.player=next;
   };
   window.addEventListener("starry-3d-avatar-change",world.onAvatarChange);
@@ -1260,14 +1264,18 @@ function mount(host) {
     const x=THREE.MathUtils.clamp(Number(info.x)||0,-environment.playableRadius,environment.playableRadius);
     const z=THREE.MathUtils.clamp(Number(info.z)||0,-environment.playableRadius,environment.playableRadius);
     const avatarId=info.avatarId||"wanderer";
+    const customization={avatarType:info.avatarType||"wanderer",appearance:info.appearance||{}};
+    const appearanceKey=JSON.stringify([avatarId,customization.avatarType,customization.appearance]);
     let entry=world.otherPlayers.get(id);
-    if(!entry||entry.avatarId!==avatarId){
+    if(!entry||entry.appearanceKey!==appearanceKey){
+      const oldEntry=entry;
       if(entry)releaseRemoteAvatar(entry);
-      const model=buildPlayer(scene,avatarId);
+      const model=buildPlayer(scene,avatarId,customization);
       model.scale.setScalar(0.82);
       const nameTag=makeLabelSprite({title:String(info.nickname||"星空旅人").slice(0,12),subtitle:"ONLINE"});
       if(nameTag){nameTag.position.set(0,3.05,0);nameTag.scale.set(2.35,0.64,1);model.add(nameTag)}
-      entry={model,avatarId,target:new THREE.Vector3(x,surfaceAt(x,z)-0.025,z),targetYaw:Number(info.yaw)||0,nickname:info.nickname||"星空旅人"};
+      entry={model,avatarId,appearanceKey,target:new THREE.Vector3(x,surfaceAt(x,z)-0.025,z),targetYaw:Number(info.yaw)||0,nickname:info.nickname||"星空旅人"};
+      if(oldEntry){entry.target.copy(oldEntry.target);entry.model.position.copy(oldEntry.model.position)}
       world.otherPlayers.set(id,entry);
     }
     entry.nickname=info.nickname||entry.nickname;
