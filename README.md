@@ -8,16 +8,31 @@ Live website: https://edward11031709.github.io/Starry-Dreamland/
 
 The homepage contains an explorable Three.js night park, viewed from behind the player at the entrance. Players can walk with WASD / arrow keys, run with Shift, rotate the camera by dragging, and zoom with the mouse wheel.
 
-The park is built from procedural geometry and original materials. It includes a castle, observatory, themed ride districts, lantern-lit paths, floating gardens, a starfield and a distant ringed planet. The center plaza's old raised crystal has been replaced by a low-profile astral compass inlay to keep the central walkway visually open.
+The park is built from procedural geometry and original materials, with the supplied concept board guiding its deep-indigo night sky, violet crystal accents, silver architecture, warm gold illumination and ornate fantasy silhouettes. It includes a multi-spire castle, observatory, themed ride districts, lantern-lit paths, floating gardens, a starfield and a distant ringed planet. The center plaza uses a low-profile astral compass inlay; the floating island underside now tapers down below the walkable deck instead of protruding through the surface.
 
-- The attraction signs are attached to their matching models rather than scattered overhead.
-- The carousel has visible horses and a ride interaction; press E nearby to board or leave.
+- An interactive 2D guide map sits at the upper-left of the park view. It shows the entrance, castle, rides, games, service points, the player's position and nearby online visitors; the map can be expanded for a full view.
+- The entrance is framed by a curved celestial arch. The castle has more detailed towers, illuminated windows, portico columns and orbital star ornaments; garden trees use layered crystal-evergreen forms.
+- Attraction signs are attached to their matching models rather than scattered overhead.
+- The carousel has visible horses and a ride interaction; click it or press E nearby to board or leave.
 - The ticket booth is a service point for park information, not a mini-game entrance.
 - Shooting and mirror-memory challenges have their own dedicated building façades.
 - Movement uses walk-surface height metadata for paths and plazas and approximate circular blockers for attractions, the castle, the observatory and trees.
 - If WebGL or the CDN is unavailable, the HTML game cards remain available.
 
 The scene is still a procedural 3D prototype, not a finished photorealistic asset pack. Collision is currently an intentionally lightweight approximation rather than a full physics engine. Visual and gameplay review in a real browser/WebGL session is still needed.
+
+## Multiplayer park and public chat
+
+Signed-in non-admin players can join the shared park lounge:
+
+- Supabase Realtime Presence lists who is online.
+- Broadcast syncs player positions so other visitors can appear as 3D avatars in the same park.
+- The upper-left map also marks online visitors.
+- Public chat messages are stored in `sd_chat_messages` and delivered through Realtime database changes.
+- Chat writes are authenticated, server-stamped with the profile nickname, and rate-limited. Message bodies are limited to 180 characters by the app and 240 by the database.
+- Administrator accounts are excluded from public presence, movement broadcasts, chat reads/writes, and public rankings. The admin account can still view its own profile and history after signing in.
+
+The Realtime channel uses the private `park:lobby` topic. Confirm the Supabase Realtime project setting permits private channels and does not permit public access before opening the multiplayer park to other visitors. A real second-player browser session is still required to validate the end-to-end online experience.
 
 ## Player wardrobe
 
