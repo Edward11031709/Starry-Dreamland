@@ -76,6 +76,12 @@ The park's stone walls, roofs, walkways and plazas now use generated repeating s
 
 The Traveler Atelier includes an actual Three.js 3D preview using the same player model as the park. Drag the preview to rotate the character, change archetype and appearance controls for immediate updates, and preview any outfit—including locked outfits—before deciding to equip or unlock it. Previewing does not spend Star Dust.
 
+## Live chat bubbles and quick reactions
+
+When a signed-in, non-admin player sends a public park chat message, the message is broadcast on the private `park:lobby` Realtime channel. Other currently online players see a temporary speech bubble above that actual player's 3D avatar, while the message also remains in the chat panel and the existing chat table. The sender sees the same temporary bubble in third-person view.
+
+The chat lounge includes four one-tap reactions: wave, starlight, moon and heart. Reactions are posted as ordinary short chat messages, so they use the same authenticated insert, database constraints and Realtime delivery path as text. Bubbles are rendered as canvas text (not HTML) and automatically expire after a few seconds. No anonymous visitor or NPC actor is created by these features.
+
 ## Real-player visibility and deferred NPCs
 
 No ambient or placeholder visitor characters are spawned in the park. The only other humanoid characters shown in the 3D world are authenticated, currently online, non-admin players received through Supabase Realtime. Offline names, demo silhouettes and scripted crowd models are not rendered.
