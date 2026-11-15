@@ -45,9 +45,15 @@ Signed-in non-admin players can join the shared park lounge:
 
 The Realtime channel uses the private `park:lobby` topic. Confirm the Supabase Realtime project setting permits private channels and does not permit public access before opening the multiplayer park to other visitors. A real second-player browser session is still required to validate the end-to-end online experience.
 
+## Real-player visibility and deferred NPCs
+
+No ambient or placeholder visitor characters are spawned in the park. The only other humanoid characters shown in the 3D world are authenticated, currently online, non-admin players received through Supabase Realtime. Offline names, demo silhouettes and scripted crowd models are not rendered.
+
+NPCs are intentionally deferred. A later NPC phase should define individual identities, visual concepts, schedules, pathing, dialogue and interactions before any characters are placed in the park.
+
 ## Player wardrobe
 
-The default Star Traveler appearance is designed as a complete fantasy outfit (layered robe, mantle, boots, hair, headpiece and celestial details), not a placeholder sphere. The wardrobe contains six styles:
+The default Star Traveler appearance is designed as a complete fantasy outfit (layered robe, mantle, boots, hair, headpiece and celestial details), not a placeholder sphere. The character atelier supports five traveler archetypes (Wanderer, Astral Mage, Star Knight, Moon Priest and Celestial Guardian), selectable hair styles, hair colors, skin tones and star-trim colors. These settings are stored in the Supabase profile and synced to other online players. The wardrobe contains six outfits:
 
 - Star Traveler — free default outfit.
 - Moonlight Priestess.
