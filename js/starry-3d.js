@@ -304,7 +304,21 @@ function buildCarousel(scene,materials,x,z){
   addMesh(ride,new THREE.CylinderGeometry(2.42,0.86,0.36,48),materials.roof,[0,3.18,0]);
   addMesh(ride,new THREE.CylinderGeometry(2.45,2.45,0.12,48),materials.gold,[0,3.4,0]);
   addMesh(ride,new THREE.TorusGeometry(2.28,0.055,8,72),materials.trim,[0,3.48,0]);
+  const scallop=addMesh(ride,new THREE.TorusGeometry(2.42,0.035,7,96),materials.gold,[0,3.43,0]);scallop.rotation.x=Math.PI/2;
+  for(let panel=0;panel<12;panel++){
+    const a=panel/12*Math.PI*2;
+    const ornament=addMesh(ride,new THREE.OctahedronGeometry(0.09,0),panel%2?materials.gold:materials.crystal,
+      [Math.cos(a)*2.34,3.5,Math.sin(a)*2.34],[0.72,0.38,1.7],null,false,false);
+    ornament.rotation.y=a;
+    const pendant=addMesh(ride,new THREE.ConeGeometry(0.07,0.24,6),materials.gold,
+      [Math.cos(a)*2.15,3.22,Math.sin(a)*2.15]);pendant.rotation.z=Math.cos(a)*0.35;
+  }
   const canopy=addMesh(ride,new THREE.ConeGeometry(1.16,0.92,12),materials.trim,[0,3.98,0]);canopy.rotation.y=Math.PI/12;
+  for(let panel=0;panel<12;panel++){
+    const a=panel/12*Math.PI*2;
+    const seam=addMesh(ride,new THREE.BoxGeometry(0.035,0.38,1.2),materials.gold,
+      [Math.cos(a)*0.72,3.19,Math.sin(a)*0.72],null,false,false);seam.rotation.y=a;
+  }
   addMesh(ride,new THREE.SphereGeometry(0.22,16,12),materials.crystal,[0,4.5,0],null,false,false);
   for(let i=0;i<12;i++){
     const a=i/12*Math.PI*2,xp=Math.cos(a)*2.13,zp=Math.sin(a)*2.13;
@@ -334,6 +348,9 @@ function buildCarousel(scene,materials,x,z){
       addMesh(horse,new THREE.CylinderGeometry(0.07,0.09,0.12,10),materials.darkStone,[lx,0.02,lz]);
     }
     addMesh(horse,new THREE.TorusGeometry(0.26,0.035,7,24),materials.gold,[0,0.78,0]);
+    addMesh(horse,new THREE.TorusGeometry(0.19,0.025,6,24),materials.gold,[0.48,0.76,0]).rotation.y=Math.PI/2;
+    addMesh(horse,new THREE.OctahedronGeometry(0.075,1),materials.crystal,[0.46,0.82,0.18],[0.7,1.15,0.7],null,false,false);
+    addMesh(horse,new THREE.TorusGeometry(0.12,0.025,6,24),materials.trim,[0.86,1.05,0.02]);
   }
   const rideSeat=new THREE.Group();rideSeat.position.set(1.48,1.34,0);rideSeat.rotation.y=-Math.PI/2;ride.add(rideSeat);
   const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL · RIDE"});
@@ -344,22 +361,33 @@ function buildCarousel(scene,materials,x,z){
 function buildFerrisWheel(scene,materials,x,y,z){
   const root=new THREE.Group();root.position.set(x,y,z);scene.add(root);
   [-0.82,0.82].forEach((sx,i)=>{
+    const foot=addMesh(root,new THREE.CylinderGeometry(0.34,0.4,0.26,12),materials.darkStone,[sx,0.16,0]);
+    addMesh(root,new THREE.TorusGeometry(0.31,0.045,8,28),materials.gold,[sx,0.31,0]).rotation.x=Math.PI/2;
     const leg=addMesh(root,new THREE.BoxGeometry(0.23,3.5,0.28),materials.silverMetal,[sx,1.6,0]);leg.rotation.z=i===0?-0.26:0.26;
+    const inlay=addMesh(root,new THREE.BoxGeometry(0.045,3.02,0.045),materials.gold,[sx+(i===0?0.12:-0.12),1.58,0.15]);inlay.rotation.z=i===0?-0.26:0.26;
     addMesh(root,new THREE.BoxGeometry(0.62,0.18,0.72),materials.gold,[sx,0.12,0]);
   });
   const wheel=new THREE.Group();wheel.position.set(0,3.45,0.18);root.add(wheel);
   addMesh(wheel,new THREE.TorusGeometry(2.62,0.085,12,80),materials.gold,[0,0,0]);
   addMesh(wheel,new THREE.TorusGeometry(2.28,0.045,8,72),materials.silver,[0,0,0]);
+  addMesh(wheel,new THREE.TorusGeometry(2.8,0.028,7,88),materials.crystal,[0,0,0]);
   for(let i=0;i<10;i++){
     const a=i/10*Math.PI*2;
     const spoke=addMesh(wheel,new THREE.BoxGeometry(0.075,5.18,0.09),materials.silverMetal,[0,0,0]);spoke.rotation.z=a;
+    const pin=addMesh(wheel,new THREE.BoxGeometry(0.025,4.9,0.035),materials.gold,[0,0,0]);pin.rotation.z=a;
     const cx=Math.cos(a)*2.62,cy=Math.sin(a)*2.62;
     const gondolaMat=makeMaterial([0x6f8fc5,0xb18bcf,0xd7ad70,0x81a9a0,0xc27ea1][i%5],0.42,0.28);
     addMesh(wheel,new THREE.BoxGeometry(0.52,0.55,0.46),gondolaMat,[cx,cy-0.08,0.18]);
     addMesh(wheel,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[cx,cy+0.22,0.18]);
+    addMesh(wheel,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[cx-0.28,cy-0.05,0.18]);
+    addMesh(wheel,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[cx+0.28,cy-0.05,0.18]);
+    const canopy=addMesh(wheel,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[cx,cy+0.44,0.18]);canopy.rotation.y=Math.PI/8;
+    addMesh(wheel,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[cx,cy+0.61,0.18],[0.8,1.2,0.8],null,false,false);
     addMesh(wheel,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[cx,cy-0.36,0.42]);
   }
-  const hub=addMesh(wheel,new THREE.CylinderGeometry(0.35,0.35,0.42,20),materials.gold,[0,0,0]);hub.rotation.x=Math.PI/2;
+  const hub=addMesh(wheel,new THREE.CylinderGeometry(0.42,0.42,0.52,24),materials.gold,[0,0,0]);hub.rotation.x=Math.PI/2;
+  addMesh(wheel,new THREE.TorusGeometry(0.49,0.055,8,48),materials.trim,[0,0,0]).rotation.x=Math.PI/2;
+  const hubGem=addMesh(wheel,new THREE.OctahedronGeometry(0.28,1),materials.crystal,[0,0,0.32],[0.8,1.15,0.8],null,false,false);hubGem.rotation.z=Math.PI/4;
   const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL"});
   if(sign){sign.position.set(0,6.6,0.22);sign.scale.set(4.1,1.1,1);root.add(sign)}
   return {object:wheel,axis:"z",speed:-0.105};
@@ -429,7 +457,10 @@ function buildTeacupRide(scene,materials,x,z){
     const mat=makeMaterial(colors[i],0.34,0.28);
     addMesh(cup,new THREE.CylinderGeometry(0.32,0.48,0.58,20),mat,[0,0.24,0]);
     addMesh(cup,new THREE.TorusGeometry(0.39,0.055,8,28),materials.gold,[0,0.53,0]);
+    addMesh(cup,new THREE.TorusGeometry(0.2,0.045,8,24),materials.trim,[0.2,0.28,0]);
+    addMesh(cup,new THREE.TorusGeometry(0.49,0.028,6,32),materials.gold,[0,0.03,0]).rotation.x=Math.PI/2;
     addMesh(cup,new THREE.SphereGeometry(0.14,12,10),materials.lampGlow,[0,0.62,0],null,false,false);
+    addMesh(cup,new THREE.OctahedronGeometry(0.085,1),materials.crystal,[0,0.78,0.18],[0.72,1.2,0.72],null,false,false);
   }
   const sign=makeLabelSprite({title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS"});
   if(sign){sign.position.set(0,4.15,0);sign.scale.set(3.5,0.92,1);root.add(sign)}
@@ -447,8 +478,15 @@ function buildDropTower(scene,materials,x,z){
     leg.rotation.z=-Math.cos(a)*0.14;leg.rotation.x=Math.sin(a)*0.14;
     addMesh(root,new THREE.SphereGeometry(0.16,12,10),materials.lampGlow,[xp,7.0,zp],null,false,false);
   }
+  [1.0,3.8,6.55].forEach((yy,index)=>{
+    const band=addMesh(root,new THREE.TorusGeometry(index===1?0.72:0.56,0.045,8,48),index===1?materials.gold:materials.trim,[0,yy,0]);
+    band.rotation.x=Math.PI/2;
+  });
+  const crown=addMesh(root,new THREE.CylinderGeometry(0.72,0.88,0.2,12),materials.gold,[0,7.48,0]);
+  addMesh(root,new THREE.OctahedronGeometry(0.32,1),materials.crystal,[0,7.82,0],[0.76,1.3,0.76],null,false,false);
   const gondola=new THREE.Group();root.add(gondola);gondola.position.y=1.7;
   addMesh(gondola,new THREE.TorusGeometry(1.05,0.16,10,48),materials.gold,[0,0,0]);
+  addMesh(gondola,new THREE.TorusGeometry(0.9,0.045,8,48),materials.trim,[0,0.1,0]);
   for(let i=0;i<8;i++){
     const a=i/8*Math.PI*2;
     addMesh(gondola,new THREE.BoxGeometry(0.42,0.48,0.52),
@@ -532,8 +570,6 @@ function buildEnvironment(scene) {
     road: makeMaterial(0x292d50, 0.94, 0.08), roadEdge: makeMaterial(0xb5a0c9, 0.48, 0.48),
     paving: makeMaterial(0x393451, 0.78, 0.22),
     lampGlow: new THREE.MeshStandardMaterial({color:0xffedc2,emissive:0xf1bb72,emissiveIntensity:2.6,roughness:0.18,metalness:0.18}),
-    npcClothes: [makeMaterial(0x6f8fc5,0.58,0.08),makeMaterial(0xc27ea1,0.58,0.08),makeMaterial(0x7eaa9a,0.58,0.08),makeMaterial(0xd2a45f,0.58,0.08)],
-    npcSkin: makeMaterial(0xf0d2b8, 0.82, 0.02)
   };
 
   // A large connected floating island gives the park room for real exploration.
@@ -609,7 +645,20 @@ function buildEnvironment(scene) {
       segment.rotation.y=Math.atan2(dx,dz);island.add(segment);
       walkSegments.push({x1:a[0],z1:a[1],x2:b[0],z2:b[1],width,surfaceY:0.822});
       addMesh(segment,new THREE.BoxGeometry(width,0.075,length+0.42),materials.road,[0,0,0],null,false,true);
-      [-1,1].forEach(side=>addMesh(segment,new THREE.BoxGeometry(0.12,0.045,length+0.48),materials.roadEdge,[side*(width/2-0.08),0.052,0],null,false,false));
+      [-1,1].forEach(side=>{
+        addMesh(segment,new THREE.BoxGeometry(0.16,0.06,length+0.5),materials.roadEdge,[side*(width/2-0.08),0.052,0],null,false,false);
+        addMesh(segment,new THREE.BoxGeometry(0.045,0.025,length+0.28),materials.gold,[side*(width/2-0.26),0.094,0],null,false,false);
+      });
+      addMesh(segment,new THREE.BoxGeometry(0.055,0.018,length*0.82),materials.trim,[0,0.091,0],null,false,false);
+      const seamCount=Math.max(1,Math.floor(length/3.2));
+      for(let seam=1;seam<seamCount;seam++){
+        const zSeam=-length/2+seam*length/seamCount;
+        addMesh(segment,new THREE.BoxGeometry(width-0.48,0.018,0.035),materials.roadEdge,[0,0.094,zSeam],null,false,false);
+        for(const side of [-1,1]){
+          const inset=addMesh(segment,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[side*(width/2-0.42),0.12,zSeam],[0.8,0.28,1.5],null,false,false);
+          inset.rotation.y=Math.PI/4;
+        }
+      }
     }
   }
   [
@@ -739,14 +788,31 @@ function buildEnvironment(scene) {
 
   // Each attraction carries its own sign directly on the matching model.
 
-  // Warm lanterns, groves and small guests add scale and life to the walkways.
+  // Ornate lanterns and crystal groves add life to the walkways; no placeholder visitors are spawned.
   function addParkLamp(x,z,scale=1){
-    const lamp=new THREE.Group();lamp.position.set(x,0.72,z);island.add(lamp);
-    addMesh(lamp,new THREE.CylinderGeometry(0.075,0.12,2.65*scale,10),materials.darkStone,[0,1.32*scale,0]);
-    addMesh(lamp,new THREE.CylinderGeometry(0.19,0.24,0.13,12),materials.gold,[0,2.58*scale,0]);
-    addMesh(lamp,new THREE.SphereGeometry(0.2*scale,14,10),materials.lampGlow,[0,2.82*scale,0],null,false,false);
-    const halo=addMesh(lamp,new THREE.TorusGeometry(0.29*scale,0.035,6,28),materials.gold,[0,2.82*scale,0]);
-    halo.rotation.x=Math.PI/2;
+    const lamp=new THREE.Group();lamp.position.set(x,0.72,z);lamp.scale.setScalar(scale);island.add(lamp);
+    addMesh(lamp,new THREE.CylinderGeometry(0.25,0.32,0.2,12),materials.darkStone,[0,0.1,0]);
+    addMesh(lamp,new THREE.TorusGeometry(0.27,0.045,8,32),materials.gold,[0,0.19,0]).rotation.x=Math.PI/2;
+    addMesh(lamp,new THREE.CylinderGeometry(0.095,0.16,2.28,16),materials.darkStone,[0,1.35,0]);
+    for(let k=0;k<4;k++){
+      const rib=addMesh(lamp,new THREE.BoxGeometry(0.026,1.82,0.026),materials.gold,[0,1.36,0.14]);
+      rib.rotation.y=k*Math.PI/2;
+    }
+    addMesh(lamp,new THREE.TorusGeometry(0.19,0.04,8,32),materials.trim,[0,2.42,0]).rotation.x=Math.PI/2;
+    addMesh(lamp,new THREE.CylinderGeometry(0.24,0.3,0.16,12),materials.gold,[0,2.55,0]);
+    // Hexagonal glass lantern cage around a warm crystal lamp.
+    for(let k=0;k<6;k++){
+      const a=k/6*Math.PI*2;
+      addMesh(lamp,new THREE.CylinderGeometry(0.025,0.025,0.48,8),materials.silverMetal,
+        [Math.cos(a)*0.19,2.85,Math.sin(a)*0.19]);
+      addMesh(lamp,new THREE.SphereGeometry(0.045,8,8),materials.gold,
+        [Math.cos(a)*0.19,3.11,Math.sin(a)*0.19],null,false,false);
+    }
+    const glass=addMesh(lamp,new THREE.OctahedronGeometry(0.22,1),materials.lampGlow,[0,2.86,0],[0.82,1.12,0.82],null,false,false);
+    const halo=addMesh(lamp,new THREE.TorusGeometry(0.34,0.032,8,40),materials.gold,[0,2.84,0]);halo.rotation.x=Math.PI/2;
+    addMesh(lamp,new THREE.ConeGeometry(0.28,0.34,8),materials.trim,[0,3.28,0]);
+    addMesh(lamp,new THREE.OctahedronGeometry(0.15,1),materials.crystal,[0,3.56,0],[0.68,1.42,0.68],null,false,false);
+    const glow=new THREE.PointLight(0xffd48d,0.48,5.5,2);glow.position.set(0,2.82,0);lamp.add(glow);
   }
   [
     [-4,25],[4,25],[-5,14],[5,14],[-10,2],[10,2],[-17,8],[-26,8],
@@ -766,21 +832,6 @@ function buildEnvironment(scene) {
     addCollider(p[0],p[1],0.42,"星樹");
   });
 
-  function addGuest(x,z,outfitIndex,facing=0){
-    const guest=new THREE.Group();guest.position.set(x,0.62,z);guest.rotation.y=facing;island.add(guest);
-    addMesh(guest,new THREE.SphereGeometry(0.27,12,10),materials.npcClothes[outfitIndex%materials.npcClothes.length],[0,0.72,0],[0.78,1.18,0.68]);
-    addMesh(guest,new THREE.SphereGeometry(0.2,12,10),materials.npcSkin,[0,1.27,0.015]);
-    addMesh(guest,new THREE.ConeGeometry(0.21,0.25,8),materials.npcClothes[outfitIndex%materials.npcClothes.length],[0,1.52,0]);
-    return guest;
-  }
-  const guests=[
-    addGuest(-5.5,12.5,0,0.6),addGuest(5.8,11.8,1,-0.7),
-    addGuest(-17.2,5.4,2,1.2),addGuest(-25.5,3.8,3,-0.8),
-    addGuest(21,-9,1,2.1),addGuest(28.3,-8.5,0,-1.7),
-    addGuest(-3.2,27,3,0.2),addGuest(5.5,27.5,2,-0.3),
-    addGuest(-11.2,-8,0,0.8),addGuest(14.8,-7.5,1,-1.1)
-  ];
-
   const clouds=new THREE.Group();scene.add(clouds);
   for(let i=0;i<18;i++){
     const angle=(i/18)*Math.PI*2,radius=34+(i%4)*4.5;
@@ -789,7 +840,7 @@ function buildEnvironment(scene) {
     }),[Math.cos(angle)*radius,-6.1-(i%3)*0.65,Math.sin(angle)*radius],[4.4+(i%3),0.72,2.5],false,false);
     cloud.userData.phase=angle;
   }
-  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,guests,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
+  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
 }
 
 function createStarfield(scene, count = 620) {
