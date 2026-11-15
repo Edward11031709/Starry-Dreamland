@@ -375,7 +375,7 @@ function currentParkPresence(){
   onlineAt:new Date().toISOString()
  };
 }
-async async function refreshParkPresence(){
+async function refreshParkPresence(){
  if(!parkChannel||!cloudUser||me()?.isAdmin)return;
  try{await parkChannel.track(currentParkPresence())}catch(error){console.warn("Park presence update failed:",error)}
 }
