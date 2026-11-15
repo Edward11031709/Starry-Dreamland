@@ -544,7 +544,24 @@ function buildEnvironment(scene) {
   const addCollider = (x,z,radius,label)=>colliders.push({x,z,radius,label});
   const cliff = addMesh(island,new THREE.CylinderGeometry(44.2,34.5,4.2,64,3),materials.rock,[0,-1.42,0]);
   cliff.rotation.y=0.12;
-  addMesh(island,new THREE.DodecahedronGeometry(34,1),materials.rockLight,[0,-2.55,0],[1.06,0.5,0.92]).rotation.y=0.22;
+  // The island underside tapers DOWN. A tall rock dome here used to pierce the
+  // walkable platform and look like a giant mountain in the center of the park.
+  const underbody=addMesh(island,new THREE.ConeGeometry(34.45,8.45,64,4),materials.rockLight,[0,-7.745,0],[1,1,0.94]);
+  underbody.rotation.set(Math.PI,0.22,0);
+  const lowerRim=addMesh(island,new THREE.TorusGeometry(34.25,0.18,12,128),materials.trim,[0,-3.54,0]);
+  lowerRim.rotation.x=Math.PI/2;
+  for(let i=0;i<16;i++){
+    const angle=(i/16)*Math.PI*2,radius=30.8+(i%3)*1.1;
+    const shard=addMesh(island,new THREE.ConeGeometry(0.62+(i%3)*0.14,2.0+(i%4)*0.42,7),materials.rockLight,
+      [Math.cos(angle)*radius,-4.65-(i%3)*0.42,Math.sin(angle)*radius],[1,1,0.92]);
+    shard.rotation.z=(i%2?1:-1)*0.2;
+    shard.rotation.x=Math.PI+(i%3)*0.08;
+    if(i%2===0){
+      const glint=addMesh(island,new THREE.OctahedronGeometry(0.17,1),materials.crystal,
+        [Math.cos(angle)*radius,-5.65-(i%2)*0.3,Math.sin(angle)*radius],[0.62,1.4,0.62],false,false);
+      glint.rotation.y=angle;
+    }
+  }
   addMesh(island,new THREE.CylinderGeometry(44.15,44.15,0.48,96),materials.top,[0,0.46,0]);
   addMesh(island,new THREE.TorusGeometry(43.82,0.23,12,144),materials.gold,[0,0.70,0]).rotation.x=Math.PI/2;
   addMesh(island,new THREE.CylinderGeometry(41.8,41.8,0.13,96),makeMaterial(0x46466e,0.88,0.14),[0,0.72,0]);
