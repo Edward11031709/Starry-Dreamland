@@ -195,40 +195,80 @@ function buildEntranceGate(scene,materials){
 }
 
 function buildTicketBooth(scene,materials,x,z){
-  const booth=new THREE.Group();booth.position.set(x,0.72,z);scene.add(booth);
-  addMesh(booth,new THREE.BoxGeometry(1.9,1.5,1.45),materials.wall,[0,0.85,0]);
-  addMesh(booth,new THREE.BoxGeometry(2.15,0.18,1.65),materials.gold,[0,1.66,0]);
-  const roof=addMesh(booth,new THREE.ConeGeometry(1.35,0.66,4),materials.roof,[0,2.06,0]);roof.rotation.y=Math.PI/4;
-  addMesh(booth,new THREE.BoxGeometry(1.38,0.66,0.1),materials.darkStone,[0,1.12,0.77]);
-  addMesh(booth,new THREE.BoxGeometry(1.12,0.43,0.12),materials.crystal,[0,1.18,0.85],null,false,false);
-  addMesh(booth,new THREE.BoxGeometry(2.02,0.12,0.4),materials.trim,[0,0.92,0.9]);
-  const sign=makeLabelSprite({title:"夜場售票",subtitle:"TICKETS"});
-  if(sign){sign.position.set(0,2.62,0.22);sign.scale.set(2.55,0.7,1);booth.add(sign)}
-  [-1.45,-0.95,0.95,1.45].forEach((x,i)=>{const post=addMesh(booth,new THREE.CylinderGeometry(0.055,0.07,0.64,10),materials.gold,[x,0.36,1.18]);post.rotation.z=i%2?0.08:-0.08});
+  const booth=new THREE.Group();booth.position.set(x,0.72,z);booth.userData.action="ticket-booth";scene.add(booth);
+  addMesh(booth,new THREE.CylinderGeometry(2.25,2.4,0.24,40),materials.darkStone,[0,0.12,0]);
+  addMesh(booth,new THREE.TorusGeometry(2.2,0.085,8,64),materials.gold,[0,0.28,0]).rotation.x=Math.PI/2;
+  addMesh(booth,new THREE.BoxGeometry(3.25,1.78,2.2),materials.wall,[0,1.2,0]);
+  addMesh(booth,new THREE.BoxGeometry(3.42,0.14,2.36),materials.trim,[0,2.12,0]);
+  [-1.38,1.38].forEach(xp=>{
+    addMesh(booth,new THREE.CylinderGeometry(0.16,0.2,2.56,16),materials.silverMetal,[xp,1.4,1.0]);
+    addMesh(booth,new THREE.CylinderGeometry(0.25,0.25,0.13,16),materials.gold,[xp,2.63,1.0]);
+    addMesh(booth,new THREE.SphereGeometry(0.16,14,10),materials.crystal,[xp,2.79,1.0],null,false,false);
+  });
+  const roof=addMesh(booth,new THREE.ConeGeometry(2.28,1.28,6),materials.roof,[0,2.85,0]);roof.rotation.y=Math.PI/6;
+  addMesh(booth,new THREE.TorusGeometry(1.1,0.055,8,48),materials.gold,[0,3.45,0]);
+  addMesh(booth,new THREE.OctahedronGeometry(0.32,1),materials.crystal,[0,3.62,0],null,false,false);
+  addMesh(booth,new THREE.BoxGeometry(2.35,0.82,0.13),materials.darkStone,[0,1.24,1.13]);
+  addMesh(booth,new THREE.BoxGeometry(2.12,0.53,0.1),materials.lampGlow,[0,1.35,1.21],null,false,false);
+  addMesh(booth,new THREE.BoxGeometry(2.7,0.16,0.5),materials.gold,[0,0.92,1.32]);
+  addMesh(booth,new THREE.BoxGeometry(0.72,0.26,0.08),materials.crystal,[0,1.62,1.28],null,false,false);
+  const sign=makeLabelSprite({title:"星夢入園票亭",subtitle:"STARDREAM TICKETS · PARK GUIDE"});
+  if(sign){sign.position.set(0,4.45,0.34);sign.scale.set(4.6,1.22,1);booth.add(sign)}
+  [-1.85,-0.85,0.85,1.85].forEach((xp,i)=>{
+    const post=addMesh(booth,new THREE.CylinderGeometry(0.055,0.07,0.76,10),materials.gold,[xp,0.38,1.8]);
+    post.rotation.z=i%2?0.08:-0.08;
+    addMesh(booth,new THREE.SphereGeometry(0.09,10,8),materials.crystal,[xp,0.8,1.8],null,false,false);
+  });
+  addMesh(booth,new THREE.BoxGeometry(2.25,0.09,0.08),materials.gold,[0,0.54,1.8]);
   return booth;
 }
 
 function buildCarousel(scene,materials,x,z){
-  const root=new THREE.Group();root.position.set(x,0.78,z);scene.add(root);
-  addMesh(root,new THREE.CylinderGeometry(2.05,2.22,0.34,48),materials.darkStone,[0,0.18,0]);
-  addMesh(root,new THREE.TorusGeometry(2.12,0.11,10,64),materials.gold,[0,0.38,0]).rotation.x=Math.PI/2;
+  const root=new THREE.Group();root.position.set(x,0.78,z);root.userData.action="ride-carousel";scene.add(root);
+  addMesh(root,new THREE.CylinderGeometry(2.45,2.62,0.34,64),materials.darkStone,[0,0.18,0]);
+  addMesh(root,new THREE.TorusGeometry(2.48,0.13,12,80),materials.gold,[0,0.39,0]).rotation.x=Math.PI/2;
+  addMesh(root,new THREE.CylinderGeometry(2.28,2.34,0.12,64),materials.paving,[0,0.42,0]);
   const ride=new THREE.Group();ride.position.y=0.42;root.add(ride);
-  addMesh(ride,new THREE.CylinderGeometry(0.16,0.22,3.15,18),materials.silverMetal,[0,1.57,0]);
-  addMesh(ride,new THREE.CylinderGeometry(2.12,0.82,0.38,40),materials.roof,[0,3.18,0]);
-  addMesh(ride,new THREE.CylinderGeometry(2.18,2.18,0.12,40),materials.gold,[0,3.4,0]);
-  addMesh(ride,new THREE.ConeGeometry(0.8,0.72,12),materials.trim,[0,3.94,0]);
-  const animalColors=[0xb8a1df,0xe6c98e,0x86b6d8,0xd69acb,0xa9c6ad,0xe7a98e];
-  for(let i=0;i<6;i++){
-    const a=i/6*Math.PI*2,x=Math.cos(a)*1.42,z=Math.sin(a)*1.42;
-    addMesh(ride,new THREE.CylinderGeometry(0.045,0.055,2.2,8),materials.silver,[x,1.35,z]);
-    const animalMat=makeMaterial(animalColors[i],0.34,0.3);
-    addMesh(ride,new THREE.SphereGeometry(0.34,14,10),animalMat,[x,0.72,z],[1.2,0.7,0.72]);
-    addMesh(ride,new THREE.SphereGeometry(0.19,12,10),animalMat,[x+0.27,0.94,z],[0.72,0.8,0.72]);
-    addMesh(ride,new THREE.ConeGeometry(0.1,0.3,8),materials.gold,[x+0.36,1.12,z],[0.7,1,0.7]);
+  addMesh(ride,new THREE.CylinderGeometry(0.18,0.3,3.45,20),materials.silverMetal,[0,1.72,0]);
+  addMesh(ride,new THREE.CylinderGeometry(0.42,0.6,0.22,32),materials.gold,[0,3.36,0]);
+  addMesh(ride,new THREE.CylinderGeometry(2.42,0.86,0.36,48),materials.roof,[0,3.18,0]);
+  addMesh(ride,new THREE.CylinderGeometry(2.45,2.45,0.12,48),materials.gold,[0,3.4,0]);
+  addMesh(ride,new THREE.TorusGeometry(2.28,0.055,8,72),materials.trim,[0,3.48,0]);
+  const canopy=addMesh(ride,new THREE.ConeGeometry(1.16,0.92,12),materials.trim,[0,3.98,0]);canopy.rotation.y=Math.PI/12;
+  addMesh(ride,new THREE.SphereGeometry(0.22,16,12),materials.crystal,[0,4.5,0],null,false,false);
+  for(let i=0;i<12;i++){
+    const a=i/12*Math.PI*2,xp=Math.cos(a)*2.13,zp=Math.sin(a)*2.13;
+    addMesh(ride,new THREE.CylinderGeometry(0.045,0.06,2.48,10),materials.silverMetal,[xp,2.08,zp]);
+    addMesh(ride,new THREE.SphereGeometry(0.095,12,10),materials.lampGlow,[xp,3.28,zp],null,false,false);
+    addMesh(ride,new THREE.SphereGeometry(0.07,10,8),materials.gold,[xp,0.52,zp],null,false,false);
   }
-  const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL"});
-  if(sign){sign.position.set(0,4.72,0);sign.scale.set(4.1,1.1,1);root.add(sign)}
-  return {object:ride,axis:"y",speed:0.28};
+  const animalColors=[0xb8a1df,0xe6c98e,0x86b6d8,0xd69acb,0xa9c6ad,0xe7a98e];
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2,xp=Math.cos(a)*1.48,zp=Math.sin(a)*1.48;
+    const horse=new THREE.Group();horse.position.set(xp,0.62,zp);horse.rotation.y=-a;ride.add(horse);
+    const coat=makeMaterial(animalColors[i%animalColors.length],0.28,0.32,{clearcoat:0.72,clearcoatRoughness:0.18});
+    const mane=makeMaterial(i%2?0x493a70:0x2b4265,0.34,0.32);
+    addMesh(horse,new THREE.SphereGeometry(0.38,20,16),coat,[0,0.46,0],[1.5,0.76,0.74]);
+    addMesh(horse,new THREE.SphereGeometry(0.19,16,12),coat,[0.42,0.73,0],[1.12,1.45,0.88]);
+    addMesh(horse,new THREE.SphereGeometry(0.18,16,12),coat,[0.7,1.06,0.02],[1.2,0.88,0.8]);
+    addMesh(horse,new THREE.SphereGeometry(0.1,12,10),materials.gold,[0.83,1.01,0.16],[0.8,0.65,0.65]);
+    addMesh(horse,new THREE.ConeGeometry(0.075,0.23,8),mane,[0.58,1.29,-0.09],[0.8,1,0.8]);
+    addMesh(horse,new THREE.ConeGeometry(0.075,0.23,8),mane,[0.58,1.29,0.12],[0.8,1,0.8]);
+    addMesh(horse,new THREE.SphereGeometry(0.12,12,10),mane,[0.36,1.03,-0.13],[0.8,1.5,0.85]);
+    addMesh(horse,new THREE.SphereGeometry(0.13,12,10),mane,[-0.45,0.7,0],[0.65,1.2,0.7]);
+    addMesh(horse,new THREE.BoxGeometry(0.58,0.12,0.48),materials.gold,[0.02,0.88,0]);
+    addMesh(horse,new THREE.BoxGeometry(0.48,0.08,0.4),materials.crystal,[0.02,0.97,0],null,false,false);
+    for(let leg=0;leg<4;leg++){
+      const lx=leg<2?0.27:-0.25,lz=leg%2?0.23:-0.23;
+      addMesh(horse,new THREE.CylinderGeometry(0.055,0.07,0.56,10),coat,[lx,0.2,lz]);
+      addMesh(horse,new THREE.CylinderGeometry(0.07,0.09,0.12,10),materials.darkStone,[lx,0.02,lz]);
+    }
+    addMesh(horse,new THREE.TorusGeometry(0.26,0.035,7,24),materials.gold,[0,0.78,0]);
+  }
+  const rideSeat=new THREE.Group();rideSeat.position.set(1.48,1.34,0);rideSeat.rotation.y=-Math.PI/2;ride.add(rideSeat);
+  const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL · RIDE"});
+  if(sign){sign.position.set(0,5.12,0);sign.scale.set(4.4,1.16,1);root.add(sign)}
+  return {id:"carousel",root,object:ride,rideSeat,axis:"y",speed:0.24};
 }
 
 function buildFerrisWheel(scene,materials,x,y,z){
@@ -280,13 +320,25 @@ function buildRollerCoaster(scene,materials){
 
 function buildArcadeStalls(scene,materials){
   const stalls=[];
-  [[5.1,6.9,"星際獎品所","PRIZE ARCADE"],[8.25,5.45,"午夜挑戰亭","NIGHT CHALLENGE"]].forEach(([x,z,title,sub])=>{
+  [
+    [5.1,6.9,"星塵兌換所","STAR DUST REWARDS"],
+    [8.25,5.45,"旅人補給站","TRAVELER SUPPLY"]
+  ].forEach(([x,z,title,sub],index)=>{
     const booth=new THREE.Group();booth.position.set(x,0.72,z);scene.add(booth);
-    addMesh(booth,new THREE.BoxGeometry(1.75,1.55,1.35),materials.darkStone,[0,0.82,0]);
-    addMesh(booth,new THREE.BoxGeometry(1.95,0.18,1.55),materials.gold,[0,1.66,0]);
-    addMesh(booth,new THREE.BoxGeometry(1.36,0.8,0.12),materials.wall,[0,1.0,0.72]);
-    for(let k=0;k<3;k++)addMesh(booth,new THREE.SphereGeometry(0.16,12,10),[materials.crystal,materials.silver,materials.gold][k],[-0.42+k*0.42,1.0,0.84]);
-    const sign=makeLabelSprite({title,subtitle:sub});if(sign){sign.position.set(0,2.28,0.2);sign.scale.set(2.8,0.76,1);booth.add(sign)}
+    addMesh(booth,new THREE.CylinderGeometry(1.18,1.28,0.22,32),materials.darkStone,[0,0.11,0]);
+    addMesh(booth,new THREE.BoxGeometry(1.85,1.5,1.42),materials.wall,[0,0.85,0]);
+    addMesh(booth,new THREE.BoxGeometry(2.0,0.15,1.55),materials.gold,[0,1.62,0]);
+    const roof=addMesh(booth,new THREE.ConeGeometry(1.38,0.72,4),materials.roof,[0,2.02,0]);roof.rotation.y=Math.PI/4;
+    addMesh(booth,new THREE.BoxGeometry(1.32,0.76,0.12),materials.darkStone,[0,1.0,0.73]);
+    if(index===0){
+      for(let k=0;k<3;k++)addMesh(booth,new THREE.OctahedronGeometry(0.22,1),[materials.crystal,materials.silver,materials.gold][k],[-0.43+k*0.43,1.05,0.84],null,false,false);
+      addMesh(booth,new THREE.BoxGeometry(1.42,0.12,0.18),materials.gold,[0,0.62,0.9]);
+    }else{
+      addMesh(booth,new THREE.BoxGeometry(0.85,0.62,0.1),materials.wood,[-0.38,1.1,0.84]);
+      addMesh(booth,new THREE.BoxGeometry(0.4,0.28,0.12),materials.crystal,[0.38,1.1,0.84],null,false,false);
+    }
+    const sign=makeLabelSprite({title,subtitle:sub});
+    if(sign){sign.position.set(0,2.58,0.2);sign.scale.set(3.3,0.88,1);booth.add(sign)}
     stalls.push(booth);
   });
   return stalls;
@@ -336,6 +388,58 @@ function buildDropTower(scene,materials,x,z){
   const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP"});
   if(sign){sign.position.set(0,8.8,0);sign.scale.set(3.7,0.98,1);root.add(sign)}
   return {object:gondola,axis:"lift",baseY:1.4,range:3.9,speed:0.82,phase:Math.random()*Math.PI*2};
+}
+
+function buildShootingGallery(scene,materials,x,z){
+  const hall=new THREE.Group();hall.position.set(x,0.78,z);hall.userData.gameId="shooting-range";scene.add(hall);
+  addMesh(hall,new THREE.CylinderGeometry(4.0,4.2,0.24,48),materials.darkStone,[0,0.12,0]);
+  addMesh(hall,new THREE.TorusGeometry(3.92,0.1,8,72),materials.gold,[0,0.28,0]).rotation.x=Math.PI/2;
+  addMesh(hall,new THREE.BoxGeometry(7.0,3.2,1.0),materials.wall,[0,2.0,-1.1]);
+  addMesh(hall,new THREE.BoxGeometry(7.25,0.18,1.2),materials.trim,[0,3.65,-1.1]);
+  [-3.25,3.25].forEach(xp=>{
+    addMesh(hall,new THREE.CylinderGeometry(0.18,0.22,3.75,16),materials.silverMetal,[xp,1.9,0.2]);
+    addMesh(hall,new THREE.CylinderGeometry(0.26,0.26,0.14,16),materials.gold,[xp,3.78,0.2]);
+    addMesh(hall,new THREE.SphereGeometry(0.14,12,10),materials.crystal,[xp,3.98,0.2],null,false,false);
+  });
+  const canopy=addMesh(hall,new THREE.ConeGeometry(4.05,1.1,6),materials.roof,[0,4.0,-0.75]);canopy.rotation.y=Math.PI/6;
+  addMesh(hall,new THREE.BoxGeometry(5.7,0.22,2.2),materials.darkStone,[0,0.82,0.65]);
+  addMesh(hall,new THREE.BoxGeometry(5.3,0.16,0.42),materials.gold,[0,1.15,0.7]);
+  const targetColors=[0x73d6ed,0xf0c47a,0xc19bff];
+  for(let i=0;i<3;i++){
+    const xp=-2.15+i*2.15;
+    addMesh(hall,new THREE.CylinderGeometry(0.55,0.6,0.16,40),materials.silverMetal,[xp,2.25,-0.48]).rotation.x=Math.PI/2;
+    addMesh(hall,new THREE.CylinderGeometry(0.43,0.43,0.18,40),makeMaterial(targetColors[i],0.24,0.36,{emissive:targetColors[i],emissiveIntensity:0.62}),[xp,2.25,-0.34]).rotation.x=Math.PI/2;
+    addMesh(hall,new THREE.CylinderGeometry(0.13,0.13,0.2,24),materials.gold,[xp,2.25,-0.18]).rotation.x=Math.PI/2;
+    addMesh(hall,new THREE.SphereGeometry(0.1,12,10),materials.lampGlow,[xp,3.0,-0.5],null,false,false);
+  }
+  const sign=makeLabelSprite({title:"霓虹神射手",subtitle:"NEON SHOOTING GALLERY · PLAY"});
+  if(sign){sign.position.set(0,5.15,0.15);sign.scale.set(4.8,1.28,1);hall.add(sign)}
+  addMesh(hall,new THREE.TorusGeometry(0.2,0.035,8,28),materials.gold,[0,1.55,0.78]);
+  return hall;
+}
+
+function buildMirrorHouse(scene,materials,x,z){
+  const hall=new THREE.Group();hall.position.set(x,0.78,z);hall.userData.gameId="mirror-house";scene.add(hall);
+  addMesh(hall,new THREE.CylinderGeometry(4.0,4.25,0.28,48),materials.darkStone,[0,0.14,0]);
+  addMesh(hall,new THREE.TorusGeometry(3.92,0.1,8,72),materials.gold,[0,0.3,0]).rotation.x=Math.PI/2;
+  addMesh(hall,new THREE.BoxGeometry(6.2,3.7,0.72),materials.roof,[0,2.08,-1.15]);
+  addMesh(hall,new THREE.BoxGeometry(6.45,0.2,0.92),materials.gold,[0,4.02,-1.15]);
+  [-2.85,2.85].forEach(xp=>{
+    addMesh(hall,new THREE.CylinderGeometry(0.2,0.26,3.9,16),materials.silverMetal,[xp,1.98,0.1]);
+    addMesh(hall,new THREE.TorusGeometry(0.24,0.05,8,24),materials.gold,[xp,3.72,0.1]);
+  });
+  const arch=addMesh(hall,new THREE.TorusGeometry(1.25,0.19,16,64),materials.crystal,[0,2.08,0.1]);arch.scale.set(1,1.35,1);
+  addMesh(hall,new THREE.CircleGeometry(1.12,48),new THREE.MeshPhysicalMaterial({
+    color:0x7b7be1,emissive:0x3f348f,emissiveIntensity:0.55,metalness:0.35,roughness:0.12,
+    transparent:true,opacity:0.58,side:THREE.DoubleSide,clearcoat:1
+  }),[0,2.08,0.16],null,false,false);
+  for(let i=0;i<5;i++){
+    const shard=addMesh(hall,new THREE.BoxGeometry(0.12,2.3,0.14),materials.silverMetal,[-2.0+i,1.92,-0.68]);
+    shard.rotation.z=(i-2)*0.11;
+  }
+  const sign=makeLabelSprite({title:"幻影鏡屋",subtitle:"MIRROR MAZE · MEMORY TRIAL"});
+  if(sign){sign.position.set(0,5.05,0.2);sign.scale.set(4.4,1.18,1);hall.add(sign)}
+  return hall;
 }
 
 function buildEnvironment(scene) {
