@@ -1,16 +1,16 @@
 let THREE;
 
 const PALETTE = {
-  night: 0x080d2a,
-  navy: 0x111a3c,
-  stone: 0x42435f,
-  lightStone: 0x77718f,
+  night: 0x070918,
+  navy: 0x111329,
+  stone: 0x302a4a,
+  lightStone: 0x6e638b,
   violet: 0x8d75c9,
-  lilac: 0xc5b6ef,
-  silver: 0xc9d2e9,
-  gold: 0xe9c982,
-  blue: 0x53bce9,
-  pink: 0xe28cdb
+  lilac: 0xd3c4ff,
+  silver: 0xc7d9ef,
+  gold: 0xf1d18e,
+  blue: 0x64c9ed,
+  pink: 0xe89bdc
 };
 
 let activeWorld = null;
@@ -100,17 +100,24 @@ function makeIsland(parent, x, y, z, radius, palette) {
 }
 
 function makeLabelSprite(meta){
- const canvas=document.createElement("canvas");canvas.width=640;canvas.height=176;
+ const canvas=document.createElement("canvas");canvas.width=768;canvas.height=208;
  const ctx=canvas.getContext("2d");if(!ctx)return null;ctx.clearRect(0,0,canvas.width,canvas.height);
- const gradient=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
- gradient.addColorStop(0,"rgba(17,23,55,0.96)");gradient.addColorStop(0.5,"rgba(27,30,68,0.94)");gradient.addColorStop(1,"rgba(12,19,47,0.96)");
- ctx.fillStyle=gradient;ctx.strokeStyle="rgba(235,211,157,0.92)";ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(8,8,624,160,30);ctx.fill();ctx.stroke();
- ctx.textAlign="center";ctx.textBaseline="middle";ctx.shadowColor="rgba(239,212,154,0.35)";ctx.shadowBlur=13;ctx.fillStyle="#f6dfae";ctx.font="bold 52px 'Noto Sans TC',system-ui,sans-serif";ctx.fillText(meta.title,320,69);
- ctx.shadowBlur=0;ctx.fillStyle="#d3cbe8";ctx.font="25px Georgia,serif";ctx.letterSpacing="4px";ctx.fillText(meta.subtitle,320,126);
+ const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+ gradient.addColorStop(0,"rgba(25,18,52,0.98)");gradient.addColorStop(0.5,"rgba(15,26,55,0.97)");gradient.addColorStop(1,"rgba(8,16,39,0.98)");
+ ctx.shadowColor="rgba(128,105,218,0.42)";ctx.shadowBlur=20;ctx.fillStyle=gradient;ctx.beginPath();ctx.roundRect(10,10,748,188,32);ctx.fill();ctx.shadowBlur=0;
+ ctx.strokeStyle="rgba(233,201,130,0.95)";ctx.lineWidth=5;ctx.beginPath();ctx.roundRect(12,12,744,184,30);ctx.stroke();
+ ctx.strokeStyle="rgba(156,139,214,0.78)";ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(23,23,722,162,24);ctx.stroke();
+ ctx.fillStyle="#f3dca7";ctx.shadowColor="rgba(255,218,151,0.85)";ctx.shadowBlur=18;
+ [[48,104],[720,104]].forEach(([x,y])=>{ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);ctx.fillRect(-7,-7,14,14);ctx.restore()});
+ ctx.textAlign="center";ctx.textBaseline="middle";ctx.shadowBlur=18;ctx.fillStyle="#fff0c9";
+ ctx.font="bold 54px 'Noto Serif TC','Noto Sans TC',serif";ctx.fillText(meta.title,384,78);
+ ctx.shadowBlur=0;ctx.fillStyle="#c9c1e7";ctx.font="26px Georgia,serif";ctx.letterSpacing="5px";ctx.fillText(meta.subtitle,384,145);
  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
  const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false,sizeAttenuation:true});
- const sprite=new THREE.Sprite(material);sprite.scale.set(4.45,1.22,1);return sprite;
+ const sprite=new THREE.Sprite(material);sprite.scale.set(4.8,1.3,1);return sprite;
 }
+
+
 function buildPortal(scene,meta,x,z,materials){
  const group=new THREE.Group();group.position.set(x,0.48,z);group.userData.gameId=meta.id;scene.add(group);
  const glowMaterial=new THREE.MeshStandardMaterial({color:meta.color,emissive:meta.color,emissiveIntensity:1.55,roughness:0.2,metalness:0.45});
@@ -176,6 +183,8 @@ function buildObservatory(scene, x, y, z, materials) {
     materials.silverMetal, [0, 4.1, 0.14]);
   lens.rotation.x = Math.PI / 2.8;
   addCrystal(group, 1.2, 0.65, -0.5, 0.38, PALETTE.blue);
+  const sign=makeLabelSprite({title:"星辰觀測站",subtitle:"STARGAZER OBSERVATORY"});
+  if(sign){sign.position.set(0,5.4,0.1);sign.scale.set(4.0,1.08,1);group.add(sign)}
   return group;
 }
 
@@ -444,20 +453,24 @@ function buildMirrorHouse(scene,materials,x,z){
 
 function buildEnvironment(scene) {
   const materials = {
-    rock: makeMaterial(0x343b5b, 0.94, 0.04), rockLight: makeMaterial(0x4c5274, 0.88, 0.08),
-    wall: makeMaterial(0x66637f, 0.72, 0.17), roof: makeMaterial(0x494466, 0.45, 0.42),
-    trim: makeMaterial(0xb2a0ca, 0.34, 0.58), gold: makeMaterial(PALETTE.gold, 0.27, 0.72),
-    silver: makeMaterial(PALETTE.silver, 0.28, 0.62),
+    rock: makeMaterial(0x211e39, 0.92, 0.12),
+    rockLight: makeMaterial(0x39345d, 0.84, 0.18),
+    wall: makeMaterial(0x494163, 0.58, 0.28),
+    roof: makeMaterial(0x262341, 0.32, 0.62),
+    trim: makeMaterial(0xb7a4df, 0.24, 0.74),
+    gold: makeMaterial(PALETTE.gold, 0.2, 0.82),
+    silver: makeMaterial(PALETTE.silver, 0.22, 0.76),
     silverMetal: new THREE.MeshPhysicalMaterial({color:0xc2c8dc,roughness:0.24,metalness:0.78,clearcoat:0.65}),
-    darkStone: makeMaterial(0x242c4b, 0.8, 0.28), top: makeMaterial(0x343a63, 0.85, 0.1),
-    wood: makeMaterial(0x423651, 0.85, 0.06),
+    darkStone: makeMaterial(0x17172e, 0.72, 0.42),
+    top: makeMaterial(0x292747, 0.72, 0.22),
+    wood: makeMaterial(0x2b2038, 0.8, 0.12),
     foliageA: makeMaterial(0x344b67, 0.95, 0.02), foliageB: makeMaterial(0x465578, 0.93, 0.03),
     foliageC: makeMaterial(0x675b88, 0.92, 0.04),
-    crystal: new THREE.MeshPhysicalMaterial({color:PALETTE.gold,emissive:PALETTE.gold,emissiveIntensity:0.9,roughness:0.18,metalness:0.28,clearcoat:0.8}),
+    crystal: new THREE.MeshPhysicalMaterial({color:PALETTE.lilac,emissive:0x8e68e8,emissiveIntensity:0.62,roughness:0.12,metalness:0.32,clearcoat:1,clearcoatRoughness:0.08}),
     water: new THREE.MeshPhysicalMaterial({color:0x648de0,emissive:0x171f68,emissiveIntensity:0.45,roughness:0.12,metalness:0.38,transparent:true,opacity:0.72}),
     road: makeMaterial(0x292d50, 0.94, 0.08), roadEdge: makeMaterial(0xb5a0c9, 0.48, 0.48),
-    paving: makeMaterial(0x545477, 0.9, 0.12),
-    lampGlow: new THREE.MeshStandardMaterial({color:0xffe6ad,emissive:0xffc66f,emissiveIntensity:2.1,roughness:0.24,metalness:0.1}),
+    paving: makeMaterial(0x393451, 0.78, 0.22),
+    lampGlow: new THREE.MeshStandardMaterial({color:0xffedc2,emissive:0xf1bb72,emissiveIntensity:2.6,roughness:0.18,metalness:0.18}),
     npcClothes: [makeMaterial(0x6f8fc5,0.58,0.08),makeMaterial(0xc27ea1,0.58,0.08),makeMaterial(0x7eaa9a,0.58,0.08),makeMaterial(0xd2a45f,0.58,0.08)],
     npcSkin: makeMaterial(0xf0d2b8, 0.82, 0.02)
   };
@@ -514,6 +527,8 @@ function buildEnvironment(scene) {
     [[0,-15],[-9,-20],[-20,-21],[-30,-17]],
     [[0,-15],[9,-20],[20,-21],[30,-17]],
     [[-6,-5],[-10,-9],[-13,-11.5],[-20,-19]],
+    [[0,15],[9,15],[18,9]],
+    [[0,-3],[-10,-3],[-19,-8]],
     [[6,-5],[10,-8],[13,-10],[20,-15],[25,-17]],
     [[-22,1],[-29,5],[-34,12]],[[25,-8],[34,-2],[36,8]]
   ].forEach(path=>addWalkway(path));
@@ -525,6 +540,7 @@ function buildEnvironment(scene) {
   }
   addDistrictPlaza(0,0,12.8);addDistrictPlaza(-21.5,0.7,7.1);
   addDistrictPlaza(-13,-11.5,5.4);addDistrictPlaza(13,-10,5.4);
+  addDistrictPlaza(18,9,6.3);addDistrictPlaza(-19,-8,6.3);
   addDistrictPlaza(-25,-19,7.0);addDistrictPlaza(25,-17,7.0);addDistrictPlaza(0,31,6.2);
 
   // The old satellite islands become reachable themed gardens at the far end of the park.
@@ -552,27 +568,19 @@ function buildEnvironment(scene) {
   [-7.2,0,7.2].forEach((x,i)=>portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials)));
 
   const rides=[];
-  rides.push(buildCarousel(scene,materials,-21.5,0.7));
+  const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);
   rides.push(buildTeacupRide(scene,materials,-13,-11.5));
   rides.push(buildDropTower(scene,materials,13,-10));
   rides.push(buildFerrisWheel(scene,materials,25,0.78,-17));
   buildRollerCoaster(scene,materials);
-  buildTicketBooth(scene,materials,-4.8,30.5);
+  const ticketBooth=buildTicketBooth(scene,materials,-4.8,30.5);
   buildEntranceGate(scene,materials);
-  buildArcadeStalls(scene,materials);
+  const arcadeStalls=buildArcadeStalls(scene,materials);
+  const shootingGallery=buildShootingGallery(scene,materials,18,9);
+  const mirrorHouse=buildMirrorHouse(scene,materials,-19,-8);
+  const interactables=[...portals,carousel.root,ticketBooth,shootingGallery,mirrorHouse];
 
-  // Large overhead district markers make it easy to read the park at a glance.
-  [
-    {x:-21.5,y:5.0,z:8.0,title:"星光嘉年華",subtitle:"STARLIGHT CARNIVAL"},
-    {x:25,y:8.2,z:-7.0,title:"銀河冒險區",subtitle:"GALAXY ADVENTURE"},
-    {x:-13,y:5.2,z:-5.8,title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS"},
-    {x:13,y:9.2,z:-4.8,title:"自由落體塔",subtitle:"GALAXY DROP TOWER"},
-    {x:-29,y:6.0,z:-9.0,title:"星辰觀測站",subtitle:"STARGAZER POINT"},
-    {x:0,y:8.8,z:-12.5,title:"星夢城堡",subtitle:"DREAM CASTLE"}
-  ].forEach(item=>{
-    const sign=makeLabelSprite({title:item.title,subtitle:item.subtitle});
-    if(sign){sign.position.set(item.x,item.y,item.z);sign.scale.set(4.9,1.35,1);island.add(sign)}
-  });
+  // Each attraction carries its own sign directly on the matching model.
 
   // Warm lanterns, groves and small guests add scale and life to the walkways.
   function addParkLamp(x,z,scale=1){
@@ -621,7 +629,7 @@ function buildEnvironment(scene) {
     }),[Math.cos(angle)*radius,-6.1-(i%3)*0.65,Math.sin(angle)*radius],[4.4+(i%3),0.72,2.5],false,false);
     cloud.userData.phase=angle;
   }
-  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,guests,playableRadius:41.2};
+  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,guests,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,playableRadius:41.2};
 }
 
 function createStarfield(scene, count = 620) {
