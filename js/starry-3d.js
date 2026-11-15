@@ -492,6 +492,8 @@ function mount(host) {
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.domElement.className = "starry-3d-canvas";
   renderer.domElement.setAttribute("aria-label", "可點擊三座星門的立體星夢廣場");
+  const loadingFallback = host.querySelector(".starry-3d-fallback");
+  if (loadingFallback) loadingFallback.remove();
   host.appendChild(renderer.domElement);
 
   const hemisphere = new THREE.HemisphereLight(0xc8d2ff, 0x17152f, 1.72);
