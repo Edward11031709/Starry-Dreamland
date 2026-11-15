@@ -42,35 +42,7 @@ function makeWindow(parent, x, y, z, width, height, material) {
   return [frame, glass];
 }
 
-function addTower(parent, x, z, baseY, height, radius, materials, detail = true) {
-  const group = new THREE.Group();
-  group.position.set(x, baseY, z);
-  parent.add(group);
-
-  addMesh(group, new THREE.CylinderGeometry(radius * 1.25, radius * 1.34, 0.42, 12),
-    materials.trim, [0, 0.21, 0]);
-  addMesh(group, new THREE.CylinderGeometry(radius * 0.8, radius, height, 12, 1),
-    materials.wall, [0, height / 2 + 0.35, 0]);
-  addMesh(group, new THREE.CylinderGeometry(radius * 0.92, radius * 0.92, 0.18, 12),
-    materials.trim, [0, height + 0.38, 0]);
-  const roof = addMesh(group, new THREE.ConeGeometry(radius * 1.2, height * 0.42, 8),
-    materials.roof, [0, height + height * 0.21 + 0.36, 0]);
-  roof.rotation.y = Math.PI / 8;
-
-  if (detail) {
-    const windowMat = new THREE.MeshStandardMaterial({
-      color: PALETTE.gold, emissive: PALETTE.gold, emissiveIntensity: 1.35, roughness: 0.3
-    });
-    [0.35, 0.68].forEach(f => {
-      makeWindow(group, 0, height * f, radius * 0.91, radius * 0.22, height * 0.12, windowMat);
-    });
-    addMesh(group, new THREE.TorusGeometry(radius * 0.8, 0.045, 7, 24),
-      materials.trim, [0, height * 0.77 + 0.35, 0]).rotation.x = Math.PI / 2;
-  }
-  return group;
-}
-
-function addCrystal(parent, x, y, z, size, color) {
+function addCrystal(parent, x, y, z, size, color) {function addCrystal(parent, x, y, z, size, color) {
   const material = new THREE.MeshPhysicalMaterial({
     color, emissive: color, emissiveIntensity: 0.42, roughness: 0.2,
     metalness: 0.24, transmission: 0.08, thickness: 0.6, clearcoat: 0.7
@@ -81,21 +53,7 @@ function addCrystal(parent, x, y, z, size, color) {
   return crystal;
 }
 
-function createTree(parent, x, z, scale, materials) {
-  const tree = new THREE.Group();
-  tree.position.set(x, 0.55, z);
-  tree.scale.setScalar(scale);
-  parent.add(tree);
-  addMesh(tree, new THREE.CylinderGeometry(0.12, 0.2, 1.15, 7), materials.wood, [0, 0.55, 0]);
-  const leafColors = [0x334a67, 0x465278, 0x6c5c91];
-  [0.82, 1.35, 1.82].forEach((y, i) => {
-    addMesh(tree, new THREE.ConeGeometry(0.72 - i * 0.13, 1.18 - i * 0.1, 7),
-      makeMaterial(leafColors[i], 0.75, 0.08), [0, y, 0]);
-  });
-  return tree;
-}
-
-function makeIsland(parent, x, y, z, radius, palette) {
+function makeIsland(parent, x, y, z, radius, palette) {function makeIsland(parent, x, y, z, radius, palette) {
   const group = new THREE.Group();
   group.position.set(x, y, z);
   parent.add(group);
@@ -111,134 +69,7 @@ function makeIsland(parent, x, y, z, radius, palette) {
   return group;
 }
 
-function makeLabelSprite(meta) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 128;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "rgba(9, 14, 39, 0.86)";
-  ctx.strokeStyle = "rgba(235, 211, 157, 0.78)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.roundRect(6, 6, 500, 116, 26);
-  ctx.fill();
-  ctx.stroke();
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#f4dca5";
-  ctx.font = "bold 38px 'Noto Sans TC', system-ui, sans-serif";
-  ctx.fillText(meta.title, 256, 49);
-  ctx.fillStyle = "#c7c0df";
-  ctx.font = "20px Georgia, serif";
-  ctx.letterSpacing = "3px";
-  ctx.fillText(meta.subtitle, 256, 91);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false });
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(3.05, 0.76, 1);
-  return sprite;
-}
-
-function buildPortal(scene, meta, x, z, materials) {
-  const group = new THREE.Group();
-  group.position.set(x, 0.48, z);
-  group.userData.gameId = meta.id;
-  scene.add(group);
-
-  const glowMaterial = new THREE.MeshStandardMaterial({
-    color: meta.color, emissive: meta.color, emissiveIntensity: 1.1,
-    roughness: 0.18, metalness: 0.38
-  });
-  addMesh(group, new THREE.CylinderGeometry(1.32, 1.48, 0.34, 40),
-    materials.trim, [0, 0.18, 0]);
-  addMesh(group, new THREE.CylinderGeometry(1.18, 1.26, 0.14, 40),
-    materials.darkStone, [0, 0.4, 0]);
-  addMesh(group, new THREE.TorusGeometry(1.26, 0.055, 8, 48),
-    materials.gold, [0, 0.47, 0]).rotation.x = Math.PI / 2;
-
-  const gate = new THREE.Group();
-  gate.position.set(0, 0.56, 0.03);
-  group.add(gate);
-  const ring = addMesh(gate, new THREE.TorusGeometry(1.02, 0.12, 14, 64),
-    glowMaterial, [0, 1.6, 0]);
-  const inner = addMesh(gate, new THREE.TorusGeometry(0.82, 0.025, 7, 64),
-    materials.silver, [0, 1.6, -0.04]);
-  const core = addMesh(gate, new THREE.CircleGeometry(0.9, 48),
-    new THREE.MeshBasicMaterial({
-      color: meta.color, transparent: true, opacity: 0.18,
-      side: THREE.DoubleSide, depthWrite: false
-    }), [0, 1.6, -0.055], null, false, false);
-  const crystal = addMesh(gate, new THREE.OctahedronGeometry(0.33, 1),
-    new THREE.MeshPhysicalMaterial({
-      color: meta.color, emissive: meta.color, emissiveIntensity: 0.8,
-      roughness: 0.17, metalness: 0.18, transparent: true, opacity: 0.96
-    }), [0, 1.6, 0.14], [0.78, 1.18, 0.78]);
-  const orbit = addMesh(gate, new THREE.TorusGeometry(0.54, 0.025, 6, 48),
-    glowMaterial, [0, 1.6, 0.12]);
-  orbit.rotation.x = Math.PI / 3;
-  const label = makeLabelSprite(meta);
-  if (label) {
-    label.position.set(0, 3.15, 0.18);
-    group.add(label);
-  }
-  group.userData.motion = { ring, inner, core, crystal, orbit, phase: Math.random() * Math.PI * 2 };
-  group.traverse(obj => { obj.userData.gameId = meta.id; });
-  return group;
-}
-
-function buildCastle(scene, materials) {
-  const castle = new THREE.Group();
-  castle.position.set(0, 0.65, -5.0);
-  scene.add(castle);
-
-  addMesh(castle, new THREE.CylinderGeometry(4.45, 4.7, 0.42, 48),
-    materials.darkStone, [0, 0.1, 0]);
-  addMesh(castle, new THREE.TorusGeometry(4.42, 0.08, 8, 64),
-    materials.gold, [0, 0.33, 0]).rotation.x = Math.PI / 2;
-
-  addMesh(castle, new THREE.BoxGeometry(5.8, 3.45, 3.5),
-    materials.wall, [0, 2.05, 0]);
-  addMesh(castle, new THREE.BoxGeometry(6.1, 0.28, 3.8),
-    materials.trim, [0, 3.88, 0]);
-  addMesh(castle, new THREE.BoxGeometry(3.1, 4.7, 3.0),
-    materials.wall, [0, 2.65, -0.85]);
-  addMesh(castle, new THREE.ConeGeometry(2.1, 2.5, 7),
-    materials.roof, [0, 6.18, -0.85]);
-
-  const towers = [
-    [-3.2, -1.65, 4.2, 0.84], [3.2, -1.65, 4.2, 0.84],
-    [-3.25, 1.35, 3.75, 0.76], [3.25, 1.35, 3.75, 0.76],
-    [0, -2.35, 6.8, 0.72]
-  ];
-  towers.forEach(t => addTower(castle, t[0], t[1], 0.2, t[2], t[3], materials));
-
-  const windowMat = new THREE.MeshStandardMaterial({
-    color: 0xffdc9e, emissive: 0xffbc63, emissiveIntensity: 1.25, roughness: 0.28
-  });
-  [-1.75, -0.6, 0.6, 1.75].forEach(x => {
-    makeWindow(castle, x, 2.5, 1.79, 0.28, 0.75, windowMat);
-    makeWindow(castle, x, 1.55, 1.79, 0.22, 0.4, windowMat);
-  });
-  [-2.5, 2.5].forEach(x => {
-    addMesh(castle, new THREE.BoxGeometry(0.14, 2.7, 0.15),
-      materials.gold, [x, 2.05, 1.81]);
-  });
-
-  // A small moon crest over the central keep.
-  const crest = addMesh(castle, new THREE.TorusGeometry(0.54, 0.055, 8, 40),
-    materials.gold, [0, 5.38, 0.8]);
-  crest.rotation.x = Math.PI / 2;
-  const star = addMesh(castle, new THREE.OctahedronGeometry(0.3, 1),
-    materials.crystal, [0, 5.38, 0.86], [0.9, 1.25, 0.9]);
-  star.rotation.z = Math.PI / 4;
-
-  return castle;
-}
-
-function buildObservatory(scene, x, y, z, materials) {
+function buildObservatory(scene, x, y, z, materials) {function buildObservatory(scene, x, y, z, materials) {
   const group = new THREE.Group();
   group.position.set(x, y, z);
   scene.add(group);
@@ -272,6 +103,9 @@ function buildEnvironment(scene) {
     darkStone: makeMaterial(0x242c4b, 0.8, 0.28),
     top: makeMaterial(0x343a63, 0.85, 0.1),
     wood: makeMaterial(0x423651, 0.85, 0.06),
+    foliageA: makeMaterial(0x344b67, 0.95, 0.02),
+    foliageB: makeMaterial(0x465578, 0.93, 0.03),
+    foliageC: makeMaterial(0x675b88, 0.92, 0.04),
     crystal: new THREE.MeshPhysicalMaterial({
       color: PALETTE.gold, emissive: PALETTE.gold, emissiveIntensity: 0.9,
       roughness: 0.18, metalness: 0.28, clearcoat: 0.8
@@ -285,20 +119,41 @@ function buildEnvironment(scene) {
   // Main floating island and its layered cliff.
   const island = new THREE.Group();
   scene.add(island);
-  const cliff = addMesh(island, new THREE.CylinderGeometry(11.0, 8.35, 2.8, 18, 2),
+  const cliff = addMesh(island, new THREE.CylinderGeometry(12.0, 8.6, 3.0, 40, 3),
     materials.rock, [0, -1.0, 0]);
   cliff.rotation.y = 0.12;
   addMesh(island, new THREE.DodecahedronGeometry(8.0, 1), materials.rockLight,
     [0, -1.65, 0], [0.96, 0.44, 0.84]).rotation.y = 0.22;
-  addMesh(island, new THREE.CylinderGeometry(10.85, 10.95, 0.42, 64),
+  addMesh(island, new THREE.CylinderGeometry(11.8, 11.95, 0.48, 80),
     materials.top, [0, 0.46, 0]);
-  addMesh(island, new THREE.TorusGeometry(10.64, 0.16, 10, 96),
+  addMesh(island, new THREE.TorusGeometry(11.62, 0.2, 12, 112),
     materials.gold, [0, 0.69, 0]).rotation.x = Math.PI / 2;
-  addMesh(island, new THREE.CylinderGeometry(9.5, 9.7, 0.12, 64),
+  addMesh(island, new THREE.CylinderGeometry(10.7, 10.85, 0.13, 80),
     makeMaterial(0x46466e, 0.88, 0.14), [0, 0.72, 0]);
 
+  // Subtle radial stone inlays divide the plaza into crafted paving sectors.
+  const pavingMaterials = [
+    makeMaterial(0x4c4d78, 0.86, 0.12),
+    makeMaterial(0x55547f, 0.84, 0.14)
+  ];
+  for (let i = 0; i < 16; i++) {
+    const start = (i / 16) * Math.PI * 2;
+    const tile = addMesh(island,
+      new THREE.RingGeometry(3.35, 10.55, 24, 1, start, Math.PI / 8),
+      pavingMaterials[i % 2], [0, 0.755, 0], null, false, true);
+    tile.rotation.x = -Math.PI / 2;
+  }
+  const inlayMat = makeMaterial(0x81749f, 0.52, 0.58);
+  for (let i = 0; i < 16; i++) {
+    const angle = (i / 16) * Math.PI * 2;
+    const spoke = addMesh(island, new THREE.BoxGeometry(0.026, 0.018, 7.1),
+      inlayMat, [Math.sin(angle) * 6.85, 0.78, Math.cos(angle) * 6.85],
+      null, false, false);
+    spoke.rotation.y = angle;
+  }
+
   // Concentric inlaid paths and a central star compass.
-  [3.0, 5.4, 8.45].forEach((radius, i) => {
+  [3.25, 5.75, 9.45].forEach((radius, i) => {
     const ring = addMesh(island, new THREE.TorusGeometry(radius, i === 1 ? 0.055 : 0.035, 8, 96),
       i === 1 ? materials.gold : materials.trim, [0, 0.83 + i * 0.002, 0]);
     ring.rotation.x = Math.PI / 2;
@@ -319,6 +174,13 @@ function buildEnvironment(scene) {
     addCrystal(island, side * 2.4, 0.95, z, 0.2 + (i % 3) * 0.07, i % 2 ? PALETTE.blue : PALETTE.violet);
   }
 
+  // Broad stair and a paved approach lead the eye toward the castle entrance.
+  for (let i = 0; i < 5; i++) {
+    const z = -2.5 - i * 0.47;
+    addMesh(island, new THREE.BoxGeometry(3.15 + i * 0.2, 0.16, 0.5),
+      i % 2 ? materials.trim : materials.darkStone,
+      [0, 0.82 - i * 0.025, z]);
+  }
   buildCastle(scene, materials);
 
   // Small floating isles frame the central island.
@@ -478,28 +340,28 @@ function mount(host) {
   scene.background = new THREE.Color(PALETTE.night);
   scene.fog = new THREE.FogExp2(PALETTE.night, 0.011);
 
-  const camera = new THREE.PerspectiveCamera(39, width / height, 0.1, 150);
+  const camera = new THREE.PerspectiveCamera(37, width / height, 0.1, 150);
   const isSmall = width < 650;
-  camera.position.set(isSmall ? 0 : 12.5, isSmall ? 24 : 15.5, isSmall ? 38 : 25);
+  camera.position.set(isSmall ? 0 : 10.2, isSmall ? 24 : 16.8, isSmall ? 38 : 25.5);
   camera.lookAt(0, 0.2, -0.65);
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.25 : 1.6));
   renderer.setSize(width, height, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.2;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = "starry-3d-canvas";
   renderer.domElement.setAttribute("aria-label", "可點擊三座星門的立體星夢廣場");
   const loadingFallback = host.querySelector(".starry-3d-fallback");
   if (loadingFallback) loadingFallback.remove();
   host.appendChild(renderer.domElement);
 
-  const hemisphere = new THREE.HemisphereLight(0xc8d2ff, 0x17152f, 1.72);
+  const hemisphere = new THREE.HemisphereLight(0xdbe3ff, 0x28223f, 2.05);
   scene.add(hemisphere);
 
-  const moonLight = new THREE.DirectionalLight(0xffe5bf, 3.0);
+  const moonLight = new THREE.DirectionalLight(0xffe8ca, 2.55);
   moonLight.position.set(-11, 20, 15);
   moonLight.castShadow = true;
   moonLight.shadow.mapSize.set(1024, 1024);
@@ -510,7 +372,7 @@ function mount(host) {
   moonLight.shadow.bias = -0.00035;
   scene.add(moonLight);
 
-  const fillLight = new THREE.DirectionalLight(0x8c95f2, 1.18);
+  const fillLight = new THREE.DirectionalLight(0x9ba9ff, 1.55);
   fillLight.position.set(12, 8, -12);
   scene.add(fillLight);
 
@@ -590,7 +452,8 @@ function mount(host) {
       motion.orbit.rotation.z += delta * (i % 2 ? -0.32 : 0.32);
       motion.crystal.rotation.y += delta * 0.45;
       motion.crystal.position.y = 2.16 + Math.sin(t * 1.1 + motion.phase) * 0.11;
-      motion.core.material.opacity = 0.15 + (Math.sin(t * 1.5 + motion.phase) + 1) * 0.07;
+      motion.core.material.opacity = 0.17 + (Math.sin(t * 1.5 + motion.phase) + 1) * 0.08;
+      if (motion.aura) motion.aura.intensity = 8 + (Math.sin(t * 1.8 + motion.phase) + 1) * 2.5;
     });
     renderer.render(scene, camera);
   };
@@ -603,7 +466,7 @@ function mount(host) {
     const h = Math.max(1, Math.floor(entry.contentRect.height));
     const small = w < 650;
     camera.aspect = w / h;
-    camera.position.set(small ? 0 : 12.5, small ? 24 : 15.5, small ? 38 : 25);
+    camera.position.set(small ? 0 : 10.2, small ? 24 : 16.8, small ? 38 : 25.5);
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.25 : 1.6));
     renderer.setSize(w, h, false);
