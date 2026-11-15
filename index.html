@@ -44,8 +44,61 @@
 .mirror-pad span{font-size:32px}.mirror-pad small{font-size:10px;color:#c7bedc}.mirror-pad.flash{background:radial-gradient(circle,#ffe7ad,#b78bd0 55%,#39315f);color:#231832;box-shadow:0 0 32px #ffe2a1bb;transform:scale(1.07)}
 .mirror-progress{text-align:center;color:#d8cce9;font-size:13px;min-height:22px}
 @media(max-width:600px){.shooting-grid{gap:7px}.shoot-target span{font-size:28px}.mirror-pads{gap:7px}.mirror-pad{border-radius:14px}.mirror-pad span{font-size:25px}.answer-review{padding:14px}}
+
+/* Starry fantasy park overlay and avatar wardrobe */
+.admin-mark{display:inline-block;padding:3px 8px;border-radius:99px;border:1px solid #f0d49b99;background:#6f542d55;color:#ffe7ad;font-size:10px;letter-spacing:1px}
+.plaza-3d{background:#070918;border-color:#d7c4ff66}
+.plaza-topline{left:205px}
+.park-minimap{position:absolute;z-index:4;top:14px;left:14px;width:178px;padding:10px 10px 8px;border:1px solid #d7c7ff77;border-radius:19px;background:linear-gradient(155deg,#101735ee,#090f27ee);box-shadow:0 10px 34px #030614aa,0 0 25px #9e84df24;backdrop-filter:blur(14px);pointer-events:none}
+.park-map-heading{display:flex;align-items:center;justify-content:space-between;color:#f3dca7;font-size:11px;font-weight:750;letter-spacing:1px}
+.park-map-heading small{font-size:7px;color:#9eabd4;letter-spacing:1px}
+.park-map-svg{display:block;width:100%;height:auto;margin:4px auto 0;overflow:visible}
+.map-island{fill:#171c3a;stroke:#d8c5f5;stroke-opacity:.6;stroke-width:.8}
+.map-path{fill:none;stroke:#7d80ac;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1.5 1}
+.map-castle{fill:#f1d18e;stroke:#fff1c8;stroke-width:.65}
+.map-ride{fill:#9d8be4;stroke:#e5d9ff;stroke-width:.55}
+.map-game{fill:#6bd1e8;stroke:#d7fcff;stroke-width:.55}
+.map-service{fill:#e9b9a4;stroke:#ffe0ca;stroke-width:.55}
+.map-label{font-size:2.35px;text-anchor:middle;fill:#dce0f4;paint-order:stroke;stroke:#12172f;stroke-width:.65px;stroke-linejoin:round}
+.map-player circle{fill:#ffe69d;stroke:#fff8d7;stroke-width:.65;filter:drop-shadow(0 0 2px #ffd98b)}
+.map-player path{fill:#fff8d7;stroke:#71552b;stroke-width:.5}
+.park-map-legend{display:flex;justify-content:center;gap:9px;color:#bfc7e5;font-size:8px}
+.park-map-legend span{display:flex;align-items:center;gap:4px}
+.park-map-legend i{width:6px;height:6px;border-radius:50%;display:inline-block}
+.legend-ride{background:#9d8be4}.legend-game{background:#6bd1e8}.legend-player{background:#ffe69d}
+.wardrobe-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:16px 0 24px;padding:17px 20px;border:1px solid #d1bced66;border-radius:17px;background:linear-gradient(120deg,#211d48dd,#101a35ee);box-shadow:0 10px 28px #0004}
+.wardrobe-entry b{display:block;color:#f2dba7;font-family:Georgia,"Noto Serif TC",serif;font-size:18px}
+.wardrobe-entry small{display:block;margin-top:5px;color:#b9b8d2;font-size:12px}
+.wardrobe-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+.avatar-card{overflow:hidden;position:relative;padding:16px;border:1px solid #bcaadd66;border-radius:19px;background:linear-gradient(150deg,#23234c,#111a35);box-shadow:0 12px 28px #0004}
+.avatar-card.current{border-color:#f1d18e;box-shadow:0 0 0 1px #f1d18e55,0 12px 32px #0005}
+.avatar-preview{height:126px;display:grid;place-items:center;border-radius:13px;background:radial-gradient(ellipse at 50% 70%,#7c69b755,transparent 60%),linear-gradient(145deg,#30335f,#10192e)}
+.avatar-preview span{font-size:58px;filter:drop-shadow(0 8px 12px #070b21)}
+.avatar-card h3{margin:12px 0 5px;color:#f4dca8;font-size:16px}
+.avatar-card p{min-height:42px;margin:0 0 12px;color:#b9b8d2;font-size:12px;line-height:1.65}
+.avatar-card .avatar-rarity{font-size:10px;letter-spacing:1px;color:#c6b5ed}
+.avatar-card .avatar-price{margin:8px 0 12px;color:#f2dba7;font-size:13px;font-weight:750}
+.avatar-card .btn{width:100%}
+.wardrobe-balance{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:15px 0;padding:13px 16px;border:1px solid #d9c38c55;border-radius:14px;background:#191c3c;color:#d7d3e8}
+.wardrobe-balance b{color:#f4d99c}
+@media(max-width:760px){
+ .park-minimap{top:9px;left:9px;width:142px;padding:8px 8px 6px;border-radius:15px}
+ .plaza-topline{left:158px;right:8px;top:10px;display:block}
+ .plaza-camera{display:none}
+ .plaza-tag{display:inline-block;font-size:8px;padding:6px 8px}
+ .plaza-controls{max-width:94%;bottom:10px;gap:5px}
+ .plaza-controls span{font-size:8px;padding:6px 8px}
+ .plaza-status{bottom:44px;right:10px}
+ .wardrobe-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .wardrobe-entry{padding:14px;align-items:flex-start}
+ .wardrobe-entry small{max-width:230px;line-height:1.5}
+ .avatar-card{padding:12px}
+ .avatar-preview{height:105px}
+}
+@media(max-width:420px){.wardrobe-grid{grid-template-columns:1fr}.avatar-preview{height:130px}}
+
 </style></head><body>
-<header class="top"><div class="brand"><div class="mark">✦</div><div><b>星夢樂園</b><small>STARRY DREAMLAND</small></div></div><nav class="nav"><button data-page="home" class="active">星夢廣場</button><button data-page="children">星芽探索區</button><button data-page="leaderboard">排行榜</button><button data-page="history">遊玩紀錄</button></nav><div class="pill hidden" id="pill"><b id="pname">旅人</b>　<span id="points">0 ✦</span>　<button class="ghost" id="logout">登出</button></div></header>
+<header class="top"><div class="brand"><div class="mark">✦</div><div><b>星夢樂園</b><small>STARRY DREAMLAND</small></div></div><nav class="nav"><button data-page="home" class="active">星夢廣場</button><button data-page="children">星芽探索區</button><button data-page="leaderboard">排行榜</button><button data-page="history">遊玩紀錄</button></nav><div class="pill hidden" id="pill"><b id="pname">旅人</b>　<span id="points">0 ✦</span>　<span id="adminMark" class="admin-mark hidden">管理員</span>　<button class="ghost" id="logout">登出</button></div></header>
 <main class="wrap" id="app"></main><div class="toast" id="toast"></div>
 <script>
 (function(){
@@ -53,6 +106,14 @@ const STORE="starryDreamland.githubPages.demo";
 let mazeX=1,mazeY=1,mazeKeys=0,mazeSteps=0,mazeMap=[],mazeKeyPositions=[];
 const KIDS_GAME_IDS=["constellation","maze","child-connect","child-memory"];
 const ADULT_GAME_IDS=["moon","cipher","orbit","shooting-range","mirror-house"];
+const AVATARS=[
+ {id:"wanderer",name:"星旅者",description:"夜藍旅袍、星紋披風與金色星冠。",cost:0,rarity:"免費"},
+ {id:"moon-priestess",name:"月影祭司",description:"銀紫月紗、月環頭飾與冰晶肩飾。",cost:80,rarity:"稀有"},
+ {id:"nebula-prince",name:"星雲王子",description:"深海藍綠禮袍、星芒披肩與琉璃冠。",cost:120,rarity:"稀有"},
+ {id:"crystal-witch",name:"水晶魔女",description:"紫晶巫帽、星砂披風與流光魔石。",cost:180,rarity:"史詩"},
+ {id:"astral-knight",name:"星辰騎士",description:"星銀甲片、金曜角盔與守護披風。",cost:220,rarity:"史詩"},
+ {id:"celestial-guardian",name:"星界守護者",description:"象牙白禮甲、日輪星冠與神聖光環。",cost:320,rarity:"傳說"}
+];
 let state=read(),clock=null,frame=null,active=null;
 const cloudMode=!!(window.STARRY_CONFIG&&window.STARRY_CONFIG.mode==="supabase");
 let sb=window.SD_SUPABASE||null,cloudUser=null,cloudBusy=false;
@@ -63,7 +124,7 @@ function total(){return me()?Number(me().adultPoints)||0:0}
 function kidsTotal(){return me()?Number(me().kidsPoints)||0:0}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function say(s){const e=document.getElementById("toast");e.textContent=s;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1900)}
-function header(){const p=me();document.getElementById("pill").classList.toggle("hidden",!p);if(p){document.getElementById("pname").textContent=p.name;document.getElementById("points").textContent="成人 "+(Number(p.adultPoints)||0)+" ✦";const out=document.getElementById("logout");if(out)out.textContent=cloudMode&&!cloudUser?"登入／註冊":"登出"}}
+function header(){const p=me();document.getElementById("pill").classList.toggle("hidden",!p);if(p){document.getElementById("pname").textContent=p.name;document.getElementById("points").textContent="可用 "+(Number(p.avatarPoints??p.adultPoints)||0)+" ✦";const adminMark=document.getElementById("adminMark");if(adminMark)adminMark.classList.toggle("hidden",!p.isAdmin);const out=document.getElementById("logout");if(out)out.textContent=cloudMode&&!cloudUser?"登入／註冊":"登出"}}
 function shell(s){document.getElementById("app").innerHTML=s}
 function nav(page){document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page))}
 function stop(){if(clock){clearInterval(clock);clock=null}if(frame){cancelAnimationFrame(frame);frame=null}if(active&&active.cleanup)active.cleanup();active=null}
@@ -74,22 +135,37 @@ function authRedirectUrl(){return window.location.origin+window.location.pathnam
 function friendlyAuthError(error){const message=String(error?.message||error||"未知錯誤");if(/Invalid login credentials/i.test(message))return "電子郵件或密碼不正確。";if(/Email not confirmed/i.test(message))return "電子郵件尚未驗證，請先查看信箱。";if(/User already registered/i.test(message))return "這個電子郵件已註冊，請直接登入。";if(/Password should be at least/i.test(message))return "密碼長度不足，請使用至少 8 個字元。";if(/rate limit/i.test(message))return "操作次數太頻繁，請稍後再試。";return message}
 async function loadCloudPlayer(user,nicknameHint=""){
  if(!sb||!user)throw new Error("目前沒有有效的雲端登入工作階段。");
- const {data:profile,error:profileError}=await sb.from("sd_profiles").select("user_id,nickname,created_at").eq("user_id",user.id).maybeSingle();
+ const profileFields="user_id,nickname,created_at,avatar_id,owned_avatar_ids,avatar_spent_points";
+ const {data:profile,error:profileError}=await sb.from("sd_profiles").select(profileFields).eq("user_id",user.id).maybeSingle();
  if(profileError)throw profileError;
  let actualProfile=profile;
  if(!actualProfile){
   const candidate=(nicknameHint||user.user_metadata?.nickname||("旅人"+user.id.slice(0,4))).trim().slice(0,16)||("旅人"+user.id.slice(0,4));
-  const {data:inserted,error:insertError}=await sb.from("sd_profiles").insert({user_id:user.id,nickname:candidate}).select("user_id,nickname,created_at").single();
+  const {data:inserted,error:insertError}=await sb.from("sd_profiles").insert({user_id:user.id,nickname:candidate}).select(profileFields).single();
   if(insertError)throw insertError;
   actualProfile=inserted;
  }
- const {data:rows,error:recordsError}=await sb.rpc("sd_my_game_records");
+ const [{data:rows,error:recordsError},{data:avatarRows,error:avatarError},{data:isAdmin,error:adminError}]=await Promise.all([
+  sb.rpc("sd_my_game_records"),
+  sb.rpc("sd_avatar_state"),
+  sb.rpc("sd_is_admin")
+ ]);
  if(recordsError)throw recordsError;
+ if(avatarError)throw avatarError;
+ if(adminError)throw adminError;
  const records=(rows||[]).map(r=>({id:r.record_id,uid:user.id,name:actualProfile.nickname,game:r.game_id,category:r.category,score:Number(r.score)||0,status:r.status,reward:Number(r.reward)||0,time:Date.parse(r.created_at)||Date.now()}));
  const adultPoints=records.filter(r=>r.category==="adult").reduce((sum,r)=>sum+r.reward,0);
  const kidsPoints=records.filter(r=>r.category==="kids").reduce((sum,r)=>sum+r.reward,0);
+ const avatarState=Array.isArray(avatarRows)?avatarRows[0]:avatarRows;
  cloudUser=user;
- state.players=[{id:user.id,name:actualProfile.nickname,adultPoints,kidsPoints,points:adultPoints,created:Date.parse(actualProfile.created_at)||Date.now()}];
+ state.players=[{
+  id:user.id,name:actualProfile.nickname,adultPoints,kidsPoints,points:adultPoints,
+  created:Date.parse(actualProfile.created_at)||Date.now(),
+  avatarId:actualProfile.avatar_id||avatarState?.avatar_id||"wanderer",
+  ownedAvatarIds:actualProfile.owned_avatar_ids||avatarState?.owned_avatar_ids||["wanderer"],
+  avatarPoints:Number(avatarState?.points_balance)||0,
+  isAdmin:isAdmin===true
+ }];
  state.player=user.id;
  state.records=records.sort((a,b)=>a.time-b.time);
  header();
@@ -160,7 +236,31 @@ async function syncCloudRecord(record){
  header();
  const totalEl=document.getElementById("resultTotal");if(totalEl)totalEl.textContent=(KIDS_GAME_IDS.includes(record.game)?kidsTotal():total())+" ✦";
 }
-function home(){nav("home");header();shell('<section class="hero"><div class="eyebrow">STAR DREAMLAND · AFTER DARK</div><h1>星夢夜遊園</h1><p>入夜後才開始的成人星際遊樂園。登上雲霄飛車、挑戰霓虹靶場、穿越鏡屋密室，在城堡燈火之間展開夜間冒險。</p></section><section class="plaza plaza-3d" id="starry-plaza"><div id="starry-3d" class="starry-3d-stage" aria-label="星夢樂園 3D 中央廣場"><div class="starry-3d-fallback"><strong>星夢廣場準備中</strong><span>正在載入 3D 場景；若暫時無法顯示，仍可從下方遊戲入口開始挑戰。</span></div></div><div class="plaza-topline"><span class="plaza-tag">✦ OPEN WORLD NIGHT PARK</span><span class="plaza-camera">入口第三人稱視角</span></div><div class="locked">✧ 星際競技館<br><small>尚未開放 · COMING SOON</small></div><div id="starry-3d-status" class="plaza-status">正在喚醒星夢廣場…</div><div class="plaza-controls"><span>WASD／方向鍵：移動</span><span>Shift：奔跑</span><span>拖曳：旋轉視角</span><span>滾輪：調整遠近</span></div><div class="caption">✦ STAR DREAMLAND　／　自由探索夜遊園</div></section><div class="head"><div><h2>成人夜遊設施</h2><p>每項設施都有獨立玩法、隨機關卡與成人星塵紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">☾</div><h3>月相共鳴</h3><p>在不規則節奏中判斷月光時機，連續命中可取得更高分數。</p><button class="btn sm" data-game="moon">進入挑戰</button></article><article class="card"><div class="art">⌘</div><h3>星域解碼</h3><p>從符號位置與命中數量推理四位密碼，線索不會直接揭露答案。</p><button class="btn sm" data-game="cipher">進入挑戰</button></article><article class="card"><div class="art">⌁</div><h3>軌道接線</h3><p>旋轉不同形狀的節點，將起點接通出口；路線每次重新生成。</p><button class="btn sm" data-game="orbit">進入挑戰</button></article></section><div class="head"><div><h2>夜間限定設施</h2><p>兩款新增遊戲都會在每次結束時完整公開正解與操作紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">◎</div><h3>霓虹神射手</h3><p>24 秒反應靶場，依序命中六個亮起的目標，考驗專注力與反應速度。</p><button class="btn sm" data-game="shooting-range">進入靶場</button></article><article class="card"><div class="art">◇</div><h3>幻影鏡屋</h3><p>三輪漸進式光影記憶試煉，記住符號順序，穿越鏡面長廊。</p><button class="btn sm" data-game="mirror-house">進入鏡屋</button></article></section><div class="head"><div><h2>旅人資料</h2><p>'+(cloudMode&&!cloudUser?"目前為訪客預覽，遊玩不會儲存成績；按右上角「登入／註冊」即可連接全球帳號。":"成人與星芽星塵分開計算；雲端帳號會同步保存在不同裝置。")+'</p></div></div><div class="stats"><div class="stat"><small>玩家暱稱</small><b>'+esc(me().name)+'</b></div><div class="stat"><small>成人星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div><div class="stat"><small>成人挑戰</small><b>'+state.records.filter(r=>r.uid===me().id&&ADULT_GAME_IDS.includes(r.game)).length+'</b></div></div><div class="footer">Starry Dreamland · 星夢樂園　｜　成人挑戰與星芽探索分開計分</div>');const host=document.getElementById("starry-3d");if(window.Starry3D&&host)window.Starry3D.mount(host)}
+function home(){nav("home");header();shell('<section class="hero"><div class="eyebrow">STAR DREAMLAND · AFTER DARK</div><h1>星夢夜遊園</h1><p>入夜後才開始的成人星際遊樂園。登上雲霄飛車、挑戰霓虹靶場、穿越鏡屋密室，在城堡燈火之間展開夜間冒險。</p></section><section class="plaza plaza-3d" id="starry-plaza"><div id="starry-3d" class="starry-3d-stage" aria-label="星夢樂園 3D 中央廣場"><div class="starry-3d-fallback"><strong>星夢廣場準備中</strong><span>正在載入 3D 場景；若暫時無法顯示，仍可從下方遊戲入口開始挑戰。</span></div></div><aside class="park-minimap" aria-label="星夢樂園地圖">
+ <div class="park-map-heading"><span>✦ 園區導覽</span><small>YOU ARE HERE</small></div>
+ <svg class="park-map-svg" viewBox="-44 -48 88 96" role="img" aria-label="星夢樂園設施位置簡圖">
+  <circle cx="0" cy="0" r="42" class="map-island"/>
+  <path class="map-path" d="M0 44 L0 36 L0 27 L0 18 L0 9 L0 0 L0 -10 L0 -19"/>
+  <path class="map-path" d="M0 15 L-10 15 L-18 9 L-22 1 L-23 -9 L-25 -19"/>
+  <path class="map-path" d="M0 15 L10 15 L18 9 L23 1 L25 -8 L25 -18"/>
+  <path class="map-path" d="M0 -15 L-9 -20 L-20 -21 L-30 -17"/>
+  <path class="map-path" d="M0 -15 L9 -20 L20 -21 L30 -17"/>
+  <path class="map-path" d="M0 -3 L-10 -3 L-19 -8"/>
+  <circle cx="0" cy="-18" r="3.3" class="map-castle"/><text x="0" y="-23" class="map-label">城堡</text>
+  <circle cx="-21.5" cy="0.7" r="3" class="map-ride"/><text x="-21.5" y="7" class="map-label">木馬</text>
+  <circle cx="-13" cy="-11.5" r="2.7" class="map-ride"/><text x="-13" y="-6.5" class="map-label">茶杯</text>
+  <circle cx="13" cy="-10" r="2.7" class="map-ride"/><text x="13" y="-5" class="map-label">塔</text>
+  <circle cx="25" cy="-17" r="3" class="map-ride"/><text x="25" y="-11" class="map-label">摩天輪</text>
+  <circle cx="18" cy="9" r="2.8" class="map-game"/><text x="18" y="14" class="map-label">射擊</text>
+  <circle cx="-19" cy="-8" r="2.8" class="map-game"/><text x="-19" y="-3" class="map-label">鏡屋</text>
+  <circle cx="-4.8" cy="30.5" r="2.6" class="map-service"/><text x="-4.8" y="36" class="map-label">票亭</text>
+  <g id="parkMapPlayer" class="map-player" transform="translate(0 33)">
+   <circle r="3.1"/><path d="M0 -7 L-2.2 -1.3 L2.2 -1.3 Z"/>
+  </g>
+ </svg>
+ <div class="park-map-legend"><span><i class="legend-ride"></i>設施</span><span><i class="legend-game"></i>遊戲場</span><span><i class="legend-player"></i>玩家</span></div>
+</aside>
+<div class="plaza-topline"><span class="plaza-tag">✦ OPEN WORLD NIGHT PARK</span><span class="plaza-camera">入口第三人稱視角</span></div><div class="locked">✧ 星際競技館<br><small>尚未開放 · COMING SOON</small></div><div id="starry-3d-status" class="plaza-status">正在喚醒星夢廣場…</div><div class="plaza-controls"><span>WASD／方向鍵：移動</span><span>Shift：奔跑</span><span>E：互動／下車</span><span>拖曳：旋轉視角</span><span>滾輪：調整遠近</span></div><div class="caption">✦ STAR DREAMLAND　／　自由探索夜遊園</div></section><div class="wardrobe-entry"><div><b>旅人造型衣櫥</b><small>更換你的星幻旅人造型，或使用星塵解鎖稀有外觀。</small></div><button class="btn sm" data-wardrobe>開啟衣櫥</button></div><div class="head"><div><h2>成人夜遊設施</h2><p>每項設施都有獨立玩法、隨機關卡與成人星塵紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">☾</div><h3>月相共鳴</h3><p>在不規則節奏中判斷月光時機，連續命中可取得更高分數。</p><button class="btn sm" data-game="moon">進入挑戰</button></article><article class="card"><div class="art">⌘</div><h3>星域解碼</h3><p>從符號位置與命中數量推理四位密碼，線索不會直接揭露答案。</p><button class="btn sm" data-game="cipher">進入挑戰</button></article><article class="card"><div class="art">⌁</div><h3>軌道接線</h3><p>旋轉不同形狀的節點，將起點接通出口；路線每次重新生成。</p><button class="btn sm" data-game="orbit">進入挑戰</button></article></section><div class="head"><div><h2>夜間限定設施</h2><p>兩款新增遊戲都會在每次結束時完整公開正解與操作紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">◎</div><h3>霓虹神射手</h3><p>24 秒反應靶場，依序命中六個亮起的目標，考驗專注力與反應速度。</p><button class="btn sm" data-game="shooting-range">進入靶場</button></article><article class="card"><div class="art">◇</div><h3>幻影鏡屋</h3><p>三輪漸進式光影記憶試煉，記住符號順序，穿越鏡面長廊。</p><button class="btn sm" data-game="mirror-house">進入鏡屋</button></article></section><div class="head"><div><h2>旅人資料</h2><p>'+(cloudMode&&!cloudUser?"目前為訪客預覽，遊玩不會儲存成績；按右上角「登入／註冊」即可連接全球帳號。":"成人與星芽星塵分開計算；雲端帳號會同步保存在不同裝置。")+'</p></div></div><div class="stats"><div class="stat"><small>玩家暱稱</small><b>'+esc(me().name)+'</b></div><div class="stat"><small>成人星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div><div class="stat"><small>成人挑戰</small><b>'+state.records.filter(r=>r.uid===me().id&&ADULT_GAME_IDS.includes(r.game)).length+'</b></div></div><div class="footer">Starry Dreamland · 星夢樂園　｜　成人挑戰與星芽探索分開計分</div>');const host=document.getElementById("starry-3d");if(window.Starry3D&&host)window.Starry3D.mount(host)}
 function instructions(id){const d={moon:["月相共鳴","月亮會以不同速度與節奏穿越星軌。依照提示區判斷時機，完成 12 至 15 拍的動態節奏挑戰。","☾"],cipher:["星域解碼","破解由 7 種符號組成的 4 位不重複密碼。每次提交都會回報位置正確數與符號正確但位置錯誤數；最多 8 次推理機會。","⌘"],orbit:["軌道接線","旋轉 5 × 5 星際節點，將左側起點接通右側出口。管線方向與隨機路線每局都不同。","⌁"],constellation:["星座校準","45 秒內依序連接 8 顆目標星。星點位置與順序每局都會改變；點錯會扣分。","✧"],maze:["引力迷航","使用方向鍵或畫面按鈕移動光球，收集兩枚星塵碎片後抵達出口。迷宮每次重新生成。","◈"],"shooting-range":["霓虹神射手","在 24 秒內命中六個依序亮起的目標。誤按會扣分；結束後會列出六輪正解與你的反應紀錄。","◎"],"mirror-house":["幻影鏡屋","觀察三輪逐漸變長的光影序列，再依序點擊四種符號。每次結束都會揭曉所有關卡的完整正解。","◇"]}[id];if(!d)return;const kids=KIDS_GAME_IDS.includes(id);nav(kids?"children":"home");shell('<section class="hero"><div class="eyebrow">'+(kids?"LITTLE STARLAND":"ADVANCED STAR CHALLENGE")+'</div><h1>'+d[0]+'</h1><p>'+d[1]+'</p></section><div class="panel" style="max-width:700px;margin:auto;text-align:center"><div style="font-size:65px;color:var(--gold)">'+d[2]+'</div><p style="color:var(--muted);line-height:1.8">'+(kids?"這款遊戲的獎勵會累積到星芽星塵，不會影響成人排行榜。":"挑戰分數會累積到成人星塵。每局題目或節奏都會變化。")+'</p><button class="btn" data-launch="'+id+'">開始挑戰</button> <button class="btn alt" data-page="'+(kids?"children":"home")+'">返回'+(kids?"星芽探索區":"星夢廣場")+'</button></div>')}
 function answerMarkup(review){if(!review)return "";return '<section class="answer-review"><h3>✦ 本局正解與解題回顧</h3><p>'+esc(review.summary||"以下為本局正確答案。")+'</p><ol>'+(review.lines||[]).map(line=>'<li>'+esc(line)+'</li>').join("")+'</ol></section>'}
 async function result(score,status,id){const review=active&&active.id===id&&typeof active.review==="function"?active.review(status):null;stop();score=Math.max(0,Math.min(100,Math.round(score)));const p=me(),isKids=KIDS_GAME_IDS.includes(id),reward=(status==="abandoned"||status==="failed")?0:Math.floor(score/10)+(status==="completed"?5:0);if(!p)return;if(reward){if(isKids)p.kidsPoints=(Number(p.kidsPoints)||0)+reward;else p.adultPoints=(Number(p.adultPoints)||0)+reward;p.points=p.adultPoints}const record={uid:p.id,name:p.name,game:id,score,status,reward,category:isKids?"kids":"adult",time:Date.now()};state.records.push(record);save();header();const totalLabel=isKids?"星芽星塵":"成人星塵",totalValue=isKids?kidsTotal():total();const replay=isKids?(id==="child-connect"?'<button class="btn alt" data-child="connect">再玩一次</button>':id==="child-memory"?'<button class="btn alt" data-child="memory">再玩一次</button>':'<button class="btn alt" data-childgame="'+id+'">再玩一次</button>'):'<button class="btn alt" data-game="'+id+'">再玩一次</button>';shell('<section class="hero"><div class="eyebrow">YOUR STAR JOURNEY</div><h1>挑戰結果</h1><p>'+({completed:"太棒了！你完成了本次挑戰。",timed_out:"時間到了，星空仍記住你的努力。",abandoned:"已提前離開，本次不發放星塵。",failed:"這次還沒破解成功，再試一次吧。"}[status])+'</p></section><div class="panel" style="max-width:650px;margin:auto;text-align:center"><div style="font-size:54px;color:var(--gold)">✦</div><div class="stats"><div class="stat"><small>本次分數</small><b>'+score+'</b></div><div class="stat"><small>獲得星塵</small><b>+'+reward+' ✦</b></div><div class="stat"><small>挑戰狀態</small><b style="font-size:17px">'+({completed:"完成",timed_out:"時間到",abandoned:"提前退出",failed:"尚未破解"}[status])+'</b></div></div><p style="color:var(--muted)">目前累積'+totalLabel+'：<b id="resultTotal">'+totalValue+' ✦</b></p>'+answerMarkup(review)+'<button class="btn" data-page="home">返回星夢廣場</button> '+replay+'</div>');if(cloudMode&&cloudUser)await syncCloudRecord(record)}
@@ -332,13 +432,23 @@ function childMemory(){let faces=["✦","☾","✧"],cards=faces.concat(faces).s
 async function rank(){nav("leaderboard");const labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};let entries=[];if(cloudMode&&cloudUser){if(!sb){say("雲端連線尚未就緒。");return}const {data,error}=await sb.rpc("sd_global_best_scores");if(error){shell('<section class="hero"><h1>星塵排行榜</h1><p>目前無法載入全球排行榜。</p></section><div class="panel">'+esc(friendlyAuthError(error))+'</div>');return}entries=(data||[]).map(r=>({uid:r.user_id,name:r.nickname,game:r.game_id,category:r.category,score:Number(r.best_score)||0,time:Date.parse(r.first_achieved_at)||Date.now()}))}else{state.players.forEach(p=>{[...ADULT_GAME_IDS,...KIDS_GAME_IDS].forEach(g=>{const eligible=state.records.filter(r=>r.uid===p.id&&r.game===g&&r.status!=="abandoned"&&r.status!=="failed");const score=Math.max(0,...eligible.map(r=>r.score));const first=eligible.filter(r=>r.score===score).sort((a,b)=>a.time-b.time)[0];entries.push({uid:p.id,name:p.name,game:g,category:KIDS_GAME_IDS.includes(g)?"kids":"adult",score,time:first?first.time:(p.created||0)})})})}function overall(games){const map=new Map();entries.filter(e=>games.includes(e.game)).forEach(e=>{let r=map.get(e.uid);if(!r){r={uid:e.uid,name:e.name,total:0,best:{},reachedAt:0};map.set(e.uid,r)}r.best[e.game]=e.score;r.total+=e.score;r.reachedAt=Math.max(r.reachedAt,e.time)});return [...map.values()].sort((a,b)=>b.total-a.total||a.reachedAt-b.reachedAt)}function overallTable(rows){return '<table class="table"><thead><tr><th>排名</th><th>旅人</th><th>總分</th></tr></thead><tbody>'+(rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.name)+'</td><td>'+r.total+'</td></tr>').join("")||'<tr><td colspan="3">目前還沒有排行資料</td></tr>')+'</tbody></table>'}function gameCards(games){return '<section class="cards" style="margin-top:15px">'+games.map(g=>{const rr=entries.filter(e=>e.game===g).sort((a,b)=>b.score-a.score||a.time-b.time).slice(0,5);return '<article class="card"><h3>'+labels[g]+'</h3><table class="table"><tbody>'+(rr.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td>'+x.score+'</td></tr>').join("")||'<tr><td colspan="3">尚無紀錄</td></tr>')+'</tbody></table></article>'}).join("")+'</section>'}const adults=overall(ADULT_GAME_IDS),kids=overall(KIDS_GAME_IDS);shell('<section class="hero"><div class="eyebrow">STAR DUST RANKING</div><h1>星塵排行榜</h1><p>'+(cloudMode&&cloudUser?"全球旅人即時排行榜；":cloudMode?"訪客展示模式，登入後可查看全球排行榜；":"目前為本機展示排行榜；")+'成人挑戰與星芽探索分開排行，同分時以較早達成者優先。</p></section><div class="panel"><h3 style="color:var(--gold)">成人挑戰總排行</h3>'+overallTable(adults)+'</div>'+gameCards(ADULT_GAME_IDS)+'<div class="panel" style="margin-top:18px"><h3 style="color:#f5d7ed">星芽探索總排行</h3>'+overallTable(kids)+'</div>'+gameCards(KIDS_GAME_IDS))}
 function history(){nav("history");let rs=state.records.filter(r=>r.uid===me().id).slice().reverse(),labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};shell('<section class="hero"><div class="eyebrow">MY STAR JOURNEY</div><h1>我的遊玩紀錄</h1><p>成人挑戰及星芽探索各自記錄，不會混在一起。</p></section><div class="stats"><div class="stat"><small>成人星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div></div><div class="panel"><table class="table"><thead><tr><th>分區</th><th>遊戲</th><th>分數</th><th>狀態</th><th>星塵</th></tr></thead><tbody>'+(rs.map(r=>'<tr><td>'+(KIDS_GAME_IDS.includes(r.game)?"星芽":"成人")+'</td><td>'+(labels[r.game]||r.game)+'</td><td>'+r.score+'</td><td>'+({completed:"完成",timed_out:"時間到",abandoned:"提前退出",failed:"尚未破解"}[r.status]||r.status)+'</td><td>+'+r.reward+' ✦</td></tr>').join("")||'<tr><td colspan="5">目前還沒有遊玩紀錄。</td></tr>')+'</tbody></table></div>')}
 function render(){if(!me()){login();return}home()}
-document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
 document.getElementById("logout").onclick=async()=>{stop();if(cloudMode&&sb){const {error}=await sb.auth.signOut();if(error)say("登出時發生問題："+friendlyAuthError(error))}cloudUser=null;state.player=null;state.players=[];state.records=[];save();render()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&active)result(0,"abandoned",active.id)});
 window.addEventListener("starry-supabase-ready",bootCloud);
 window.addEventListener("starry-3d-ready",()=>{const host=document.getElementById("starry-3d");if(host&&window.Starry3D)window.Starry3D.mount(host)});
 window.addEventListener("starry-3d-error",()=>{const host=document.getElementById("starry-3d"),status=document.getElementById("starry-3d-status");if(host)host.dataset.status="fallback";if(status)status.textContent="3D 元件暫時無法載入；請使用下方遊戲卡片。";const fallback=host?.querySelector(".starry-3d-fallback");if(fallback)fallback.innerHTML="<strong>3D 場景暫時無法載入</strong><span>遊戲入口與雲端資料仍可正常使用，請稍後重新整理。</span>"});
 window.addEventListener("starry-3d-portal",event=>{const gameId=event.detail&&event.detail.gameId;if(gameId&&ADULT_GAME_IDS.includes(gameId))start(gameId)});
+window.addEventListener("starry-3d-map",event=>{
+ const marker=document.getElementById("parkMapPlayer"),d=event.detail;
+ if(!marker||!d)return;
+ const x=Math.max(-41,Math.min(41,Number(d.x)||0)),z=Math.max(-43,Math.min(43,Number(d.z)||0));
+ marker.setAttribute("transform","translate("+x+" "+z+") rotate("+(-Number(d.yaw||0)*180/Math.PI)+")");
+});
+window.addEventListener("starry-3d-action",event=>{
+ const action=event.detail&&event.detail.action;
+ if(action==="ticket-booth")say("星夢入園票亭：歡迎來到星夢樂園！目前開放自由探索；成人遊戲與星芽探索區可從園區入口開始。");
+});
 window.addEventListener("starry-supabase-error",()=>{login();authMessage("無法載入 Supabase 連線元件："+(window.SD_SUPABASE_ERROR||"請確認網路後重新整理。"),true)});
 if(cloudMode){login();if(window.SD_SUPABASE)bootCloud()}else render();
 })();
