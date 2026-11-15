@@ -21,6 +21,17 @@ The park is built from procedural geometry and original materials, with the supp
 
 The scene is still a procedural 3D prototype, not a finished photorealistic asset pack. Collision is currently an intentionally lightweight approximation rather than a full physics engine. Visual and gameplay review in a real browser/WebGL session is still needed.
 
+## Mobile and first-person controls
+
+- The park opens in first-person eye-level view so the player can look around naturally. A view toggle switches to third-person follow view to see the selected avatar.
+- On touch devices in portrait orientation, the park shows a rotate-to-landscape overlay.
+- The full-screen control requests browser fullscreen and then attempts the Screen Orientation API landscape lock. Browsers that do not support orientation locking require the player to rotate the device manually.
+- In landscape touch mode, the left virtual joystick moves the player, the Run button increases speed, and the Interact button boards or exits rides and uses nearby service points.
+- Dragging the open right side of the 3D view looks around. In first-person mode, vertical dragging looks up and down.
+- Desktop players can still use WASD / arrow keys, Shift, E, mouse drag and wheel zoom.
+
+The viewport respects device safe areas. The park uses system Traditional Chinese font fallbacks and auto-fits attraction sign text to reduce font substitution and clipping across devices.
+
 ## Multiplayer park and public chat
 
 Signed-in non-admin players can join the shared park lounge:
