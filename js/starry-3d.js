@@ -589,7 +589,8 @@ function buildDropTower(scene,materials,x,z){
       makeMaterial([0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9][i%4],0.38,0.22),
       [Math.cos(a)*0.95,0,Math.sin(a)*0.95]);
   }
-  const rideSeat=new THREE.Group();rideSeat.position.set(0,0.24,0);gondola.add(rideSeat);\n  const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP · RIDE"});
+  const rideSeat=new THREE.Group();rideSeat.position.set(0,0.24,0);gondola.add(rideSeat);
+  const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP · RIDE"});
   if(sign){sign.position.set(0,8.8,0);sign.scale.set(3.7,0.98,1);root.add(sign)}
   return {id:"drop",name:"星際自由落體",action:"ride-drop",root,object:gondola,rideSeat,axis:"lift",baseY:1.4,range:3.9,speed:0.82,phase:Math.random()*Math.PI*2,interactionRadius:4.0,dismountRadius:5.0};
 }
@@ -887,17 +888,18 @@ function buildEnvironment(scene) {
 
   const rides=[];
   const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);addCollider(-21.5,0.7,3.65,"星光旋轉木馬");
-  rides.push(buildTeacupRide(scene,materials,-13,-11.5));addCollider(-13,-11.5,3.2,"星月茶杯");
-  rides.push(buildDropTower(scene,materials,13,-10));addCollider(13,-10,2.7,"星際自由落體");
-  rides.push(buildFerrisWheel(scene,materials,25,0.78,-17));addCollider(25,-17,3.8,"星河摩天輪");
-  buildRollerCoaster(scene,materials);addCollider(-24.5,-19.0,4.8,"星際雲霄飛車");
+  const teacups=buildTeacupRide(scene,materials,-13,-11.5);rides.push(teacups);addCollider(-13,-11.5,3.2,"星月茶杯");
+  const drop=buildDropTower(scene,materials,13,-10);rides.push(drop);addCollider(13,-10,2.7,"星際自由落體");
+  const ferris=buildFerrisWheel(scene,materials,25,0.78,-17);rides.push(ferris);addCollider(25,-17,3.8,"星河摩天輪");
+  const coaster=buildRollerCoaster(scene,materials);rides.push(coaster);addCollider(-24.5,-19.0,4.8,"星際雲霄飛車");
+  const rideStations=[carousel,teacups,drop,ferris,coaster];
   const ticketBooth=buildTicketBooth(scene,materials,-4.8,30.5);addCollider(-4.8,30.5,2.55,"星夢入園票亭");
   buildEntranceGate(scene,materials);
   const arcadeStalls=buildArcadeStalls(scene,materials);
   addCollider(5.1,6.9,1.35,"星塵兌換所");addCollider(8.25,5.45,1.35,"旅人補給站");
   const shootingGallery=buildShootingGallery(scene,materials,18,9);addCollider(18,9,4.45,"霓虹神射手");
   const mirrorHouse=buildMirrorHouse(scene,materials,-19,-8);addCollider(-19,-8,4.2,"幻影鏡屋");
-  const interactables=[...portals,carousel.root,ticketBooth,shootingGallery,mirrorHouse];
+  const interactables=[...portals,...rideStations.map(ride=>ride.root),ticketBooth,shootingGallery,mirrorHouse];
 
   // Each attraction carries its own sign directly on the matching model.
 
@@ -953,7 +955,7 @@ function buildEnvironment(scene) {
     }),[Math.cos(angle)*radius,-6.1-(i%3)*0.65,Math.sin(angle)*radius],[4.4+(i%3),0.72,2.5],false,false);
     cloud.userData.phase=angle;
   }
-  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
+  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,rideStations,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,playableRadius:41.2};
 }
 
 function createParkMotes(scene,count=56){
