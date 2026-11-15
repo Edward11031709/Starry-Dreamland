@@ -349,7 +349,9 @@ async function loadCloudPlayer(user,nicknameHint=""){
  state.players=[{
   id:user.id,name:actualProfile.nickname,adultPoints,kidsPoints,points:adultPoints,
   created:Date.parse(actualProfile.created_at)||Date.now(),
-  avatarId:actualProfile.avatar_id||avatarState?.avatar_id||"wanderer",\n  avatarType:actualProfile.avatar_type||"wanderer",\n  appearance:Object.assign({},DEFAULT_APPEARANCE,actualProfile.appearance||{}),
+  avatarId:actualProfile.avatar_id||avatarState?.avatar_id||"wanderer",
+  avatarType:actualProfile.avatar_type||"wanderer",
+  appearance:Object.assign({},DEFAULT_APPEARANCE,actualProfile.appearance||{}),
   ownedAvatarIds:actualProfile.owned_avatar_ids||avatarState?.owned_avatar_ids||["wanderer"],
   avatarPoints:Number(avatarState?.points_balance)||0,
   isAdmin:isAdmin===true
@@ -483,7 +485,8 @@ function renderParkVisitorMarkers(players){
 }
 function currentParkPresence(){
  const p=me();return {
-  sessionId:parkSessionId,nickname:p?.name||"星空旅人",avatarId:p?.avatarId||"wanderer",\n  avatarType:p?.avatarType||"wanderer",appearance:Object.assign({},DEFAULT_APPEARANCE,p?.appearance||{}),
+  sessionId:parkSessionId,nickname:p?.name||"星空旅人",avatarId:p?.avatarId||"wanderer",
+  avatarType:p?.avatarType||"wanderer",appearance:Object.assign({},DEFAULT_APPEARANCE,p?.appearance||{}),
   x:parkLocalPosition.x,z:parkLocalPosition.z,yaw:parkLocalPosition.yaw,
   onlineAt:new Date().toISOString()
  };
