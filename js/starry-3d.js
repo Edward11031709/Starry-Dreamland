@@ -464,9 +464,9 @@ function buildCarousel(scene,materials,x,z){
 }
 
 function buildFerrisWheel(scene,materials,x,y,z){
-  const root=new THREE.Group();root.position.set(x,y,z);scene.add(root);
+  const root=new THREE.Group();root.position.set(x,y,z);root.userData.action="ride-ferris";scene.add(root);
   [-0.82,0.82].forEach((sx,i)=>{
-    const foot=addMesh(root,new THREE.CylinderGeometry(0.34,0.4,0.26,12),materials.darkStone,[sx,0.16,0]);
+    addMesh(root,new THREE.CylinderGeometry(0.34,0.4,0.26,12),materials.darkStone,[sx,0.16,0]);
     addMesh(root,new THREE.TorusGeometry(0.31,0.045,8,28),materials.gold,[sx,0.31,0]).rotation.x=Math.PI/2;
     const leg=addMesh(root,new THREE.BoxGeometry(0.23,3.5,0.28),materials.silverMetal,[sx,1.6,0]);leg.rotation.z=i===0?-0.26:0.26;
     const inlay=addMesh(root,new THREE.BoxGeometry(0.045,3.02,0.045),materials.gold,[sx+(i===0?0.12:-0.12),1.58,0.15]);inlay.rotation.z=i===0?-0.26:0.26;
@@ -476,35 +476,41 @@ function buildFerrisWheel(scene,materials,x,y,z){
   addMesh(wheel,new THREE.TorusGeometry(2.62,0.085,12,80),materials.gold,[0,0,0]);
   addMesh(wheel,new THREE.TorusGeometry(2.28,0.045,8,72),materials.silver,[0,0,0]);
   addMesh(wheel,new THREE.TorusGeometry(2.8,0.028,7,88),materials.crystal,[0,0,0]);
+  let rideSeat=null;const gondolas=[];
   for(let i=0;i<10;i++){
     const a=i/10*Math.PI*2;
     const spoke=addMesh(wheel,new THREE.BoxGeometry(0.075,5.18,0.09),materials.silverMetal,[0,0,0]);spoke.rotation.z=a;
     const pin=addMesh(wheel,new THREE.BoxGeometry(0.025,4.9,0.035),materials.gold,[0,0,0]);pin.rotation.z=a;
     const cx=Math.cos(a)*2.62,cy=Math.sin(a)*2.62;
+    const gondola=new THREE.Group();gondola.position.set(cx,cy,0.18);wheel.add(gondola);gondolas.push(gondola);
     const gondolaMat=makeMaterial([0x6f8fc5,0xb18bcf,0xd7ad70,0x81a9a0,0xc27ea1][i%5],0.42,0.28);
-    addMesh(wheel,new THREE.BoxGeometry(0.52,0.55,0.46),gondolaMat,[cx,cy-0.08,0.18]);
-    addMesh(wheel,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[cx,cy+0.22,0.18]);
-    addMesh(wheel,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[cx-0.28,cy-0.05,0.18]);
-    addMesh(wheel,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[cx+0.28,cy-0.05,0.18]);
-    const canopy=addMesh(wheel,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[cx,cy+0.44,0.18]);canopy.rotation.y=Math.PI/8;
-    addMesh(wheel,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[cx,cy+0.61,0.18],[0.8,1.2,0.8],null,false,false);
-    addMesh(wheel,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[cx,cy-0.36,0.42]);
+    addMesh(gondola,new THREE.BoxGeometry(0.52,0.55,0.46),gondolaMat,[0,-0.08,0]);
+    addMesh(gondola,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[0,0.22,0]);
+    addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[-0.28,-0.05,0]);
+    addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[0.28,-0.05,0]);
+    const canopy=addMesh(gondola,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[0,0.44,0]);canopy.rotation.y=Math.PI/8;
+    addMesh(gondola,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[0,0.61,0],[0.8,1.2,0.8],null,false,false);
+    addMesh(gondola,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[0,-0.36,0.24]);
+    const anchor=new THREE.Group();anchor.position.set(0,-0.1,0.32);gondola.add(anchor);
+    if(i===0)rideSeat=anchor;
   }
   const hub=addMesh(wheel,new THREE.CylinderGeometry(0.42,0.42,0.52,24),materials.gold,[0,0,0]);hub.rotation.x=Math.PI/2;
   addMesh(wheel,new THREE.TorusGeometry(0.49,0.055,8,48),materials.trim,[0,0,0]).rotation.x=Math.PI/2;
   const hubGem=addMesh(wheel,new THREE.OctahedronGeometry(0.28,1),materials.crystal,[0,0,0.32],[0.8,1.15,0.8],null,false,false);hubGem.rotation.z=Math.PI/4;
-  const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL"});
+  const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL · RIDE"});
   if(sign){sign.position.set(0,6.6,0.22);sign.scale.set(4.1,1.1,1);root.add(sign)}
-  return {object:wheel,axis:"z",speed:-0.105};
+  return {id:"ferris",name:"星河摩天輪",action:"ride-ferris",root,object:wheel,rideSeat,gondolas,axis:"z",speed:-0.105,interactionRadius:4.6,dismountRadius:5.5};
 }
 
 function buildRollerCoaster(scene,materials){
-  const root=new THREE.Group();root.position.set(-24.5,0.72,-19.0);scene.add(root);
+  const root=new THREE.Group();root.position.set(-24.5,0.72,-19.0);root.userData.action="ride-coaster";scene.add(root);
   const points=[[-2.8,0.65,1.8],[-2.3,1.7,0.8],[-1.55,3.7,0.2],[-0.45,4.0,0.1],[0.65,2.0,0.3],[1.55,0.9,1.0],[2.55,2.0,1.8],[3.05,2.55,2.2]];
+  const pathPoints=points.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
+  const curve=new THREE.CatmullRomCurve3(pathPoints,false,"centripetal");
   [-0.24,0.24].forEach(offset=>{
-    const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p[0],p[1],p[2]+offset)));
-    const geometry=new THREE.TubeGeometry(curve,96,0.075,8,false);
-    addMesh(root,geometry,materials.gold,null,null,true,false);
+    const railPoints=points.map(p=>new THREE.Vector3(p[0],p[1],p[2]+offset));
+    const railCurve=new THREE.CatmullRomCurve3(railPoints,false,"centripetal");
+    addMesh(root,new THREE.TubeGeometry(railCurve,96,0.075,8,false),materials.gold,null,null,true,false);
   });
   points.forEach((p,i)=>{
     if(i===0||i===2||i===4||i===6){
@@ -516,39 +522,22 @@ function buildRollerCoaster(scene,materials){
   addMesh(root,new THREE.BoxGeometry(1.25,0.48,0.62),makeMaterial(0x9d6fc1,0.34,0.44),[-1.75,3.96,0.2]);
   addMesh(root,new THREE.BoxGeometry(1.0,0.12,0.72),materials.gold,[-1.75,4.25,0.2]);
   for(let i=0;i<3;i++)addMesh(root,new THREE.SphereGeometry(0.13,12,10),materials.silver,[-2.1+i*0.34,4.42,0.2],[0.75,0.75,0.75]);
-  const sign=makeLabelSprite({title:"星際雲霄飛車",subtitle:"COSMIC COASTER"});
-  if(sign){sign.position.set(0,4.9,2.05);sign.scale.set(4.3,1.05,1);root.add(sign)}
-  return root;
-}
-
-function buildArcadeStalls(scene,materials){
-  const stalls=[];
-  [
-    [5.1,6.9,"星塵兌換所","STAR DUST REWARDS"],
-    [8.25,5.45,"旅人補給站","TRAVELER SUPPLY"]
-  ].forEach(([x,z,title,sub],index)=>{
-    const booth=new THREE.Group();booth.position.set(x,0.72,z);scene.add(booth);
-    addMesh(booth,new THREE.CylinderGeometry(1.18,1.28,0.22,32),materials.darkStone,[0,0.11,0]);
-    addMesh(booth,new THREE.BoxGeometry(1.85,1.5,1.42),materials.wall,[0,0.85,0]);
-    addMesh(booth,new THREE.BoxGeometry(2.0,0.15,1.55),materials.gold,[0,1.62,0]);
-    const roof=addMesh(booth,new THREE.ConeGeometry(1.38,0.72,4),materials.roof,[0,2.02,0]);roof.rotation.y=Math.PI/4;
-    addMesh(booth,new THREE.BoxGeometry(1.32,0.76,0.12),materials.darkStone,[0,1.0,0.73]);
-    if(index===0){
-      for(let k=0;k<3;k++)addMesh(booth,new THREE.OctahedronGeometry(0.22,1),[materials.crystal,materials.silver,materials.gold][k],[-0.43+k*0.43,1.05,0.84],null,false,false);
-      addMesh(booth,new THREE.BoxGeometry(1.42,0.12,0.18),materials.gold,[0,0.62,0.9]);
-    }else{
-      addMesh(booth,new THREE.BoxGeometry(0.85,0.62,0.1),materials.wood,[-0.38,1.1,0.84]);
-      addMesh(booth,new THREE.BoxGeometry(0.4,0.28,0.12),materials.crystal,[0.38,1.1,0.84],null,false,false);
-    }
-    const sign=makeLabelSprite({title,subtitle:sub});
-    if(sign){sign.position.set(0,2.58,0.2);sign.scale.set(3.3,0.88,1);booth.add(sign)}
-    stalls.push(booth);
+  const cart=new THREE.Group();root.add(cart);
+  addMesh(cart,new THREE.BoxGeometry(0.9,0.32,0.82),makeMaterial(0x6c5a91,0.28,0.56,{clearcoat:0.88}),[0,0.18,0]);
+  addMesh(cart,new THREE.BoxGeometry(0.82,0.09,0.76),materials.gold,[0,0.38,0]);
+  [-0.26,0.26].forEach(x=>{
+    addMesh(cart,new THREE.BoxGeometry(0.08,0.46,0.09),materials.silverMetal,[x,0.58,-0.28]);
+    addMesh(cart,new THREE.BoxGeometry(0.08,0.46,0.09),materials.silverMetal,[x,0.58,0.28]);
   });
-  return stalls;
+  addMesh(cart,new THREE.BoxGeometry(0.55,0.06,0.08),materials.gold,[0,0.78,0]);
+  const rideSeat=new THREE.Group();rideSeat.position.set(0,0.45,0.04);cart.add(rideSeat);
+  const sign=makeLabelSprite({title:"星際雲霄飛車",subtitle:"COSMIC COASTER · RIDE"});
+  if(sign){sign.position.set(0,4.9,2.05);sign.scale.set(4.3,1.05,1);root.add(sign)}
+  return {id:"coaster",name:"星際雲霄飛車",action:"ride-coaster",root,object:cart,rideSeat,curve,axis:"track",progress:0,direction:1,speed:0.105,interactionRadius:5.0,dismountRadius:6.2};
 }
 
 function buildTeacupRide(scene,materials,x,z){
-  const root=new THREE.Group();root.position.set(x,0.78,z);scene.add(root);
+  const root=new THREE.Group();root.position.set(x,0.78,z);root.userData.action="ride-teacups";scene.add(root);
   addMesh(root,new THREE.CylinderGeometry(2.65,2.82,0.34,48),materials.darkStone,[0,0.18,0]);
   addMesh(root,new THREE.TorusGeometry(2.7,0.11,10,64),materials.gold,[0,0.38,0]).rotation.x=Math.PI/2;
   const ride=new THREE.Group();ride.position.y=0.42;root.add(ride);
@@ -556,6 +545,7 @@ function buildTeacupRide(scene,materials,x,z){
   addMesh(ride,new THREE.CylinderGeometry(1.45,0.48,0.32,32),materials.roof,[0,2.42,0]);
   addMesh(ride,new THREE.ConeGeometry(0.68,0.62,12),materials.gold,[0,2.9,0]);
   const colors=[0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9,0xb59be5,0xe49b82];
+  let rideSeat=null;
   for(let i=0;i<6;i++){
     const a=i/6*Math.PI*2,cup=new THREE.Group();
     cup.position.set(Math.cos(a)*1.72,0.45,Math.sin(a)*1.72);ride.add(cup);
@@ -566,14 +556,15 @@ function buildTeacupRide(scene,materials,x,z){
     addMesh(cup,new THREE.TorusGeometry(0.49,0.028,6,32),materials.gold,[0,0.03,0]).rotation.x=Math.PI/2;
     addMesh(cup,new THREE.SphereGeometry(0.14,12,10),materials.lampGlow,[0,0.62,0],null,false,false);
     addMesh(cup,new THREE.OctahedronGeometry(0.085,1),materials.crystal,[0,0.78,0.18],[0.72,1.2,0.72],null,false,false);
+    if(i===0){rideSeat=new THREE.Group();rideSeat.position.set(0,0.59,0);cup.add(rideSeat)}
   }
-  const sign=makeLabelSprite({title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS"});
+  const sign=makeLabelSprite({title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS · RIDE"});
   if(sign){sign.position.set(0,4.15,0);sign.scale.set(3.5,0.92,1);root.add(sign)}
-  return {object:ride,axis:"y",speed:0.34};
+  return {id:"teacups",name:"星月茶杯",action:"ride-teacups",root,object:ride,rideSeat,axis:"y",speed:0.34,interactionRadius:4.2,dismountRadius:5.0};
 }
 
 function buildDropTower(scene,materials,x,z){
-  const root=new THREE.Group();root.position.set(x,0.78,z);scene.add(root);
+  const root=new THREE.Group();root.position.set(x,0.78,z);root.userData.action="ride-drop";scene.add(root);
   addMesh(root,new THREE.CylinderGeometry(2.2,2.45,0.38,40),materials.darkStone,[0,0.2,0]);
   addMesh(root,new THREE.TorusGeometry(2.28,0.1,8,56),materials.gold,[0,0.42,0]).rotation.x=Math.PI/2;
   addMesh(root,new THREE.CylinderGeometry(0.34,0.52,7.1,16),materials.silverMetal,[0,3.95,0]);
@@ -598,10 +589,12 @@ function buildDropTower(scene,materials,x,z){
       makeMaterial([0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9][i%4],0.38,0.22),
       [Math.cos(a)*0.95,0,Math.sin(a)*0.95]);
   }
-  const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP"});
+  const rideSeat=new THREE.Group();rideSeat.position.set(0,0.24,0);gondola.add(rideSeat);\n  const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP · RIDE"});
   if(sign){sign.position.set(0,8.8,0);sign.scale.set(3.7,0.98,1);root.add(sign)}
-  return {object:gondola,axis:"lift",baseY:1.4,range:3.9,speed:0.82,phase:Math.random()*Math.PI*2};
+  return {id:"drop",name:"星際自由落體",action:"ride-drop",root,object:gondola,rideSeat,axis:"lift",baseY:1.4,range:3.9,speed:0.82,phase:Math.random()*Math.PI*2,interactionRadius:4.0,dismountRadius:5.0};
 }
+
+
 
 function buildShootingGallery(scene,materials,x,z){
   const hall=new THREE.Group();hall.position.set(x,0.78,z);hall.userData.gameId="shooting-range";scene.add(hall);
