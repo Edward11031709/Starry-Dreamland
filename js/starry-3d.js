@@ -550,7 +550,7 @@ function mount(host) {
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({
-      antialias: window.devicePixelRatio <= 1.5,
+      antialias: window.devicePixelRatio <= 1.25,
       alpha: false,
       powerPreference: "high-performance"
     });
@@ -574,12 +574,12 @@ function mount(host) {
   camera.position.set(0, 8.5, 11.5);
   camera.lookAt(0, 1.2, 8.6);
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.25 : 1.6));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.0 : 1.25));
   renderer.setSize(width, height, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = false;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = "starry-3d-canvas";
   renderer.domElement.setAttribute("aria-label", "可點擊三座星門的立體星夢廣場");
@@ -590,7 +590,7 @@ function mount(host) {
 
   const moonLight = new THREE.DirectionalLight(0xffe8ca, 2.55);
   moonLight.position.set(-11, 20, 15);
-  moonLight.castShadow = true;
+  moonLight.castShadow = false;
   moonLight.shadow.mapSize.set(1024, 1024);
   moonLight.shadow.camera.left = -24;
   moonLight.shadow.camera.right = 24;
@@ -611,7 +611,7 @@ function mount(host) {
   blueLight.position.set(-7, 4, 5);
   scene.add(blueLight);
 
-  const starfield = createStarfield(scene, isSmall ? 360 : 620);
+  const starfield = createStarfield(scene, isSmall ? 180 : 320);
   const environment = buildEnvironment(scene);
   const player = buildPlayer(scene);
   player.position.set(0, 0.78, 8.6);
@@ -638,7 +638,7 @@ function mount(host) {
   world.onKeyDown = event => {
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target && event.target.tagName)) return;
     const key = event.key.toLowerCase();
-    if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(key)) {
+    if (["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(key)) {
       event.preventDefault();
       world.keys.add(key);
     }
@@ -773,7 +773,7 @@ function mount(host) {
     camera.aspect = w / h;
     cameraState.distance = small ? 13.5 : 12.5;
     camera.updateProjectionMatrix();
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.25 : 1.6));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.0 : 1.25));
     renderer.setSize(w, h, false);
   });
   world.resizeObserver.observe(host);
