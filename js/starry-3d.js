@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js";
+let THREE;
 
 const PALETTE = {
   night: 0x080d2a,
@@ -326,7 +326,7 @@ function buildEnvironment(scene) {
     rock: materials.rock, top: materials.top, trim: materials.gold
   });
   left.rotation.y = -0.12;
-  buildObservatory(scene, -13.4, -3.18, -5.4, materials);
+  buildObservatory(scene, -13.4, -3.58, -5.4, materials);
 
   const right = makeIsland(scene, 13.1, -4.35, -3.7, 4.1, {
     rock: materials.rock, top: materials.top, trim: materials.silver
@@ -480,7 +480,7 @@ function mount(host) {
 
   const camera = new THREE.PerspectiveCamera(39, width / height, 0.1, 150);
   const isSmall = width < 650;
-  camera.position.set(isSmall ? 3 : 14.5, isSmall ? 25 : 18.5, isSmall ? 37 : 29);
+  camera.position.set(isSmall ? 0 : 12.5, isSmall ? 24 : 15.5, isSmall ? 38 : 25);
   camera.lookAt(0, 0.2, -0.65);
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.25 : 1.6));
@@ -601,7 +601,7 @@ function mount(host) {
     const h = Math.max(1, Math.floor(entry.contentRect.height));
     const small = w < 650;
     camera.aspect = w / h;
-    camera.position.set(small ? 3 : 14.5, small ? 25 : 18.5, small ? 37 : 29);
+    camera.position.set(small ? 0 : 12.5, small ? 24 : 15.5, small ? 38 : 25);
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.25 : 1.6));
     renderer.setSize(w, h, false);
@@ -624,5 +624,14 @@ function dispose() {
   activeWorld = null;
 }
 
-window.Starry3D = { mount, dispose };
-window.dispatchEvent(new Event("starry-3d-ready"));
+async function loadThreeEngine() {
+  try {
+    THREE = await import("https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js");
+    window.Starry3D = { mount, dispose };
+    window.dispatchEvent(new Event("starry-3d-ready"));
+  } catch (error) {
+    window.STARRY_3D_ERROR = error && error.message ? error.message : String(error);
+    window.dispatchEvent(new Event("starry-3d-error"));
+  }
+}
+loadThreeEngine();
