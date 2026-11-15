@@ -552,11 +552,72 @@ function buildEnvironment(scene) {
     const ring=addMesh(island,new THREE.TorusGeometry(radius-0.16,0.075,8,64),materials.gold,[x,0.89,z]);
     ring.rotation.x=Math.PI/2;
     terrainZones.push({x,z,radius,surfaceY:0.865});
+    // Small radial floor gems create a finished paving pattern without adding obstacles.
+    for(let i=0;i<12;i++){
+      const a=i/12*Math.PI*2,rr=radius*0.78;
+      const gem=addMesh(island,new THREE.OctahedronGeometry(0.1,0),materials.trim,
+        [x+Math.cos(a)*rr,0.9,z+Math.sin(a)*rr],[0.72,0.2,1.6],false,false);
+      gem.rotation.y=a;
+    }
   }
+
+  function addStarPlanter(x,z,scale=1,accent=PALETTE.blue){
+    const bed=new THREE.Group();bed.position.set(x,0.78,z);island.add(bed);
+    addMesh(bed,new THREE.CylinderGeometry(0.72*scale,0.84*scale,0.34*scale,12),materials.darkStone,[0,0.17*scale,0]);
+    const rim=addMesh(bed,new THREE.TorusGeometry(0.69*scale,0.075*scale,8,32),materials.gold,[0,0.35*scale,0]);rim.rotation.x=Math.PI/2;
+    addMesh(bed,new THREE.CylinderGeometry(0.61*scale,0.64*scale,0.07*scale,12),materials.wood,[0,0.35*scale,0],null,false,false);
+    for(let i=0;i<5;i++){
+      const a=i/5*Math.PI*2;
+      const crystal=addCrystal(bed,Math.cos(a)*0.34*scale,0.46*scale,Math.sin(a)*0.34*scale,(0.34+(i%2)*0.12)*scale,accent);
+      crystal.rotation.z=(i%2?1:-1)*0.14;
+    }
+    addMesh(bed,new THREE.OctahedronGeometry(0.22*scale,1),materials.crystal,[0,0.84*scale,0],[0.74,1.5,0.74],false,false);
+    for(let i=0;i<8;i++){
+      const a=i/8*Math.PI*2;
+      const bloom=addMesh(bed,new THREE.SphereGeometry(0.085*scale,10,8),i%2?materials.lampGlow:materials.trim,
+        [Math.cos(a)*0.52*scale,0.52*scale,Math.sin(a)*0.52*scale],[1,0.72,1],false,false);
+    }
+    addCollider(x,z,0.82*scale,"星晶花圃");
+  }
+
+  function addOrnamentalArch(x,z,width,title,subtitle){
+    const arch=new THREE.Group();arch.position.set(x,0.78,z);island.add(arch);
+    const radius=width/2-0.38;
+    [-1,1].forEach(side=>{
+      const px=side*radius;
+      addMesh(arch,new THREE.CylinderGeometry(0.28,0.36,3.1,16),materials.darkStone,[px,1.55,0]);
+      addMesh(arch,new THREE.CylinderGeometry(0.39,0.39,0.18,16),materials.gold,[px,2.95,0]);
+      addMesh(arch,new THREE.CylinderGeometry(0.32,0.32,0.14,16),materials.trim,[px,3.12,0]);
+      addMesh(arch,new THREE.OctahedronGeometry(0.24,1),materials.crystal,[px,3.34,0],[0.75,1.35,0.75],false,false);
+      addCollider(x+px,z,0.46,title+"門柱");
+    });
+    const crown=addMesh(arch,new THREE.TorusGeometry(radius,0.14,12,56,Math.PI),materials.gold,[0,3.1,0]);
+    const inner=addMesh(arch,new THREE.TorusGeometry(radius-0.22,0.045,8,56,Math.PI),materials.crystal,[0,3.1,-0.06]);
+    const crest=addMesh(arch,new THREE.OctahedronGeometry(0.25,1),materials.crystal,[0,4.52,0],[0.8,1.2,0.8],false,false);
+    crest.rotation.y=Math.PI/4;
+    const sign=makeLabelSprite({title,subtitle});
+    if(sign){sign.position.set(0,4.17,0.22);sign.scale.set(width*0.72,0.92,1);arch.add(sign)}
+    return arch;
+  }
+
   addDistrictPlaza(0,0,12.8);addDistrictPlaza(-21.5,0.7,7.1);
   addDistrictPlaza(-13,-11.5,5.4);addDistrictPlaza(13,-10,5.4);
   addDistrictPlaza(18,9,6.3);addDistrictPlaza(-19,-8,6.3);
   addDistrictPlaza(-25,-19,7.0);addDistrictPlaza(25,-17,7.0);addDistrictPlaza(0,31,6.2);
+
+  // Ornate gateways frame the themed districts and lead the eye along the main paths.
+  addOrnamentalArch(0,18.2,8.6,"星夢中庭","STARDREAM PROMENADE");
+  addOrnamentalArch(-17.2,5.7,7.3,"星光嘉年華","STARLIGHT CARNIVAL");
+  addOrnamentalArch(17.2,6.5,7.3,"銀河冒險區","GALAXY ADVENTURE");
+
+  // Jewel planters soften the geometric plazas and give the paths a garden-park character.
+  [
+    [-7.5,23,0.9,PALETTE.pink],[7.5,23,0.9,PALETTE.blue],
+    [-11.2,4.4,0.82,PALETTE.violet],[11.2,4.4,0.82,PALETTE.blue],
+    [-32,-9,0.88,PALETTE.pink],[32,-8,0.88,PALETTE.blue],
+    [-9,-27,0.92,PALETTE.violet],[9,-27,0.92,PALETTE.pink],
+    [-34,13,0.76,PALETTE.blue],[34,13,0.76,PALETTE.violet]
+  ].forEach(([x,z,s,color])=>addStarPlanter(x,z,s,color));
 
   // The old satellite islands become reachable themed gardens at the far end of the park.
   buildCastle(scene,materials);
