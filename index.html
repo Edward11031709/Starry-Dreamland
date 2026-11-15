@@ -321,7 +321,8 @@ const AVATAR_OPTIONS={
  skinTone:[{id:"#f0d5c1",name:"暖瓷白"},{id:"#f3d9c3",name:"月光米"},{id:"#e9bea0",name:"杏桃色"},{id:"#cc9877",name:"琥珀棕"},{id:"#9c6c54",name:"深琥珀"}],
  accentColor:[{id:"#f1d18e",name:"淡金光"},{id:"#8c75d6",name:"紫晶光"},{id:"#65c5e3",name:"冰藍光"},{id:"#e69cca",name:"櫻霧光"},{id:"#a9d5b1",name:"薄荷光"},{id:"#d8e1f5",name:"星銀光"}]
 };
-const DEFAULT_APPEARANCE={hairStyle:"long",hairColor:"#30263f",skinTone:"#f0d5c1",accentColor:"#f1d18e"};\nlet atelierPreviewOutfit="wanderer";
+const DEFAULT_APPEARANCE={hairStyle:"long",hairColor:"#30263f",skinTone:"#f0d5c1",accentColor:"#f1d18e"};
+let atelierPreviewOutfit="wanderer";
 let state=read(),clock=null,frame=null,active=null;
 const cloudMode=!!(window.STARRY_CONFIG&&window.STARRY_CONFIG.mode==="supabase");
 let sb=window.SD_SUPABASE||null,cloudUser=null,cloudBusy=false;
