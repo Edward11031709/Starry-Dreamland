@@ -133,7 +133,7 @@ function buildPortal(scene,meta,x,z,materials){
  group.userData.motion={ring,inner,core,crystal,orbit,aura,phase:Math.random()*Math.PI*2};group.traverse(obj=>{obj.userData.gameId=meta.id});return group;
 }
 function buildCastle(scene,materials){
- const castle=new THREE.Group();castle.position.set(0,0.68,-5.05);scene.add(castle);
+ const castle=new THREE.Group();castle.position.set(0,0.68,-18.2);scene.add(castle);
  addMesh(castle,new THREE.CylinderGeometry(4.7,4.95,0.42,64),materials.darkStone,[0,0.1,0]);
  addMesh(castle,new THREE.TorusGeometry(4.66,0.09,10,72),materials.gold,[0,0.34,0]).rotation.x=Math.PI/2;
  addMesh(castle,new THREE.BoxGeometry(6.3,3.55,3.72),materials.wall,[0,2.1,0]);
@@ -180,7 +180,7 @@ function buildObservatory(scene, x, y, z, materials) {
 }
 
 function buildEntranceGate(scene,materials){
-  const gate=new THREE.Group();gate.position.set(0,0.78,9.35);scene.add(gate);
+  const gate=new THREE.Group();gate.position.set(0,0.78,39.2);scene.add(gate);
   [-3.25,3.25].forEach(x=>{
     addMesh(gate,new THREE.BoxGeometry(0.62,3.9,0.82),materials.darkStone,[x,1.95,0]);
     addMesh(gate,new THREE.BoxGeometry(0.86,0.22,1.02),materials.gold,[x,3.9,0]);
@@ -256,7 +256,7 @@ function buildFerrisWheel(scene,materials,x,y,z){
 }
 
 function buildRollerCoaster(scene,materials){
-  const root=new THREE.Group();root.position.set(-7.7,0.72,-6.45);scene.add(root);
+  const root=new THREE.Group();root.position.set(-24.5,0.72,-19.0);scene.add(root);
   const points=[[-2.8,0.65,1.8],[-2.3,1.7,0.8],[-1.55,3.7,0.2],[-0.45,4.0,0.1],[0.65,2.0,0.3],[1.55,0.9,1.0],[2.55,2.0,1.8],[3.05,2.55,2.2]];
   [-0.24,0.24].forEach(offset=>{
     const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p[0],p[1],p[2]+offset)));
@@ -294,164 +294,176 @@ function buildArcadeStalls(scene,materials){
 
 function buildEnvironment(scene) {
   const materials = {
-    rock: makeMaterial(0x343b5b, 0.94, 0.04),
-    rockLight: makeMaterial(0x4c5274, 0.88, 0.08),
-    wall: makeMaterial(0x66637f, 0.72, 0.17),
-    roof: makeMaterial(0x494466, 0.45, 0.42),
-    trim: makeMaterial(0xb2a0ca, 0.34, 0.58),
-    gold: makeMaterial(PALETTE.gold, 0.27, 0.72),
+    rock: makeMaterial(0x343b5b, 0.94, 0.04), rockLight: makeMaterial(0x4c5274, 0.88, 0.08),
+    wall: makeMaterial(0x66637f, 0.72, 0.17), roof: makeMaterial(0x494466, 0.45, 0.42),
+    trim: makeMaterial(0xb2a0ca, 0.34, 0.58), gold: makeMaterial(PALETTE.gold, 0.27, 0.72),
     silver: makeMaterial(PALETTE.silver, 0.28, 0.62),
-    silverMetal: new THREE.MeshPhysicalMaterial({
-      color: 0xc2c8dc, roughness: 0.24, metalness: 0.78, clearcoat: 0.65
-    }),
-    darkStone: makeMaterial(0x242c4b, 0.8, 0.28),
-    top: makeMaterial(0x343a63, 0.85, 0.1),
+    silverMetal: new THREE.MeshPhysicalMaterial({color:0xc2c8dc,roughness:0.24,metalness:0.78,clearcoat:0.65}),
+    darkStone: makeMaterial(0x242c4b, 0.8, 0.28), top: makeMaterial(0x343a63, 0.85, 0.1),
     wood: makeMaterial(0x423651, 0.85, 0.06),
-    foliageA: makeMaterial(0x344b67, 0.95, 0.02),
-    foliageB: makeMaterial(0x465578, 0.93, 0.03),
+    foliageA: makeMaterial(0x344b67, 0.95, 0.02), foliageB: makeMaterial(0x465578, 0.93, 0.03),
     foliageC: makeMaterial(0x675b88, 0.92, 0.04),
-    crystal: new THREE.MeshPhysicalMaterial({
-      color: PALETTE.gold, emissive: PALETTE.gold, emissiveIntensity: 0.9,
-      roughness: 0.18, metalness: 0.28, clearcoat: 0.8
-    }),
-    water: new THREE.MeshPhysicalMaterial({
-      color: 0x648de0, emissive: 0x171f68, emissiveIntensity: 0.45,
-      roughness: 0.12, metalness: 0.38, transparent: true, opacity: 0.72
-    })
+    crystal: new THREE.MeshPhysicalMaterial({color:PALETTE.gold,emissive:PALETTE.gold,emissiveIntensity:0.9,roughness:0.18,metalness:0.28,clearcoat:0.8}),
+    water: new THREE.MeshPhysicalMaterial({color:0x648de0,emissive:0x171f68,emissiveIntensity:0.45,roughness:0.12,metalness:0.38,transparent:true,opacity:0.72}),
+    road: makeMaterial(0x292d50, 0.94, 0.08), roadEdge: makeMaterial(0xb5a0c9, 0.48, 0.48),
+    paving: makeMaterial(0x545477, 0.9, 0.12),
+    lampGlow: new THREE.MeshStandardMaterial({color:0xffe6ad,emissive:0xffc66f,emissiveIntensity:2.1,roughness:0.24,metalness:0.1}),
+    npcClothes: [makeMaterial(0x6f8fc5,0.58,0.08),makeMaterial(0xc27ea1,0.58,0.08),makeMaterial(0x7eaa9a,0.58,0.08),makeMaterial(0xd2a45f,0.58,0.08)],
+    npcSkin: makeMaterial(0xf0d2b8, 0.82, 0.02)
   };
 
-  // Main floating island and its layered cliff.
+  // A large connected floating island gives the park room for real exploration.
   const island = new THREE.Group();
+  island.name = "OpenWorldParkIsland";
   scene.add(island);
-  const cliff = addMesh(island, new THREE.CylinderGeometry(12.0, 8.6, 3.0, 40, 3),
-    materials.rock, [0, -1.0, 0]);
-  cliff.rotation.y = 0.12;
-  addMesh(island, new THREE.DodecahedronGeometry(8.0, 1), materials.rockLight,
-    [0, -1.65, 0], [0.96, 0.44, 0.84]).rotation.y = 0.22;
-  addMesh(island, new THREE.CylinderGeometry(11.8, 11.95, 0.48, 80),
-    materials.top, [0, 0.46, 0]);
-  addMesh(island, new THREE.TorusGeometry(11.62, 0.2, 12, 112),
-    materials.gold, [0, 0.69, 0]).rotation.x = Math.PI / 2;
-  addMesh(island, new THREE.CylinderGeometry(10.7, 10.85, 0.13, 80),
-    makeMaterial(0x46466e, 0.88, 0.14), [0, 0.72, 0]);
+  const cliff = addMesh(island,new THREE.CylinderGeometry(44.2,34.5,4.2,64,3),materials.rock,[0,-1.42,0]);
+  cliff.rotation.y=0.12;
+  addMesh(island,new THREE.DodecahedronGeometry(34,1),materials.rockLight,[0,-2.55,0],[1.06,0.5,0.92]).rotation.y=0.22;
+  addMesh(island,new THREE.CylinderGeometry(44.15,44.15,0.48,96),materials.top,[0,0.46,0]);
+  addMesh(island,new THREE.TorusGeometry(43.82,0.23,12,144),materials.gold,[0,0.70,0]).rotation.x=Math.PI/2;
+  addMesh(island,new THREE.CylinderGeometry(41.8,41.8,0.13,96),makeMaterial(0x46466e,0.88,0.14),[0,0.72,0]);
 
-  // Subtle radial stone inlays divide the plaza into crafted paving sectors.
   const pavingMaterials=[makeMaterial(0x4c4d78,0.86,0.12),makeMaterial(0x55547f,0.84,0.14)];
-  for(let i=0;i<16;i++){
-    const start=(i/16)*Math.PI*2;
-    const tile=addMesh(island,new THREE.RingGeometry(3.35,10.55,24,1,start,Math.PI/8),pavingMaterials[i%2],[0,0.755,0],null,false,true);
+  for(let i=0;i<24;i++){
+    const start=(i/24)*Math.PI*2;
+    const tile=addMesh(island,new THREE.RingGeometry(3.4,12.2,28,1,start,Math.PI/12),pavingMaterials[i%2],[0,0.755,0],null,false,true);
     tile.rotation.x=-Math.PI/2;
   }
   const inlayMat=makeMaterial(0x81749f,0.52,0.58);
-  for(let i=0;i<16;i++){
-    const angle=(i/16)*Math.PI*2;
-    const spoke=addMesh(island,new THREE.BoxGeometry(0.026,0.018,7.1),inlayMat,[Math.sin(angle)*6.85,0.78,Math.cos(angle)*6.85],null,false,false);
+  for(let i=0;i<24;i++){
+    const angle=(i/24)*Math.PI*2;
+    const spoke=addMesh(island,new THREE.BoxGeometry(0.035,0.018,9.4),inlayMat,[Math.sin(angle)*7.8,0.78,Math.cos(angle)*7.8],null,false,false);
     spoke.rotation.y=angle;
   }
-
-  // Concentric inlaid paths and a central star compass.
-  [3.25, 5.75, 9.45].forEach((radius, i) => {
-    const ring = addMesh(island, new THREE.TorusGeometry(radius, i === 1 ? 0.055 : 0.035, 8, 96),
-      i === 1 ? materials.gold : materials.trim, [0, 0.83 + i * 0.002, 0]);
-    ring.rotation.x = Math.PI / 2;
+  [3.25,6.0,9.5,12.0].forEach((radius,i)=>{
+    const ring=addMesh(island,new THREE.TorusGeometry(radius,i===1?0.07:0.04,8,112),i===1?materials.gold:materials.trim,[0,0.82+i*0.003,0]);
+    ring.rotation.x=Math.PI/2;
   });
-  addMesh(island, new THREE.CylinderGeometry(1.65, 1.85, 0.22, 12),
-    materials.darkStone, [0, 0.89, 0]);
-  const compass = addMesh(island, new THREE.OctahedronGeometry(1.05, 1),
-    materials.crystal, [0, 1.95, 0], [0.72, 1.6, 0.72]);
-  compass.rotation.y = Math.PI / 4;
-  const compassHalo = addMesh(island, new THREE.TorusGeometry(1.85, 0.045, 8, 64),
-    materials.gold, [0, 1.08, 0]);
-  compassHalo.rotation.x = Math.PI / 2;
+  addMesh(island,new THREE.CylinderGeometry(1.65,1.85,0.22,12),materials.darkStone,[0,0.89,0]);
+  const compass=addMesh(island,new THREE.OctahedronGeometry(1.05,1),materials.crystal,[0,1.95,0],[0.72,1.6,0.72]);
+  compass.rotation.y=Math.PI/4;
+  const compassHalo=addMesh(island,new THREE.TorusGeometry(1.85,0.045,8,64),materials.gold,[0,1.08,0]);
+  compassHalo.rotation.x=Math.PI/2;
 
-  // A crystal-lined promenade leading to the castle.
-  for (let i = 0; i < 8; i++) {
-    const z = -1.1 - i * 0.72;
-    const side = i % 2 === 0 ? -1 : 1;
-    addCrystal(island, side * 2.4, 0.95, z, 0.2 + (i % 3) * 0.07, i % 2 ? PALETTE.blue : PALETTE.violet);
+  // Wide illuminated pedestrian routes connect the themed districts.
+  function addWalkway(points,width=4.1){
+    for(let i=0;i<points.length-1;i++){
+      const a=points[i],b=points[i+1],dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz);
+      if(length<0.1)continue;
+      const segment=new THREE.Group();
+      segment.position.set((a[0]+b[0])/2,0.785,(a[1]+b[1])/2);
+      segment.rotation.y=Math.atan2(dx,dz);island.add(segment);
+      addMesh(segment,new THREE.BoxGeometry(width,0.075,length+0.42),materials.road,[0,0,0],null,false,true);
+      [-1,1].forEach(side=>addMesh(segment,new THREE.BoxGeometry(0.12,0.045,length+0.48),materials.roadEdge,[side*(width/2-0.08),0.052,0],null,false,false));
+    }
   }
+  [
+    [[0,39],[0,29],[0,18],[0,9],[0,0],[0,-10],[0,-19]],
+    [[0,15],[-10,15],[-18,9],[-22,1],[-23,-9],[-25,-19]],
+    [[0,15],[10,15],[18,9],[23,1],[25,-8],[25,-18]],
+    [[0,-15],[-9,-20],[-20,-21],[-30,-17]],
+    [[0,-15],[9,-20],[20,-21],[30,-17]],
+    [[-22,1],[-29,5],[-34,12]],[[25,-8],[34,-2],[36,8]]
+  ].forEach(path=>addWalkway(path));
 
-  // Broad stair and a paved approach lead the eye toward the castle entrance.
-  for(let i=0;i<5;i++){
-    const z=-2.5-i*0.47;
-    addMesh(island,new THREE.BoxGeometry(3.15+i*0.2,0.16,0.36),i%2?materials.trim:materials.darkStone,[0,0.82-i*0.025,z]);
+  function addDistrictPlaza(x,z,radius,tint=materials.paving){
+    addMesh(island,new THREE.CylinderGeometry(radius,radius,0.13,48),tint,[x,0.80,z],null,false,true);
+    const ring=addMesh(island,new THREE.TorusGeometry(radius-0.16,0.075,8,64),materials.gold,[x,0.89,z]);
+    ring.rotation.x=Math.PI/2;
   }
+  addDistrictPlaza(0,0,12.8);addDistrictPlaza(-21.5,0.7,7.1);
+  addDistrictPlaza(-25,-19,7.0);addDistrictPlaza(25,-17,7.0);addDistrictPlaza(0,31,6.2);
+
+  // The old satellite islands become reachable themed gardens at the far end of the park.
   buildCastle(scene,materials);
+  const left=makeIsland(scene,-30,0.68,-16.5,4.4,{rock:materials.rock,top:materials.top,trim:materials.gold});
+  left.rotation.y=-0.12;
+  buildObservatory(scene,-30,0.68,-16.5,materials);
+  const right=makeIsland(scene,30,0.68,-16.5,4.1,{rock:materials.rock,top:materials.top,trim:materials.silver});
+  right.rotation.y=0.18;
+  for(let i=0;i<5;i++)createTree(right,-1.45+i*0.72,-0.35+(i%2)*0.85,0.7+(i%2)*0.16,{wood:materials.wood});
+  addCrystal(right,1.1,0.55,-1.0,0.6,PALETTE.pink);
 
-  // Small floating isles frame the central island.
-  const left = makeIsland(scene, -13.4, -3.7, -5.4, 4.4, {
-    rock: materials.rock, top: materials.top, trim: materials.gold
-  });
-  left.rotation.y = -0.12;
-  buildObservatory(scene, -13.4, -3.58, -5.4, materials);
+  const planet=new THREE.Group();planet.position.set(58,27,-82);scene.add(planet);
+  addMesh(planet,new THREE.SphereGeometry(6.2,48,32),new THREE.MeshStandardMaterial({color:0x545e9d,emissive:0x151d55,emissiveIntensity:0.55,roughness:0.92,metalness:0.06}),[0,0,0],[1,1,0.92],false,false);
+  const planetRing=addMesh(planet,new THREE.TorusGeometry(8.5,0.11,8,96),makeMaterial(0xaab7ef,0.24,0.8),[0,0,0]);
+  planetRing.rotation.x=1.15;planetRing.rotation.y=0.45;
 
-  const right = makeIsland(scene, 13.1, -4.35, -3.7, 4.1, {
-    rock: materials.rock, top: materials.top, trim: materials.silver
-  });
-  right.rotation.y = 0.18;
-  for (let i = 0; i < 4; i++) {
-    createTree(right, -1.3 + i * 0.82, -0.2 + (i % 2) * 1.0, 0.65 + (i % 2) * 0.18, {
-      wood: materials.wood
-    });
-  }
-  addCrystal(right, 1.1, 0.55, -1.0, 0.6, PALETTE.pink);
-
-  // A distant crescent world, surrounded by a delicate orbital ring.
-  const planet = new THREE.Group();
-  planet.position.set(17, 12, -24);
-  scene.add(planet);
-  addMesh(planet, new THREE.SphereGeometry(3.15, 48, 32),
-    new THREE.MeshStandardMaterial({
-      color: 0x545e9d, emissive: 0x151d55, emissiveIntensity: 0.55,
-      roughness: 0.92, metalness: 0.06
-    }), [0, 0, 0], [1, 1, 0.92], false, false);
-  const planetRing = addMesh(planet, new THREE.TorusGeometry(4.45, 0.075, 8, 96),
-    makeMaterial(0xaab7ef, 0.24, 0.8), [0, 0, 0]);
-  planetRing.rotation.x = 1.15;
-  planetRing.rotation.y = 0.45;
-
-  // Glowing waterfalls and small crystals hanging below the islands.
-  for (let i = 0; i < 7; i++) {
-    const x = -7.5 + i * 2.45;
-    const crystal = addCrystal(island, x, -2.55 - (i % 3) * 0.22, -3.7 + (i % 2) * 2.6,
-      0.35 + (i % 3) * 0.13, i % 2 ? PALETTE.blue : PALETTE.violet);
-    crystal.rotation.z = (i % 2 ? 1 : -1) * 0.28;
+  for(let i=0;i<17;i++){
+    const angle=(i/17)*Math.PI*2,radius=25+(i%3)*5;
+    const crystal=addCrystal(island,Math.cos(angle)*radius,-2.8-(i%3)*0.24,Math.sin(angle)*radius,0.34+(i%3)*0.12,i%2?PALETTE.blue:PALETTE.violet);
+    crystal.rotation.z=(i%2?1:-1)*0.28;
   }
 
-  // The adult challenge gates sit on the front arc of the plaza.
-  const portals = [];
-  [-6.0, 0, 6.0].forEach((x, i) => {
-    portals.push(buildPortal(scene, gameMeta[i], x, 4.15, materials));
-  });
+  const portals=[];
+  [-7.2,0,7.2].forEach((x,i)=>portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials)));
 
-  // A night amusement park grows around the central star plaza.
   const rides=[];
-  rides.push(buildCarousel(scene,materials,-7.25,0.0));
-  rides.push(buildFerrisWheel(scene,materials,13.1,-3.92,-3.7));
+  rides.push(buildCarousel(scene,materials,-21.5,0.7));
+  rides.push(buildFerrisWheel(scene,materials,25,0.78,-17));
   buildRollerCoaster(scene,materials);
-  buildTicketBooth(scene,materials,-4.9,7.05);
+  buildTicketBooth(scene,materials,-4.8,30.5);
   buildEntranceGate(scene,materials);
   buildArcadeStalls(scene,materials);
 
-  // Sculptural lantern trees around the castle garden.
-  [[-7.6,-3.3],[-7.8,0.6],[7.6,-3.0],[7.8,0.8],[-5.6,-7.4],[5.4,-7.5]].forEach((p,i) => {
-    createTree(island, p[0], p[1], 0.68 + (i % 3) * 0.12, { wood: materials.wood });
+  // Large overhead district markers make it easy to read the park at a glance.
+  [
+    {x:-21.5,y:5.0,z:8.0,title:"星光嘉年華",subtitle:"STARLIGHT CARNIVAL"},
+    {x:25,y:8.2,z:-7.0,title:"銀河冒險區",subtitle:"GALAXY ADVENTURE"},
+    {x:-29,y:6.0,z:-9.0,title:"星辰觀測站",subtitle:"STARGAZER POINT"},
+    {x:0,y:8.8,z:-12.5,title:"星夢城堡",subtitle:"DREAM CASTLE"}
+  ].forEach(item=>{
+    const sign=makeLabelSprite({title:item.title,subtitle:item.subtitle});
+    if(sign){sign.position.set(item.x,item.y,item.z);sign.scale.set(4.9,1.35,1);island.add(sign)}
   });
 
-  // A soft cloud layer beneath the main island.
-  const clouds = new THREE.Group();
-  scene.add(clouds);
-  for (let i = 0; i < 12; i++) {
-    const angle = (i / 12) * Math.PI * 2;
-    const radius = 12 + (i % 3) * 2.1;
-    const cloud = addMesh(clouds, new THREE.SphereGeometry(1, 12, 8),
-      new THREE.MeshBasicMaterial({ color: i % 2 ? 0x7473b8 : 0x9d83c4, transparent: true, opacity: 0.08, depthWrite: false }),
-      [Math.cos(angle) * radius, -5.0 - (i % 3) * 0.5, Math.sin(angle) * radius],
-      [2.8 + (i % 2), 0.58, 1.55], false, false);
-    cloud.userData.phase = angle;
+  // Warm lanterns, groves and small guests add scale and life to the walkways.
+  function addParkLamp(x,z,scale=1){
+    const lamp=new THREE.Group();lamp.position.set(x,0.72,z);island.add(lamp);
+    addMesh(lamp,new THREE.CylinderGeometry(0.075,0.12,2.65*scale,10),materials.darkStone,[0,1.32*scale,0]);
+    addMesh(lamp,new THREE.CylinderGeometry(0.19,0.24,0.13,12),materials.gold,[0,2.58*scale,0]);
+    addMesh(lamp,new THREE.SphereGeometry(0.2*scale,14,10),materials.lampGlow,[0,2.82*scale,0],null,false,false);
+    const halo=addMesh(lamp,new THREE.TorusGeometry(0.29*scale,0.035,6,28),materials.gold,[0,2.82*scale,0]);
+    halo.rotation.x=Math.PI/2;
   }
+  [
+    [-4,25],[4,25],[-5,14],[5,14],[-10,2],[10,2],[-17,8],[-26,8],
+    [-17,-9],[-29,-17],[17,8],[27,2],[18,-10],[31,-12],[-9,-20],[9,-20],
+    [-4,-28],[4,-28],[-34,15],[35,10],[-34,-5],[36,-3]
+  ].forEach((p,i)=>addParkLamp(p[0],p[1],i%4===0?1.12:1));
 
-  return { materials, island, compass, compassHalo, portals, planet, planetRing, clouds, rides };
+  [
+    [-35,23],[-32,27],[-27,25],[-20,23],[-14,28],[14,27],[20,24],[27,26],
+    [33,23],[36,17],[-36,3],[-34,-8],[-33,-23],[-25,-29],[-16,-31],[15,-31],
+    [25,-29],[34,-23],[37,-13],[36,2],[-9,-34],[0,-35],[9,-34],[-2,22],[2,22]
+  ].forEach((p,i)=>createTree(island,p[0],p[1],0.62+(i%3)*0.12,{
+    wood:materials.wood,foliageA:materials.foliageA,foliageB:materials.foliageB,
+    foliageC:materials.foliageC,gold:materials.gold
+  }));
+
+  function addGuest(x,z,outfitIndex,facing=0){
+    const guest=new THREE.Group();guest.position.set(x,0.62,z);guest.rotation.y=facing;island.add(guest);
+    addMesh(guest,new THREE.SphereGeometry(0.27,12,10),materials.npcClothes[outfitIndex%materials.npcClothes.length],[0,0.72,0],[0.78,1.18,0.68]);
+    addMesh(guest,new THREE.SphereGeometry(0.2,12,10),materials.npcSkin,[0,1.27,0.015]);
+    addMesh(guest,new THREE.ConeGeometry(0.21,0.25,8),materials.npcClothes[outfitIndex%materials.npcClothes.length],[0,1.52,0]);
+    return guest;
+  }
+  const guests=[
+    addGuest(-5.5,12.5,0,0.6),addGuest(5.8,11.8,1,-0.7),
+    addGuest(-17.2,5.4,2,1.2),addGuest(-25.5,3.8,3,-0.8),
+    addGuest(21,-9,1,2.1),addGuest(28.3,-8.5,0,-1.7),
+    addGuest(-3.2,27,3,0.2),addGuest(5.5,27.5,2,-0.3)
+  ];
+
+  const clouds=new THREE.Group();scene.add(clouds);
+  for(let i=0;i<18;i++){
+    const angle=(i/18)*Math.PI*2,radius=34+(i%4)*4.5;
+    const cloud=addMesh(clouds,new THREE.SphereGeometry(1,12,8),new THREE.MeshBasicMaterial({
+      color:i%2?0x7473b8:0x9d83c4,transparent:true,opacity:0.075,depthWrite:false
+    }),[Math.cos(angle)*radius,-6.1-(i%3)*0.65,Math.sin(angle)*radius],[4.4+(i%3),0.72,2.5],false,false);
+    cloud.userData.phase=angle;
+  }
+  return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,guests,playableRadius:41.2};
 }
 
 function createStarfield(scene, count = 620) {
