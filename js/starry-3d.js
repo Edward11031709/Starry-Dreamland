@@ -292,6 +292,52 @@ function buildArcadeStalls(scene,materials){
   return stalls;
 }
 
+function buildTeacupRide(scene,materials,x,z){
+  const root=new THREE.Group();root.position.set(x,0.78,z);scene.add(root);
+  addMesh(root,new THREE.CylinderGeometry(2.65,2.82,0.34,48),materials.darkStone,[0,0.18,0]);
+  addMesh(root,new THREE.TorusGeometry(2.7,0.11,10,64),materials.gold,[0,0.38,0]).rotation.x=Math.PI/2;
+  const ride=new THREE.Group();ride.position.y=0.42;root.add(ride);
+  addMesh(ride,new THREE.CylinderGeometry(0.25,0.32,2.4,16),materials.silverMetal,[0,1.2,0]);
+  addMesh(ride,new THREE.CylinderGeometry(1.45,0.48,0.32,32),materials.roof,[0,2.42,0]);
+  addMesh(ride,new THREE.ConeGeometry(0.68,0.62,12),materials.gold,[0,2.9,0]);
+  const colors=[0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9,0xb59be5,0xe49b82];
+  for(let i=0;i<6;i++){
+    const a=i/6*Math.PI*2,cup=new THREE.Group();
+    cup.position.set(Math.cos(a)*1.72,0.45,Math.sin(a)*1.72);ride.add(cup);
+    const mat=makeMaterial(colors[i],0.34,0.28);
+    addMesh(cup,new THREE.CylinderGeometry(0.32,0.48,0.58,20),mat,[0,0.24,0]);
+    addMesh(cup,new THREE.TorusGeometry(0.39,0.055,8,28),materials.gold,[0,0.53,0]);
+    addMesh(cup,new THREE.SphereGeometry(0.14,12,10),materials.lampGlow,[0,0.62,0],null,false,false);
+  }
+  const sign=makeLabelSprite({title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS"});
+  if(sign){sign.position.set(0,4.15,0);sign.scale.set(3.5,0.92,1);root.add(sign)}
+  return {object:ride,axis:"y",speed:0.34};
+}
+
+function buildDropTower(scene,materials,x,z){
+  const root=new THREE.Group();root.position.set(x,0.78,z);scene.add(root);
+  addMesh(root,new THREE.CylinderGeometry(2.2,2.45,0.38,40),materials.darkStone,[0,0.2,0]);
+  addMesh(root,new THREE.TorusGeometry(2.28,0.1,8,56),materials.gold,[0,0.42,0]).rotation.x=Math.PI/2;
+  addMesh(root,new THREE.CylinderGeometry(0.34,0.52,7.1,16),materials.silverMetal,[0,3.95,0]);
+  for(let i=0;i<4;i++){
+    const a=i/4*Math.PI*2,xp=Math.cos(a)*1.08,zp=Math.sin(a)*1.08;
+    const leg=addMesh(root,new THREE.CylinderGeometry(0.11,0.16,6.8,10),materials.darkStone,[xp,3.6,zp]);
+    leg.rotation.z=-Math.cos(a)*0.14;leg.rotation.x=Math.sin(a)*0.14;
+    addMesh(root,new THREE.SphereGeometry(0.16,12,10),materials.lampGlow,[xp,7.0,zp],null,false,false);
+  }
+  const gondola=new THREE.Group();root.add(gondola);gondola.position.y=1.7;
+  addMesh(gondola,new THREE.TorusGeometry(1.05,0.16,10,48),materials.gold,[0,0,0]);
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2;
+    addMesh(gondola,new THREE.BoxGeometry(0.42,0.48,0.52),
+      makeMaterial([0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9][i%4],0.38,0.22),
+      [Math.cos(a)*0.95,0,Math.sin(a)*0.95]);
+  }
+  const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP"});
+  if(sign){sign.position.set(0,8.8,0);sign.scale.set(3.7,0.98,1);root.add(sign)}
+  return {object:gondola,axis:"lift",baseY:1.4,range:3.9,speed:0.82,phase:Math.random()*Math.PI*2};
+}
+
 function buildEnvironment(scene) {
   const materials = {
     rock: makeMaterial(0x343b5b, 0.94, 0.04), rockLight: makeMaterial(0x4c5274, 0.88, 0.08),
@@ -363,6 +409,8 @@ function buildEnvironment(scene) {
     [[0,15],[10,15],[18,9],[23,1],[25,-8],[25,-18]],
     [[0,-15],[-9,-20],[-20,-21],[-30,-17]],
     [[0,-15],[9,-20],[20,-21],[30,-17]],
+    [[-6,-5],[-10,-9],[-13,-11.5],[-20,-19]],
+    [[6,-5],[10,-8],[13,-10],[20,-15],[25,-17]],
     [[-22,1],[-29,5],[-34,12]],[[25,-8],[34,-2],[36,8]]
   ].forEach(path=>addWalkway(path));
 
@@ -372,6 +420,7 @@ function buildEnvironment(scene) {
     ring.rotation.x=Math.PI/2;
   }
   addDistrictPlaza(0,0,12.8);addDistrictPlaza(-21.5,0.7,7.1);
+  addDistrictPlaza(-13,-11.5,5.4);addDistrictPlaza(13,-10,5.4);
   addDistrictPlaza(-25,-19,7.0);addDistrictPlaza(25,-17,7.0);addDistrictPlaza(0,31,6.2);
 
   // The old satellite islands become reachable themed gardens at the far end of the park.
@@ -400,6 +449,8 @@ function buildEnvironment(scene) {
 
   const rides=[];
   rides.push(buildCarousel(scene,materials,-21.5,0.7));
+  rides.push(buildTeacupRide(scene,materials,-13,-11.5));
+  rides.push(buildDropTower(scene,materials,13,-10));
   rides.push(buildFerrisWheel(scene,materials,25,0.78,-17));
   buildRollerCoaster(scene,materials);
   buildTicketBooth(scene,materials,-4.8,30.5);
@@ -410,6 +461,8 @@ function buildEnvironment(scene) {
   [
     {x:-21.5,y:5.0,z:8.0,title:"星光嘉年華",subtitle:"STARLIGHT CARNIVAL"},
     {x:25,y:8.2,z:-7.0,title:"銀河冒險區",subtitle:"GALAXY ADVENTURE"},
+    {x:-13,y:5.2,z:-5.8,title:"星月茶杯",subtitle:"MOONLIGHT TEA CUPS"},
+    {x:13,y:9.2,z:-4.8,title:"自由落體塔",subtitle:"GALAXY DROP TOWER"},
     {x:-29,y:6.0,z:-9.0,title:"星辰觀測站",subtitle:"STARGAZER POINT"},
     {x:0,y:8.8,z:-12.5,title:"星夢城堡",subtitle:"DREAM CASTLE"}
   ].forEach(item=>{
@@ -452,7 +505,8 @@ function buildEnvironment(scene) {
     addGuest(-5.5,12.5,0,0.6),addGuest(5.8,11.8,1,-0.7),
     addGuest(-17.2,5.4,2,1.2),addGuest(-25.5,3.8,3,-0.8),
     addGuest(21,-9,1,2.1),addGuest(28.3,-8.5,0,-1.7),
-    addGuest(-3.2,27,3,0.2),addGuest(5.5,27.5,2,-0.3)
+    addGuest(-3.2,27,3,0.2),addGuest(5.5,27.5,2,-0.3),
+    addGuest(-11.2,-8,0,0.8),addGuest(14.8,-7.5,1,-1.1)
   ];
 
   const clouds=new THREE.Group();scene.add(clouds);
@@ -729,7 +783,10 @@ function mount(host) {
     environment.compass.rotation.y += delta * 0.36;
     environment.rides.forEach(ride => {
       if (ride.axis === "y") ride.object.rotation.y += delta * ride.speed;
-      else ride.object.rotation.z += delta * ride.speed;
+      else if (ride.axis === "lift") {
+        const wave = (Math.sin(t * ride.speed + ride.phase) + 1) * 0.5;
+        ride.object.position.y = ride.baseY + wave * ride.range;
+      } else ride.object.rotation.z += delta * ride.speed;
     });
     environment.compassHalo.rotation.z += delta * 0.17;
     environment.planet.rotation.y += delta * 0.045;
