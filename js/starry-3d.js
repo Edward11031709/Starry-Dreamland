@@ -610,10 +610,13 @@ function buildEnvironment(scene) {
     [-35,23],[-32,27],[-27,25],[-20,23],[-14,28],[14,27],[20,24],[27,26],
     [33,23],[36,17],[-36,3],[-34,-8],[-33,-23],[-25,-29],[-16,-31],[15,-31],
     [25,-29],[34,-23],[37,-13],[36,2],[-9,-34],[0,-35],[9,-34],[-2,22],[2,22]
-  ].forEach((p,i)=>createTree(island,p[0],p[1],0.62+(i%3)*0.12,{
-    wood:materials.wood,foliageA:materials.foliageA,foliageB:materials.foliageB,
-    foliageC:materials.foliageC,gold:materials.gold
-  }));
+  ].forEach((p,i)=>{
+    createTree(island,p[0],p[1],0.62+(i%3)*0.12,{
+      wood:materials.wood,foliageA:materials.foliageA,foliageB:materials.foliageB,
+      foliageC:materials.foliageC,gold:materials.gold
+    });
+    addCollider(p[0],p[1],0.42,"星樹");
+  });
 
   function addGuest(x,z,outfitIndex,facing=0){
     const guest=new THREE.Group();guest.position.set(x,0.62,z);guest.rotation.y=facing;island.add(guest);
@@ -850,7 +853,7 @@ function mount(host) {
   const starfield = createStarfield(scene, isSmall ? 420 : 760);
   const environment = buildEnvironment(scene);
   let player = buildPlayer(scene,host.dataset.avatar || "wanderer");
-  player.position.set(0, 0.60, 33.0);
+  player.position.set(0, 0.68, 33.0);
   camera.position.set(
     player.position.x - Math.sin(cameraState.yaw) * Math.cos(cameraState.pitch) * cameraState.distance,
     player.position.y + Math.sin(cameraState.pitch) * cameraState.distance + 1.0,
@@ -901,7 +904,7 @@ function mount(host) {
   function mountCarousel() {
     if(world.mountedRide)return;
     world.mountedRide=environment.carousel.rideSeat;
-    player.visible=false;
+    player.visible=true;player.scale.setScalar(0.72);
     const status=document.getElementById("starry-3d-status");
     if(status)status.textContent="正在乘坐星光旋轉木馬 · 按 E 下車";
   }
@@ -911,7 +914,7 @@ function mount(host) {
     world.mountedRide=null;
     player.visible=true;
     const root=environment.carousel.root;
-    player.position.set(root.position.x+4.25,surfaceAt(root.position.x+4.25,root.position.z)-0.105,root.position.z);
+    player.scale.setScalar(1);player.position.set(root.position.x+4.25,surfaceAt(root.position.x+4.25,root.position.z)-0.025,root.position.z);
     const status=document.getElementById("starry-3d-status");
     if(status)status.textContent="WASD 探索園區 · 找到設施按 E 互動";
   }
@@ -1043,7 +1046,7 @@ function mount(host) {
       const mountedPosition=new THREE.Vector3();
       world.mountedRide.getWorldPosition(mountedPosition);
       player.position.copy(mountedPosition);
-      player.position.y+=0.2;
+      player.position.y-=0.18;player.rotation.y=environment.carousel.object.rotation.y;
       world.keys.clear();
     }else{
       const moving = move.lengthSq() > 0;
@@ -1068,7 +1071,7 @@ function mount(host) {
       }
       const ground=surfaceAt(player.position.x,player.position.z);
       const bob=moving?Math.abs(Math.sin(player.userData.walkPhase))*0.045:0;
-      player.position.y=THREE.MathUtils.lerp(player.position.y,ground-0.105+bob,Math.min(1,delta*12));
+      player.position.y=THREE.MathUtils.lerp(player.position.y,ground-0.025+bob,Math.min(1,delta*12));
     }
     player.userData.halo.rotation.z += delta * 0.45;
     if(player.userData.floatingStar)player.userData.floatingStar.rotation.y+=delta*0.75;
