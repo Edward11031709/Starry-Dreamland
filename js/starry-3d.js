@@ -940,7 +940,7 @@ function mount(host) {
     host, scene, renderer, camera, starfield, environment,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
     cameraState, keys: new Set(), mountedRide: null, minimapLast: 0,
-    localUserId: host.dataset.userId || null, otherPlayers: new Map(),
+    localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
     running: true, frame: 0, lastTime: 0
   };
@@ -1014,8 +1014,8 @@ function mount(host) {
   }
 
   function upsertRemotePlayer(info){
-    if(!info||!info.userId||info.userId===world.localUserId)return;
-    const id=String(info.userId);
+    if(!info||!(info.sessionId||info.userId)||(info.sessionId||info.userId)===world.localUserId)return;
+    const id=String(info.sessionId||info.userId);
     const x=THREE.MathUtils.clamp(Number(info.x)||0,-environment.playableRadius,environment.playableRadius);
     const z=THREE.MathUtils.clamp(Number(info.z)||0,-environment.playableRadius,environment.playableRadius);
     const avatarId=info.avatarId||"wanderer";
@@ -1038,8 +1038,8 @@ function mount(host) {
     const list=event.detail&&Array.isArray(event.detail.players)?event.detail.players:[];
     const visible=new Set();
     list.forEach(info=>{
-      if(!info||!info.userId||info.userId===world.localUserId)return;
-      visible.add(String(info.userId));
+      if(!info||!(info.sessionId||info.userId)||(info.sessionId||info.userId)===world.localUserId)return;
+      visible.add(String(info.sessionId||info.userId));
       upsertRemotePlayer(info);
     });
     for(const [id,entry] of world.otherPlayers){
