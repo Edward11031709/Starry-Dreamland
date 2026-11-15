@@ -19,21 +19,35 @@
 
 成人星塵與星芽星塵分開累積，排行榜亦分成成人挑戰榜與星芽探索榜。星際競技館目前尚未開放。
 
+## 全球帳號與雲端資料
+
+星夢樂園已建立 Supabase 專案，並建立：
+- `sd_profiles`：玩家暱稱及帳號資料。
+- `sd_game_records`：成人／星芽遊戲分區、分數、狀態及星塵獎勵。
+- 個人遊玩紀錄及全球最佳成績 RPC。
+- RLS 存取政策；內部高權限函式放在未公開的 `private` schema。
+
+網站已接上 Supabase JavaScript SDK（固定版本）及 Project URL／公開 Publishable key，登入介面支援電子郵件註冊、登入、登出、重設密碼、個人資料／紀錄同步及全球排行榜。
+
+**首次正式註冊前，專案擁有者仍須在 Supabase Dashboard → Authentication → URL Configuration 設定：**
+
+- Site URL：`https://edward11031709.github.io/Starry-Dreamland/`
+- Redirect URLs：加入同一個完整網址。
+
+設定後再使用正式網站測試註冊與驗證信。Supabase 內建郵件寄送額度較適合初期測試；公開營運前建議設定自有 SMTP。
+
+### 安全與資料限制
+- 網站只使用公開 Publishable key；不可把 `sb_secret_`、`service_role`、資料庫密碼或管理員金鑰放入公開 Repository。
+- 資料表啟用 RLS，個人紀錄限制為本人；全球排行榜只回傳暱稱與最佳成績。
+- 舊版本機展示資料仍留在使用過的瀏覽器，**不會自動匯入新雲端帳號**。
+- 目前遊戲分數仍由前端計算。若未來要做正式競技，需另外增加伺服器端計分／驗證，避免偽造分數。
+- 免費 Supabase 專案閒置時可能暫停；暫停後需在官方期限內從 Dashboard 恢復。
+
+完整設定與維護說明：[Supabase 全球帳號設定指南](docs/SUPABASE_SETUP_zh-TW.md)。
+
 ## 關卡變化
 
 每次開始遊戲都會重新生成節奏、密碼、管線、星點位置或迷宮路線，不再使用固定順序與同一張迷宮地圖。
-
-## 目前資料模式與全球帳號
-
-目前公開網站仍使用瀏覽器 `localStorage` 保存暱稱、積分與紀錄。資料只存在目前裝置及瀏覽器，尚未跨裝置同步，也尚未啟用全球註冊／登入。
-
-全球帳號的雲端資料結構已先準備在：
-- [Supabase 全球帳號設定指南](docs/SUPABASE_SETUP_zh-TW.md)
-- [Supabase 資料表與 RLS SQL](supabase/schema.sql)
-
-要啟用全球登入，仍須建立 Supabase 專案、執行 SQL，並將 Project URL 與公開 publishable/anon key 接入網站。**不可將 service_role key 或其他私密金鑰放進公開 Repository。**
-
-GitHub Pages 只負責發布靜態網站；全球登入、跨裝置資料與共享排行榜由 Supabase 提供。若將來要正式競技，仍需再加伺服器端分數驗證，避免客戶端偽造分數。
 
 ## GitHub Pages 發布
 
