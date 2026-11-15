@@ -106,7 +106,14 @@ function addTower(parent,x,z,baseY,height,radius,materials,detail=true){
  const group=new THREE.Group();group.position.set(x,baseY,z);parent.add(group);
  addMesh(group,new THREE.CylinderGeometry(radius*1.34,radius*1.42,0.32,20),materials.darkStone,[0,0.16,0]);
  addMesh(group,new THREE.CylinderGeometry(radius*1.08,radius*1.18,0.14,20),materials.gold,[0,0.37,0]);
- addMesh(group,new THREE.CylinderGeometry(radius*0.84,radius,height,20,1),materials.wall,[0,height/2+0.42,0]);
+ addMesh(group,new THREE.CylinderGeometry(radius*0.84,radius,height,24,2),materials.wall,[0,height/2+0.42,0]);
+ // Narrow silver ribs catch the moonlight and give each round tower a carved silhouette.
+ for(let rib=0;rib<10;rib++){
+  const angle=rib/10*Math.PI*2,rr=radius*0.86;
+  const strip=addMesh(group,new THREE.BoxGeometry(0.055,height*0.78,0.065),materials.silverMetal,
+   [Math.cos(angle)*rr,height*0.46+0.42,Math.sin(angle)*rr],null,false,false);
+  strip.rotation.y=-angle;
+ }
  addMesh(group,new THREE.CylinderGeometry(radius*0.98,radius*0.98,0.16,20),materials.trim,[0,height+0.42,0]);
  if(detail){
   const windowMat=new THREE.MeshStandardMaterial({color:0xffe5b0,emissive:0xffc66f,emissiveIntensity:1.7,roughness:0.26,metalness:0.12});
@@ -265,6 +272,22 @@ function buildCastle(scene,materials){
    const arch=addMesh(castle,new THREE.TorusGeometry(0.23,0.038,7,26,Math.PI),materials.gold,[x,y+(y>2?0.39:0.23),2.03]);arch.rotation.z=Math.PI;
   });
  });
+ // A stained-glass astral rose window above the entrance gives the castle a clear signature.
+ const roseFrame=addMesh(castle,new THREE.TorusGeometry(0.56,0.075,10,64),materials.gold,[0,3.42,2.13]);
+ const roseInner=addMesh(castle,new THREE.TorusGeometry(0.43,0.028,7,56),materials.trim,[0,3.42,2.18]);
+ addMesh(castle,new THREE.CircleGeometry(0.42,48),new THREE.MeshPhysicalMaterial({
+  color:0x8275c7,emissive:0x33295e,emissiveIntensity:0.38,metalness:0.26,roughness:0.22,
+  transparent:true,opacity:0.92,side:THREE.DoubleSide
+ }),[0,3.42,2.19],null,false,false);
+ for(let ray=0;ray<8;ray++){
+  const angle=ray/8*Math.PI*2;
+  const spoke=addMesh(castle,new THREE.BoxGeometry(0.026,0.76,0.055),materials.gold,[0,3.42,2.225],null,false,false);
+  spoke.rotation.z=angle;
+  const gem=addMesh(castle,new THREE.OctahedronGeometry(0.09,1),ray%2?materials.crystal:materials.silverMetal,
+   [Math.cos(angle)*0.3,3.42+Math.sin(angle)*0.3,2.25],[0.7,1.15,0.7],null,false,false);
+  gem.rotation.z=angle;
+ }
+ addMesh(castle,new THREE.OctahedronGeometry(0.16,1),materials.crystal,[0,3.42,2.27],[0.7,1.3,0.7],null,false,false);
  // Ornate front portico: four columns, capitals and a luminous pointed arch.
  [-2.45,-0.82,0.82,2.45].forEach(x=>{
   addMesh(castle,new THREE.CylinderGeometry(0.105,0.15,2.55,14),materials.silverMetal,[x,1.62,2.0]);
@@ -1236,6 +1259,7 @@ function mount(host) {
   moonLight.shadow.bias = -0.00022;
   moonLight.shadow.normalBias = 0.035;
   moonLight.shadow.radius = isSmall ? 2 : 3;
+  moonLight.shadow.camera.updateProjectionMatrix();
   scene.add(moonLight);
 
   const fillLight = new THREE.DirectionalLight(0x9c91eb, 0.68);
