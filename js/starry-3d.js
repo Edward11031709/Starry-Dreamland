@@ -511,16 +511,36 @@ function buildCarousel(scene,materials,x,z){
     addMesh(horse,new THREE.SphereGeometry(0.19,16,12),coat,[0.42,0.73,0],[1.12,1.45,0.88]);
     addMesh(horse,new THREE.SphereGeometry(0.18,16,12),coat,[0.7,1.06,0.02],[1.2,0.88,0.8]);
     addMesh(horse,new THREE.SphereGeometry(0.1,12,10),materials.gold,[0.83,1.01,0.16],[0.8,0.65,0.65]);
+    [-1,1].forEach(side=>{
+      addMesh(horse,new THREE.SphereGeometry(0.026,12,10),materials.darkStone,[0.72,1.12,side*0.118],[1,1,0.6],false,false);
+      addMesh(horse,new THREE.SphereGeometry(0.011,8,8),materials.lampGlow,[0.731,1.13,side*0.128],null,false,false);
+      addMesh(horse,new THREE.SphereGeometry(0.023,10,8),materials.darkStone,[0.87,1.015,side*0.13],[1,0.6,0.65],false,false);
+    });
+    const browBand=addMesh(horse,new THREE.TorusGeometry(0.18,0.018,6,24),materials.gold,[0.57,0.93,0]);
+    browBand.rotation.y=Math.PI/2;
+    const bridle=addMesh(horse,new THREE.TorusGeometry(0.23,0.022,6,28),materials.trim,[0.69,1.02,0]);
+    bridle.rotation.y=Math.PI/2;
+    addMesh(horse,new THREE.SphereGeometry(0.045,10,8),materials.crystal,[0.68,1.23,0],[0.7,1.25,0.7],null,false,false);
     addMesh(horse,new THREE.ConeGeometry(0.075,0.23,8),mane,[0.58,1.29,-0.09],[0.8,1,0.8]);
     addMesh(horse,new THREE.ConeGeometry(0.075,0.23,8),mane,[0.58,1.29,0.12],[0.8,1,0.8]);
     addMesh(horse,new THREE.SphereGeometry(0.12,12,10),mane,[0.36,1.03,-0.13],[0.8,1.5,0.85]);
     addMesh(horse,new THREE.SphereGeometry(0.13,12,10),mane,[-0.45,0.7,0],[0.65,1.2,0.7]);
+    for(let tuft=0;tuft<4;tuft++){
+      const lock=addMesh(horse,new THREE.ConeGeometry(0.05,0.22,7),mane,[0.16+tuft*0.09,1.2,-0.16]);
+      lock.rotation.z=-0.42;
+    }
+    const tail=addMesh(horse,new THREE.ConeGeometry(0.085,0.46,9),mane,[-0.62,0.72,0]);
+    tail.rotation.z=Math.PI/2.35;
     addMesh(horse,new THREE.BoxGeometry(0.58,0.12,0.48),materials.gold,[0.02,0.88,0]);
     addMesh(horse,new THREE.BoxGeometry(0.48,0.08,0.4),materials.crystal,[0.02,0.97,0],null,false,false);
+    addMesh(horse,new THREE.TorusGeometry(0.15,0.022,6,28),materials.gold,[0.02,1.04,0.22]);
+    addMesh(horse,new THREE.OctahedronGeometry(0.095,1),materials.crystal,[0.03,1.11,0.24],[0.72,1.2,0.72],null,false,false);
     for(let leg=0;leg<4;leg++){
       const lx=leg<2?0.27:-0.25,lz=leg%2?0.23:-0.23;
-      addMesh(horse,new THREE.CylinderGeometry(0.055,0.07,0.56,10),coat,[lx,0.2,lz]);
-      addMesh(horse,new THREE.CylinderGeometry(0.07,0.09,0.12,10),materials.darkStone,[lx,0.02,lz]);
+      addMesh(horse,new THREE.CylinderGeometry(0.055,0.07,0.56,12),coat,[lx,0.2,lz]);
+      addMesh(horse,new THREE.TorusGeometry(0.069,0.016,6,18),materials.gold,[lx,0.075,lz]).rotation.x=Math.PI/2;
+      addMesh(horse,new THREE.CylinderGeometry(0.07,0.09,0.12,12),materials.darkStone,[lx,0.02,lz]);
+      addMesh(horse,new THREE.CylinderGeometry(0.075,0.082,0.035,12),materials.silverMetal,[lx,-0.035,lz],null,false,false);
     }
     addMesh(horse,new THREE.TorusGeometry(0.26,0.035,7,24),materials.gold,[0,0.78,0]);
     addMesh(horse,new THREE.TorusGeometry(0.19,0.025,6,24),materials.gold,[0.48,0.76,0]).rotation.y=Math.PI/2;
@@ -547,6 +567,7 @@ function buildFerrisWheel(scene,materials,x,y,z){
   addMesh(wheel,new THREE.TorusGeometry(2.28,0.045,8,72),materials.silver,[0,0,0]);
   addMesh(wheel,new THREE.TorusGeometry(2.8,0.028,7,88),materials.crystal,[0,0,0]);
   let rideSeat=null;const gondolas=[];
+  const cabinGlass=new THREE.MeshPhysicalMaterial({color:0x8fd7ee,emissive:0x203d67,emissiveIntensity:0.18,roughness:0.16,metalness:0.2,transparent:true,opacity:0.58,clearcoat:1,side:THREE.DoubleSide});
   for(let i=0;i<10;i++){
     const a=i/10*Math.PI*2;
     const spoke=addMesh(wheel,new THREE.BoxGeometry(0.075,5.18,0.09),materials.silverMetal,[0,0,0]);spoke.rotation.z=a;
@@ -558,6 +579,12 @@ function buildFerrisWheel(scene,materials,x,y,z){
     addMesh(gondola,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[0,0.22,0]);
     addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[-0.28,-0.05,0]);
     addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[0.28,-0.05,0]);
+    addMesh(gondola,new THREE.BoxGeometry(0.3,0.2,0.035),cabinGlass,[0,-0.06,0.255],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.035,0.25,0.045),materials.gold,[-0.17,-0.06,0.275],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.035,0.25,0.045),materials.gold,[0.17,-0.06,0.275],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.37,0.055,0.06),materials.gold,[0,-0.2,0.27],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.34,0.07,0.22),materials.paving,[0,-0.25,0],null,false,false);
+    addMesh(gondola,new THREE.OctahedronGeometry(0.075,1),materials.crystal,[0,-0.38,0.265],[0.72,1.25,0.72],null,false,false);
     const canopy=addMesh(gondola,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[0,0.44,0]);canopy.rotation.y=Math.PI/8;
     addMesh(gondola,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[0,0.61,0],[0.8,1.2,0.8],null,false,false);
     addMesh(gondola,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[0,-0.36,0.24]);
