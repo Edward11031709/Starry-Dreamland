@@ -362,6 +362,25 @@ function buildCastle(scene,materials){
  const crown=addMesh(castle,new THREE.OctahedronGeometry(0.4,1),materials.crystal,[0,9.75,-2.32],[0.75,1.35,0.75]);crown.rotation.z=Math.PI/4;
  const crest=addMesh(castle,new THREE.TorusGeometry(0.52,0.055,8,48),materials.gold,[0,5.52,0.98]);crest.rotation.x=Math.PI/2;
  const star=addMesh(castle,new THREE.OctahedronGeometry(0.29,1),materials.crystal,[0,5.52,1.05],[0.9,1.35,0.9]);star.rotation.z=Math.PI/4;
+ // Front balcony: a layered stone ledge, gold handrail and individually spaced balusters.
+ addMesh(castle,new THREE.BoxGeometry(5.55,0.16,0.42),materials.darkStone,[0,3.18,2.23]);
+ addMesh(castle,new THREE.BoxGeometry(5.72,0.055,0.48),materials.gold,[0,3.28,2.23],null,false,false);
+ [-2.55,-1.95,-1.35,-0.75,-0.15,0.45,1.05,1.65,2.25].forEach(x=>{
+  addMesh(castle,new THREE.CylinderGeometry(0.027,0.035,0.43,8),materials.silverMetal,[x,3.5,2.36],null,false,false);
+ });
+ addMesh(castle,new THREE.BoxGeometry(5.55,0.06,0.06),materials.gold,[0,3.73,2.36],null,false,false);
+ // A second roof tier gives the rear keep a more recognizable fairytale silhouette.
+ const keepRoof=addMesh(castle,new THREE.ConeGeometry(2.42,1.36,4),materials.roof,[0,5.78,-0.78]);
+ keepRoof.rotation.y=Math.PI/4;
+ addMesh(castle,new THREE.TorusGeometry(1.7,0.045,8,48),materials.gold,[0,6.34,-0.78]).rotation.x=Math.PI/2;
+ // Small ceremonial pennants top the four corner turrets.
+ [[-3.32,-1.62],[3.32,-1.62],[-3.34,1.44],[3.34,1.44]].forEach(([x,z],i)=>{
+  const pole=new THREE.Group();pole.position.set(x,5.72,z);castle.add(pole);
+  addMesh(pole,new THREE.CylinderGeometry(0.025,0.035,0.82,8),materials.gold,[0,0.4,0]);
+  const pennant=addMesh(pole,new THREE.ConeGeometry(0.19,0.48,3),i%2?materials.trim:materials.crystal,[0.17,0.48,0],[1,1,0.28]);
+  pennant.rotation.z=Math.PI/2;
+  addMesh(pole,new THREE.OctahedronGeometry(0.065,1),materials.gold,[0,0.86,0],[0.75,1.35,0.75],null,false,false);
+ });
  const light=new THREE.PointLight(0xb9a5ff,18,20,2);light.position.set(0,5.8,1.5);castle.add(light);
  const warm=new THREE.PointLight(0xffd58e,13,14,2);warm.position.set(0,3.2,3.4);castle.add(warm);
  // A low circular garden rail gives the keep a finished base without blocking the path.
