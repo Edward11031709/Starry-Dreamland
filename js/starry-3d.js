@@ -362,6 +362,29 @@ function buildCastle(scene,materials){
  const crown=addMesh(castle,new THREE.OctahedronGeometry(0.4,1),materials.crystal,[0,9.75,-2.32],[0.75,1.35,0.75]);crown.rotation.z=Math.PI/4;
  const crest=addMesh(castle,new THREE.TorusGeometry(0.52,0.055,8,48),materials.gold,[0,5.52,0.98]);crest.rotation.x=Math.PI/2;
  const star=addMesh(castle,new THREE.OctahedronGeometry(0.29,1),materials.crystal,[0,5.52,1.05],[0.9,1.35,0.9]);star.rotation.z=Math.PI/4;
+ // Paired side balconies frame the rose window but deliberately leave its centre unobstructed.
+ [-1,1].forEach(side=>{
+  const balconyX=side*1.95;
+  addMesh(castle,new THREE.BoxGeometry(1.72,0.16,0.42),materials.darkStone,[balconyX,3.18,2.23]);
+  addMesh(castle,new THREE.BoxGeometry(1.82,0.055,0.48),materials.gold,[balconyX,3.28,2.23],null,false,false);
+  [-0.66,-0.22,0.22,0.66].forEach(offset=>{
+   addMesh(castle,new THREE.CylinderGeometry(0.027,0.035,0.43,8),materials.silverMetal,
+    [balconyX+offset,3.5,2.36],null,false,false);
+  });
+  addMesh(castle,new THREE.BoxGeometry(1.72,0.06,0.06),materials.gold,[balconyX,3.73,2.36],null,false,false);
+ });
+ // A second roof tier gives the rear keep a more recognizable fairytale silhouette.
+ const keepRoof=addMesh(castle,new THREE.ConeGeometry(2.42,1.36,4),materials.roof,[0,5.78,-0.78]);
+ keepRoof.rotation.y=Math.PI/4;
+ addMesh(castle,new THREE.TorusGeometry(1.7,0.045,8,48),materials.gold,[0,6.34,-0.78]).rotation.x=Math.PI/2;
+ // Small ceremonial pennants top the four corner turrets.
+ [[-3.32,-1.62],[3.32,-1.62],[-3.34,1.44],[3.34,1.44]].forEach(([x,z],i)=>{
+  const pole=new THREE.Group();pole.position.set(x,5.72,z);castle.add(pole);
+  addMesh(pole,new THREE.CylinderGeometry(0.025,0.035,0.82,8),materials.gold,[0,0.4,0]);
+  const pennant=addMesh(pole,new THREE.ConeGeometry(0.19,0.48,3),i%2?materials.trim:materials.crystal,[0.17,0.48,0],[1,1,0.28]);
+  pennant.rotation.z=Math.PI/2;
+  addMesh(pole,new THREE.OctahedronGeometry(0.065,1),materials.gold,[0,0.86,0],[0.75,1.35,0.75],null,false,false);
+ });
  const light=new THREE.PointLight(0xb9a5ff,18,20,2);light.position.set(0,5.8,1.5);castle.add(light);
  const warm=new THREE.PointLight(0xffd58e,13,14,2);warm.position.set(0,3.2,3.4);castle.add(warm);
  // A low circular garden rail gives the keep a finished base without blocking the path.
@@ -492,16 +515,36 @@ function buildCarousel(scene,materials,x,z){
     addMesh(horse,new THREE.SphereGeometry(0.19,16,12),coat,[0.42,0.73,0],[1.12,1.45,0.88]);
     addMesh(horse,new THREE.SphereGeometry(0.18,16,12),coat,[0.7,1.06,0.02],[1.2,0.88,0.8]);
     addMesh(horse,new THREE.SphereGeometry(0.1,12,10),materials.gold,[0.83,1.01,0.16],[0.8,0.65,0.65]);
+    [-1,1].forEach(side=>{
+      addMesh(horse,new THREE.SphereGeometry(0.026,12,10),materials.darkStone,[0.72,1.12,side*0.118],[1,1,0.6],false,false);
+      addMesh(horse,new THREE.SphereGeometry(0.011,8,8),materials.lampGlow,[0.731,1.13,side*0.128],null,false,false);
+      addMesh(horse,new THREE.SphereGeometry(0.023,10,8),materials.darkStone,[0.87,1.015,side*0.13],[1,0.6,0.65],false,false);
+    });
+    const browBand=addMesh(horse,new THREE.TorusGeometry(0.18,0.018,6,24),materials.gold,[0.57,0.93,0]);
+    browBand.rotation.y=Math.PI/2;
+    const bridle=addMesh(horse,new THREE.TorusGeometry(0.23,0.022,6,28),materials.trim,[0.69,1.02,0]);
+    bridle.rotation.y=Math.PI/2;
+    addMesh(horse,new THREE.SphereGeometry(0.045,10,8),materials.crystal,[0.68,1.23,0],[0.7,1.25,0.7],null,false,false);
     addMesh(horse,new THREE.ConeGeometry(0.075,0.23,8),mane,[0.58,1.29,-0.09],[0.8,1,0.8]);
     addMesh(horse,new THREE.ConeGeometry(0.075,0.23,8),mane,[0.58,1.29,0.12],[0.8,1,0.8]);
     addMesh(horse,new THREE.SphereGeometry(0.12,12,10),mane,[0.36,1.03,-0.13],[0.8,1.5,0.85]);
     addMesh(horse,new THREE.SphereGeometry(0.13,12,10),mane,[-0.45,0.7,0],[0.65,1.2,0.7]);
+    for(let tuft=0;tuft<4;tuft++){
+      const lock=addMesh(horse,new THREE.ConeGeometry(0.05,0.22,7),mane,[0.16+tuft*0.09,1.2,-0.16]);
+      lock.rotation.z=-0.42;
+    }
+    const tail=addMesh(horse,new THREE.ConeGeometry(0.085,0.46,9),mane,[-0.62,0.72,0]);
+    tail.rotation.z=Math.PI/2.35;
     addMesh(horse,new THREE.BoxGeometry(0.58,0.12,0.48),materials.gold,[0.02,0.88,0]);
     addMesh(horse,new THREE.BoxGeometry(0.48,0.08,0.4),materials.crystal,[0.02,0.97,0],null,false,false);
+    addMesh(horse,new THREE.TorusGeometry(0.15,0.022,6,28),materials.gold,[0.02,1.04,0.22]);
+    addMesh(horse,new THREE.OctahedronGeometry(0.095,1),materials.crystal,[0.03,1.11,0.24],[0.72,1.2,0.72],null,false,false);
     for(let leg=0;leg<4;leg++){
       const lx=leg<2?0.27:-0.25,lz=leg%2?0.23:-0.23;
-      addMesh(horse,new THREE.CylinderGeometry(0.055,0.07,0.56,10),coat,[lx,0.2,lz]);
-      addMesh(horse,new THREE.CylinderGeometry(0.07,0.09,0.12,10),materials.darkStone,[lx,0.02,lz]);
+      addMesh(horse,new THREE.CylinderGeometry(0.055,0.07,0.56,12),coat,[lx,0.2,lz]);
+      addMesh(horse,new THREE.TorusGeometry(0.069,0.016,6,18),materials.gold,[lx,0.075,lz]).rotation.x=Math.PI/2;
+      addMesh(horse,new THREE.CylinderGeometry(0.07,0.09,0.12,12),materials.darkStone,[lx,0.02,lz]);
+      addMesh(horse,new THREE.CylinderGeometry(0.075,0.082,0.035,12),materials.silverMetal,[lx,-0.035,lz],null,false,false);
     }
     addMesh(horse,new THREE.TorusGeometry(0.26,0.035,7,24),materials.gold,[0,0.78,0]);
     addMesh(horse,new THREE.TorusGeometry(0.19,0.025,6,24),materials.gold,[0.48,0.76,0]).rotation.y=Math.PI/2;
@@ -528,6 +571,7 @@ function buildFerrisWheel(scene,materials,x,y,z){
   addMesh(wheel,new THREE.TorusGeometry(2.28,0.045,8,72),materials.silver,[0,0,0]);
   addMesh(wheel,new THREE.TorusGeometry(2.8,0.028,7,88),materials.crystal,[0,0,0]);
   let rideSeat=null;const gondolas=[];
+  const cabinGlass=new THREE.MeshPhysicalMaterial({color:0x8fd7ee,emissive:0x203d67,emissiveIntensity:0.18,roughness:0.16,metalness:0.2,transparent:true,opacity:0.58,clearcoat:1,side:THREE.DoubleSide});
   for(let i=0;i<10;i++){
     const a=i/10*Math.PI*2;
     const spoke=addMesh(wheel,new THREE.BoxGeometry(0.075,5.18,0.09),materials.silverMetal,[0,0,0]);spoke.rotation.z=a;
@@ -539,6 +583,12 @@ function buildFerrisWheel(scene,materials,x,y,z){
     addMesh(gondola,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[0,0.22,0]);
     addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[-0.28,-0.05,0]);
     addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[0.28,-0.05,0]);
+    addMesh(gondola,new THREE.BoxGeometry(0.3,0.2,0.035),cabinGlass,[0,-0.06,0.255],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.035,0.25,0.045),materials.gold,[-0.17,-0.06,0.275],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.035,0.25,0.045),materials.gold,[0.17,-0.06,0.275],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.37,0.055,0.06),materials.gold,[0,-0.2,0.27],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.34,0.07,0.22),materials.paving,[0,-0.25,0],null,false,false);
+    addMesh(gondola,new THREE.OctahedronGeometry(0.075,1),materials.crystal,[0,-0.38,0.265],[0.72,1.25,0.72],null,false,false);
     const canopy=addMesh(gondola,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[0,0.44,0]);canopy.rotation.y=Math.PI/8;
     addMesh(gondola,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[0,0.61,0],[0.8,1.2,0.8],null,false,false);
     addMesh(gondola,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[0,-0.36,0.24]);
@@ -1147,6 +1197,11 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   const skin=makeMaterial(hex(appearance.skinTone),0.78,0.02);
   const metal=makeMaterial(style.metal,0.2,0.76,{clearcoat:1});
   const shadow=makeMaterial(0x1a1930,0.82,0.05);
+  const eyeWhite=makeMaterial(0xfff7ea,0.22,0.02,{clearcoat:1});
+  const iris=makeMaterial(hex(appearance.accentColor),0.18,0.32,{clearcoat:1,emissive:hex(appearance.accentColor),emissiveIntensity:0.13});
+  const pupil=makeMaterial(0x15172e,0.15,0.04);
+  const blush=makeMaterial(0xd78a9e,0.72,0.01);
+  const lip=makeMaterial(0x9a657f,0.55,0.02);
 
   // Tailored robe, layered mantle and a gemstone clasp.
   addMesh(player,new THREE.CylinderGeometry(0.25,0.48,0.98,24,3),robe,[0,0.77,0]);
@@ -1156,6 +1211,19 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   addMesh(player,new THREE.TorusGeometry(0.31,0.045,8,40),trim,[0,0.98,0]).rotation.x=Math.PI/2;
   addMesh(player,new THREE.BoxGeometry(0.54,0.1,0.18),metal,[0,0.99,0.02]);
   addMesh(player,new THREE.OctahedronGeometry(0.13,1),trim,[0,1.0,0.14],[0.72,1.15,0.72]);
+  // Layered collar, fitted waist sash, embroidered front panel and plated hem.
+  addMesh(player,new THREE.TorusGeometry(0.245,0.035,8,40),metal,[0,1.18,0.02]).rotation.x=Math.PI/2;
+  addMesh(player,new THREE.TorusGeometry(0.34,0.034,8,48),trim,[0,0.78,0]).rotation.x=Math.PI/2;
+  addMesh(player,new THREE.BoxGeometry(0.33,0.58,0.035),mantle,[0,0.68,0.238]);
+  addMesh(player,new THREE.BoxGeometry(0.055,0.48,0.025),trim,[-0.1,0.69,0.263],null,false,false);
+  addMesh(player,new THREE.BoxGeometry(0.055,0.48,0.025),trim,[0.1,0.69,0.263],null,false,false);
+  addMesh(player,new THREE.OctahedronGeometry(0.095,1),metal,[0,0.83,0.28],[0.75,1.15,0.55],null,false,false);
+  for(let seam=0;seam<5;seam++){
+    const x=-0.25+seam*0.125;
+    const stitch=addMesh(player,new THREE.BoxGeometry(0.018,0.34,0.012),seam%2?trim:metal,[x,0.43,0.27],null,false,false);
+    stitch.rotation.z=(seam-2)*0.035;
+  }
+  addMesh(player,new THREE.TorusGeometry(0.39,0.027,7,40),metal,[0,0.34,0]).rotation.x=Math.PI/2;
   // Boots, sleeves, gloves and decorative arm cuffs.
   [-0.19,0.19].forEach(x=>{
     addMesh(player,new THREE.CylinderGeometry(0.105,0.13,0.31,14),shadow,[x,0.19,0.02]);
@@ -1187,11 +1255,32 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     addMesh(player,new THREE.TorusGeometry(0.28,0.045,8,36),trim,[0,1.39,0.12]).rotation.x=Math.PI/2;
   }else{
     [-1,1].forEach(side=>addMesh(player,new THREE.SphereGeometry(0.07,12,10),hair,[side*0.23,1.39,-0.01],[0.8,1.4,0.9]));
+    addMesh(player,new THREE.TorusGeometry(0.11,0.018,6,24),trim,[0,1.67,-0.02]);
   }
+  // Fine strand highlights make the selected hairstyle read clearly in third person.
+  for(let strand=0;strand<3;strand++){
+    const side=strand-1;
+    const highlight=addMesh(player,new THREE.SphereGeometry(0.018,8,8),trim,
+      [side*0.12,1.61-Math.abs(side)*0.025,0.19-Math.abs(side)*0.018],[0.7,1.45,0.48],false,false);
+    highlight.rotation.z=side*0.18;
+  }
+  addMesh(player,new THREE.OctahedronGeometry(0.12,1),trim,[0,1.77,0.05],[0.72,1.2,0.72],false,false);
+  // Face sculpt: expressive eyes use the selected star-trim colour as the iris glow.
   [-1,1].forEach(side=>{
-    addMesh(player,new THREE.SphereGeometry(0.028,10,8),shadow,[side*0.095,1.5,0.242]);
+    addMesh(player,new THREE.SphereGeometry(0.047,18,14),eyeWhite,[side*0.095,1.5,0.236],[1.02,0.94,0.5]);
+    addMesh(player,new THREE.SphereGeometry(0.029,16,12),iris,[side*0.095,1.5,0.26],[1,1,0.52]);
+    addMesh(player,new THREE.SphereGeometry(0.015,12,10),pupil,[side*0.095,1.5,0.276],[1,1,0.55]);
+    addMesh(player,new THREE.SphereGeometry(0.009,10,8),eyeWhite,[side*0.106,1.517,0.284],null,false,false);
+    const brow=addMesh(player,new THREE.BoxGeometry(0.085,0.018,0.02),hair,[side*0.095,1.565,0.224]);
+    brow.rotation.z=side*-0.08;
+    addMesh(player,new THREE.SphereGeometry(0.052,14,10),skin,[side*0.252,1.455,0.012],[0.72,1,0.58]);
+    const earring=addMesh(player,new THREE.TorusGeometry(0.045,0.014,6,20),trim,[side*0.255,1.38,0.055]);
+    earring.rotation.x=Math.PI/2;
+    addMesh(player,new THREE.SphereGeometry(0.025,10,8),blush,[side*0.155,1.415,0.226],[1.3,0.68,0.24],false,false);
   });
-  addMesh(player,new THREE.SphereGeometry(0.045,12,10),skin,[0,1.41,0.238],[0.8,0.62,0.7]);
+  addMesh(player,new THREE.SphereGeometry(0.027,12,10),skin,[0,1.435,0.271],[0.78,0.95,0.65]);
+  const smile=addMesh(player,new THREE.TorusGeometry(0.045,0.009,6,20,Math.PI),lip,[0,1.365,0.255],null,false,false);
+  smile.rotation.z=Math.PI;
   addMesh(player,new THREE.TorusGeometry(0.285,0.045,8,36),trim,[0,1.68,0]).rotation.x=Math.PI/2;
 
   // Traveler archetype controls the silhouette; outfits remain independently selectable.
