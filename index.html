@@ -851,17 +851,25 @@ function mountCurrentPark(host=document.getElementById("starry-3d")){
  if(!host||!host.isConnected||!window.Starry3D?.mount)return false;
  try{
   window.Starry3D.mount(host);
-  return true;
+  return host.dataset.status==="ready";
  }catch(error){
   console.error("Starry Dreamland 3D scene mount failed:",error);
   host.dataset.status="fallback";
+  const stage=window.STARRY_3D_BOOT_STAGE||"unknown";
+  const reason=error&&error.message?error.message:String(error||"Unknown error");
+  host.dataset.errorStage=stage;
+  host.dataset.errorMessage=reason;
   const fallback=host.querySelector(".starry-3d-fallback");
   if(fallback){
    fallback.hidden=false;
-   fallback.innerHTML='<strong>3D 世界啟動失敗</strong><span>場景初始化時發生錯誤。請重新整理；下方遊戲入口仍可使用。</span>';
+   fallback.innerHTML='<strong>3D 世界啟動失敗</strong><span>已定位初始化失敗點；請將下方錯誤資訊回傳，以便精準修復。下方遊戲入口仍可使用。</span>';
+   const detail=document.createElement("code");
+   detail.style.cssText="display:block;max-width:min(90%,760px);white-space:pre-wrap;overflow-wrap:anywhere;margin:12px auto 0;padding:10px 12px;border:1px solid #d5c09166;border-radius:10px;background:#090d2bcc;color:#f2d69a;font:12px/1.6 ui-monospace,monospace;text-align:left";
+   detail.textContent="初始化階段："+stage+"\n錯誤："+reason;
+   fallback.appendChild(detail);
   }
   const status=document.getElementById("starry-3d-status");
-  if(status)status.textContent="3D 場景初始化失敗 · 請重新整理頁面";
+  if(status)status.textContent="3D 場景初始化失敗 · "+stage+" · "+reason;
   return false;
  }
 }
@@ -1187,8 +1195,6 @@ document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
 document.getElementById("logout").onclick=async()=>{stop();await stopParkSocial();if(cloudMode&&sb){const {error}=await sb.auth.signOut();if(error)say("登出時發生問題："+friendlyAuthError(error))}cloudUser=null;state.player=null;state.players=[];state.records=[];save();render()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&active)result(0,"abandoned",active.id)});
 window.addEventListener("starry-supabase-ready",bootCloud);
-window.addEventListener("starry-3d-ready",()=>{const host=document.getElementById("starry-3d");if(host&&window.Starry3D)window.Starry3D.mount(host)});
-window.addEventListener("starry-3d-error",()=>{const host=document.getElementById("starry-3d"),status=document.getElementById("starry-3d-status");if(host)host.dataset.status="fallback";if(status)status.textContent="3D 元件暫時無法載入；請使用下方遊戲卡片。";const fallback=host?.querySelector(".starry-3d-fallback");if(fallback)fallback.innerHTML="<strong>3D 場景暫時無法載入</strong><span>遊戲入口與雲端資料仍可正常使用，請稍後重新整理。</span>"});
 window.addEventListener("starry-3d-portal",event=>{const gameId=event.detail&&event.detail.gameId;if(gameId&&ADULT_GAME_IDS.includes(gameId))start(gameId)});
 window.addEventListener("starry-3d-map",event=>{
  const d=event.detail;if(!d)return;
