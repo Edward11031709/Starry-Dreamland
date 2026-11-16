@@ -362,13 +362,17 @@ function buildCastle(scene,materials){
  const crown=addMesh(castle,new THREE.OctahedronGeometry(0.4,1),materials.crystal,[0,9.75,-2.32],[0.75,1.35,0.75]);crown.rotation.z=Math.PI/4;
  const crest=addMesh(castle,new THREE.TorusGeometry(0.52,0.055,8,48),materials.gold,[0,5.52,0.98]);crest.rotation.x=Math.PI/2;
  const star=addMesh(castle,new THREE.OctahedronGeometry(0.29,1),materials.crystal,[0,5.52,1.05],[0.9,1.35,0.9]);star.rotation.z=Math.PI/4;
- // Front balcony: a layered stone ledge, gold handrail and individually spaced balusters.
- addMesh(castle,new THREE.BoxGeometry(5.55,0.16,0.42),materials.darkStone,[0,3.18,2.23]);
- addMesh(castle,new THREE.BoxGeometry(5.72,0.055,0.48),materials.gold,[0,3.28,2.23],null,false,false);
- [-2.55,-1.95,-1.35,-0.75,-0.15,0.45,1.05,1.65,2.25].forEach(x=>{
-  addMesh(castle,new THREE.CylinderGeometry(0.027,0.035,0.43,8),materials.silverMetal,[x,3.5,2.36],null,false,false);
+ // Paired side balconies frame the rose window but deliberately leave its centre unobstructed.
+ [-1,1].forEach(side=>{
+  const balconyX=side*1.95;
+  addMesh(castle,new THREE.BoxGeometry(1.72,0.16,0.42),materials.darkStone,[balconyX,3.18,2.23]);
+  addMesh(castle,new THREE.BoxGeometry(1.82,0.055,0.48),materials.gold,[balconyX,3.28,2.23],null,false,false);
+  [-0.66,-0.22,0.22,0.66].forEach(offset=>{
+   addMesh(castle,new THREE.CylinderGeometry(0.027,0.035,0.43,8),materials.silverMetal,
+    [balconyX+offset,3.5,2.36],null,false,false);
+  });
+  addMesh(castle,new THREE.BoxGeometry(1.72,0.06,0.06),materials.gold,[balconyX,3.73,2.36],null,false,false);
  });
- addMesh(castle,new THREE.BoxGeometry(5.55,0.06,0.06),materials.gold,[0,3.73,2.36],null,false,false);
  // A second roof tier gives the rear keep a more recognizable fairytale silhouette.
  const keepRoof=addMesh(castle,new THREE.ConeGeometry(2.42,1.36,4),materials.roof,[0,5.78,-0.78]);
  keepRoof.rotation.y=Math.PI/4;
