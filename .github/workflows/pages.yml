@@ -31,6 +31,13 @@ jobs:
           const fs = require('node:fs');
           const vm = require('node:vm');
           const html = fs.readFileSync('index.html', 'utf8');
+          const engine = fs.readFileSync('js/starry-3d.js', 'utf8');
+          if (!/function\\s+buildArcadeStalls\\s*\\(/.test(engine)) {
+            throw new Error('Missing required builder: buildArcadeStalls');
+          }
+          if (!/const\\s+arcadeStalls\\s*=\\s*buildArcadeStalls\\(scene,\\s*materials\\)/.test(engine)) {
+            throw new Error('Park environment is not wired to buildArcadeStalls');
+          }
           const scripts = [];
           for (const chunk of html.split('<script').slice(1)) {
             const close = chunk.indexOf('</script>');
