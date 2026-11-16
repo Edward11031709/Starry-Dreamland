@@ -31,9 +31,17 @@ jobs:
           const fs = require('node:fs');
           const vm = require('node:vm');
           const html = fs.readFileSync('index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-            .filter(([, attrs, body]) => !/\\bsrc\\s*=/.test(attrs) && body.trim())
-            .map(([, , body]) => body);
+          const scripts = [];
+          for (const chunk of html.split('<script').slice(1)) {
+            const close = chunk.indexOf('</script>');
+            const tagEnd = chunk.indexOf('>');
+            if (close < 0 || tagEnd < 0) continue;
+            const attributes = chunk.slice(0, tagEnd);
+            const source = chunk.slice(tagEnd + 1, close);
+            if (!attributes.includes('src=') && source.trim()) scripts.push(source);
+          }
+          if (!scripts.length) throw new Error('No inline JavaScript found in index.html');
+          scripts.forEach((source, index) => new vm.Script(source, { filename: `index.html:inline-script-${index + 1}` }));
           if (!scripts.length) throw new Error('No inline JavaScript found in index.html');
           scripts.forEach((source, index) => new vm.Script(source, { filename: `index.html:inline-script-${index + 1}` }));
           console.log(`Validated js/starry-3d.js and ${scripts.length} inline script(s).`);
