@@ -24,6 +24,21 @@ jobs:
       - name: 下載 Repository 程式碼
         uses: actions/checkout@v6
 
+      - name: 驗證 JavaScript 語法
+        run: |
+          node --check js/starry-3d.js
+          node <<'NODE'
+          const fs = require('node:fs');
+          const vm = require('node:vm');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
+            .filter(([, attrs, body]) => !/\\bsrc\\s*=/.test(attrs) && body.trim())
+            .map(([, , body]) => body);
+          if (!scripts.length) throw new Error('No inline JavaScript found in index.html');
+          scripts.forEach((source, index) => new vm.Script(source, { filename: `index.html:inline-script-${index + 1}` }));
+          console.log(`Validated js/starry-3d.js and ${scripts.length} inline script(s).`);
+          NODE
+
       - name: 設定 GitHub Pages
         uses: actions/configure-pages@v5
 
