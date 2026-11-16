@@ -750,6 +750,106 @@ function buildMirrorHouse(scene,materials,x,z){
   return hall;
 }
 
+function buildArcadeStalls(scene,materials){
+  const market=new THREE.Group();
+  market.name="StardreamMarketStalls";
+  scene.add(market);
+  const stalls=[];
+  const glass=new THREE.MeshPhysicalMaterial({
+    color:0xb9dff1,roughness:0.12,metalness:0.08,transparent:true,
+    opacity:0.34,clearcoat:1,clearcoatRoughness:0.04
+  });
+  const gemMaterials=[
+    makeMaterial(0x8edcf0,0.2,0.48,{emissive:0x245b83,emissiveIntensity:0.35,clearcoat:1}),
+    makeMaterial(0xc9a7f3,0.18,0.42,{emissive:0x67449b,emissiveIntensity:0.32,clearcoat:1}),
+    makeMaterial(0xf0d38e,0.2,0.5,{emissive:0x9b6b2e,emissiveIntensity:0.28,clearcoat:1})
+  ];
+
+  function makeStall(config){
+    const root=new THREE.Group();
+    root.name=config.name;
+    root.position.set(config.x,0.76,config.z);
+    root.userData.kind=config.kind;
+    market.add(root);
+
+    // Raised stone plinth and gold inlay establish a clear footprint.
+    addMesh(root,new THREE.BoxGeometry(2.05,0.16,1.72),materials.darkStone,[0,0.08,0]);
+    addMesh(root,new THREE.BoxGeometry(1.94,0.055,1.62),materials.gold,[0,0.18,0]);
+    addMesh(root,new THREE.BoxGeometry(1.82,0.045,1.48),materials.paving,[0,0.225,0]);
+
+    // Back wall, side pilasters and the open service counter.
+    addMesh(root,new THREE.BoxGeometry(1.76,1.18,0.14),materials.wall,[0,0.91,-0.59]);
+    addMesh(root,new THREE.BoxGeometry(1.78,0.075,0.19),materials.trim,[0,1.53,-0.56]);
+    [-0.86,0.86].forEach((x,index)=>{
+      addMesh(root,new THREE.CylinderGeometry(0.075,0.095,1.82,12),materials.silverMetal,[x,1.08,0.34]);
+      addMesh(root,new THREE.CylinderGeometry(0.13,0.13,0.11,12),materials.gold,[x,1.92,0.34]);
+      addMesh(root,new THREE.OctahedronGeometry(0.105,1),index?materials.crystal:materials.trim,[x,2.06,0.34],[0.75,1.3,0.75],null,false,false);
+    });
+    addMesh(root,new THREE.BoxGeometry(1.78,0.76,0.54),materials.wood,[0,0.68,0.28]);
+    addMesh(root,new THREE.BoxGeometry(1.82,0.12,0.64),materials.gold,[0,1.08,0.3]);
+    addMesh(root,new THREE.BoxGeometry(1.68,0.48,0.035),materials.darkStone,[0,0.69,0.56]);
+    addMesh(root,new THREE.BoxGeometry(1.52,0.31,0.025),config.panel,[0,0.69,0.585],null,false,false);
+    addMesh(root,new THREE.BoxGeometry(1.86,0.065,0.08),materials.trim,[0,1.17,0.59]);
+
+    // A layered canopy with alternating fabric panels and a scalloped front edge.
+    addMesh(root,new THREE.BoxGeometry(2.02,0.13,1.42),materials.roof,[0,2.13,-0.02]);
+    addMesh(root,new THREE.BoxGeometry(2.08,0.09,0.18),materials.gold,[0,2.04,0.67]);
+    for(let i=0;i<8;i++){
+      const x=-0.875+i*0.25;
+      addMesh(root,new THREE.BoxGeometry(0.245,0.025,1.27),i%2?materials.trim:config.panel,[x,2.207,-0.025],null,false,false);
+      addMesh(root,new THREE.SphereGeometry(0.12,12,8),i%2?materials.trim:config.panel,[x,2.015,0.69],[1,0.43,0.72],null,false,false);
+    }
+    addMesh(root,new THREE.BoxGeometry(1.9,0.07,0.12),materials.gold,[0,2.25,-0.04]);
+
+    // A framed sign is kept above the awning so it remains readable at walking height.
+    const sign=makeLabelSprite({title:config.title,subtitle:config.subtitle});
+    if(sign){sign.position.set(0,2.91,0.28);sign.scale.set(2.45,0.67,1);root.add(sign)}
+
+    if(config.kind==="exchange"){
+      // The exchange counter displays three illuminated star-stone specimens.
+      [-0.48,0,0.48].forEach((x,i)=>{
+        const jar=new THREE.Group();jar.position.set(x,1.22,0.24);root.add(jar);
+        addMesh(jar,new THREE.CylinderGeometry(0.105,0.12,0.28,16),glass,[0,0.14,0],null,false,false);
+        addMesh(jar,new THREE.TorusGeometry(0.11,0.018,6,20),materials.gold,[0,0.285,0]);
+        const gem=addMesh(jar,new THREE.OctahedronGeometry(0.095+i*0.012,1),gemMaterials[i],[0,0.17,0.01],[0.76,1.35,0.76],null,false,false);
+        gem.rotation.y=i*0.7;
+      });
+      addMesh(root,new THREE.OctahedronGeometry(0.18,1),materials.crystal,[0.68,1.37,0.31],[0.72,1.5,0.72],null,false,false);
+    }else{
+      // The supply counter uses small crates and colored travel elixirs.
+      [-0.58,0.48].forEach((x,i)=>{
+        const crate=addMesh(root,new THREE.BoxGeometry(0.34,0.25,0.28),materials.wood,[x,1.27,0.27]);
+        crate.rotation.y=i?0.12:-0.12;
+        addMesh(root,new THREE.BoxGeometry(0.36,0.035,0.3),materials.gold,[x,1.41,0.27],null,false,false);
+        const bottle=addMesh(root,new THREE.CylinderGeometry(0.075,0.09,0.27,12),glass,[x,1.58,0.26],null,false,false);
+        addMesh(root,new THREE.SphereGeometry(0.082,12,10),gemMaterials[i],[x,1.75,0.26],[0.9,1.05,0.9],null,false,false);
+        addMesh(root,new THREE.CylinderGeometry(0.045,0.05,0.08,10),materials.gold,[x,1.77,0.26],null,false,false);
+      });
+      addMesh(root,new THREE.TorusGeometry(0.15,0.025,6,24),materials.gold,[0,1.31,0.28]);
+    }
+
+    const lamp=new THREE.PointLight(config.light,2.6,4.2,2);
+    lamp.position.set(0,1.88,0.48);root.add(lamp);
+    addMesh(root,new THREE.OctahedronGeometry(0.12,1),config.panel,[0,2.45,0.0],[0.75,1.25,0.75],null,false,false);
+    return root;
+  }
+
+  stalls.push(makeStall({
+    name:"StardustExchangeStall",kind:"exchange",x:5.1,z:6.9,
+    title:"星塵兌換所",subtitle:"STARDUST EXCHANGE",
+    panel:makeMaterial(0x574879,0.34,0.38,{emissive:0x21143b,emissiveIntensity:0.18}),
+    light:0xe6bdff
+  }));
+  stalls.push(makeStall({
+    name:"TravelerSupplyStall",kind:"supplies",x:8.25,z:5.45,
+    title:"旅人補給站",subtitle:"TRAVELER SUPPLIES",
+    panel:makeMaterial(0x42617a,0.38,0.28,{emissive:0x102f49,emissiveIntensity:0.16}),
+    light:0x9edcf4
+  }));
+
+  return {root:market,stalls};
+}
+
 function buildEnvironment(scene) {
   const materials = {
     rock: makeMaterial(0x211e39, 0.92, 0.12),
