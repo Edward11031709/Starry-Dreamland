@@ -1345,6 +1345,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
 
 
 function mount(host) {
+  window.STARRY_3D_BOOT_STAGE = "host";
   if (!host || !host.isConnected) return;
   if (activeWorld && activeWorld.host === host) return;
   disposeWorld(activeWorld);
@@ -1355,6 +1356,7 @@ function mount(host) {
   if (status) status.textContent = "正在喚醒星夢廣場…";
 
   let renderer;
+  window.STARRY_3D_BOOT_STAGE = "renderer";
   try {
     renderer = new THREE.WebGLRenderer({
       antialias: window.devicePixelRatio <= 1.25,
@@ -1369,6 +1371,7 @@ function mount(host) {
     return;
   }
 
+  window.STARRY_3D_BOOT_STAGE = "scene and camera";
   const width = Math.max(1, host.clientWidth);
   const height = Math.max(1, host.clientHeight);
   const scene = new THREE.Scene();
@@ -1424,11 +1427,13 @@ function mount(host) {
   blueLight.position.set(-7, 4, 5);
   scene.add(blueLight);
 
+  window.STARRY_3D_BOOT_STAGE = "sky and park environment";
   const starfield = createStarfield(scene, isSmall ? 420 : 760);
   const parkMotes = createParkMotes(scene,isSmall?28:56);
   const environment = buildEnvironment(scene);
   let initialCustomization={};
   try{initialCustomization=JSON.parse(host.dataset.avatarCustomization||"{}")}catch(error){}
+  window.STARRY_3D_BOOT_STAGE = "player avatar";
   let player = buildPlayer(scene,host.dataset.avatar || "wanderer",initialCustomization);
   player.position.set(0, 0.68, 33.0);
   camera.position.set(
@@ -1868,8 +1873,10 @@ function mount(host) {
     }
     renderer.render(scene, camera);
   };
+  window.STARRY_3D_BOOT_STAGE = "animation loop";
   renderer.setAnimationLoop(world.renderFrame);
 
+  window.STARRY_3D_BOOT_STAGE = "resize observer";
   world.resizeObserver = new ResizeObserver(entries => {
     const entry = entries[0];
     if (!entry) return;
@@ -1890,6 +1897,7 @@ function mount(host) {
   };
   document.addEventListener("visibilitychange", world.visibilityHandler);
 
+  window.STARRY_3D_BOOT_STAGE = "ready";
   host.dataset.status = "ready";
   const fallback = host.querySelector(".starry-3d-fallback");
   if (fallback) fallback.hidden = true;
