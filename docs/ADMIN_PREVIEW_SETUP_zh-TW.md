@@ -32,7 +32,7 @@
 - `ADMIN_PREVIEW_BUCKET=sd-admin-previews`
 - `ADMIN_PREVIEW_ALLOWED_ORIGINS=https://edward11031709.github.io`
 
-將 `supabase/functions/sd-admin-preview/index.ts` 部署為 `sd-admin-preview`，並確認 JWT verification 開啟。此 repository PR 不會自行部署 Edge Function 或修改正式 Supabase 專案。
+將 `supabase/functions/sd-admin-preview/index.ts` 與共用檢查檔 `supabase/functions/_shared/preview-path.mjs` 一起部署為 `sd-admin-preview`，並確認 JWT verification 開啟。此 repository PR 不會自行部署 Edge Function 或修改正式 Supabase 專案。
 
 ### 3. 設定 GitHub Actions secrets
 
