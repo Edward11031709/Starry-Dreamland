@@ -552,20 +552,52 @@ function buildCarousel(scene,materials,x,z){
     const bridle=addMesh(horse,new THREE.TorusGeometry(0.23,0.022,6,28),materials.trim,[0.69,1.02,0]);
     bridle.rotation.y=Math.PI/2;
     addMesh(horse,new THREE.SphereGeometry(0.045,10,8),materials.crystal,[0.68,1.23,0],[0.7,1.25,0.7],null,false,false);
-    addMesh(horse,new THREE.ConeGeometry(0.075,0.23,8),mane,[0.58,1.29,-0.09],[0.8,1,0.8]);
-    addMesh(horse,new THREE.ConeGeometry(0.075,0.23,8),mane,[0.58,1.29,0.12],[0.8,1,0.8]);
-    addMesh(horse,new THREE.SphereGeometry(0.12,12,10),mane,[0.36,1.03,-0.13],[0.8,1.5,0.85]);
-    addMesh(horse,new THREE.SphereGeometry(0.13,12,10),mane,[-0.45,0.7,0],[0.65,1.2,0.7]);
-    for(let tuft=0;tuft<4;tuft++){
-      const lock=addMesh(horse,new THREE.ConeGeometry(0.05,0.22,7),mane,[0.16+tuft*0.09,1.2,-0.16]);
-      lock.rotation.z=-0.42;
-    }
-    const tail=addMesh(horse,new THREE.ConeGeometry(0.085,0.46,9),mane,[-0.62,0.72,0]);
-    tail.rotation.z=Math.PI/2.35;
-    addMesh(horse,new THREE.BoxGeometry(0.58,0.12,0.48),materials.gold,[0.02,0.88,0]);
-    addMesh(horse,new THREE.BoxGeometry(0.48,0.08,0.4),materials.crystal,[0.02,0.97,0],null,false,false);
-    addMesh(horse,new THREE.TorusGeometry(0.15,0.022,6,28),materials.gold,[0.02,1.04,0.22]);
+    // Flowing sculpted mane and tail replace the original cluster of cone-shaped tufts.
+    [-1,1].forEach(side=>{
+      const maneCurve=new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.6,1.25,side*0.075),
+        new THREE.Vector3(0.48,1.32,side*0.12),
+        new THREE.Vector3(0.3,1.2,side*0.16),
+        new THREE.Vector3(0.12,1.02,side*0.15),
+        new THREE.Vector3(-0.12,0.9,side*0.11)
+      ]);
+      addMesh(horse,new THREE.TubeGeometry(maneCurve,36,0.052,10,false),mane);
+      const highlightCurve=new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.55,1.29,side*0.12),
+        new THREE.Vector3(0.42,1.28,side*0.16),
+        new THREE.Vector3(0.26,1.13,side*0.19),
+        new THREE.Vector3(0.1,0.99,side*0.17)
+      ]);
+      addMesh(horse,new THREE.TubeGeometry(highlightCurve,28,0.009,6,false),materials.gold,null,null,false,false);
+    });
+    const forelockCurve=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.72,1.19,0),
+      new THREE.Vector3(0.76,1.35,-0.03),
+      new THREE.Vector3(0.62,1.43,-0.08),
+      new THREE.Vector3(0.52,1.31,-0.12)
+    ]);
+    addMesh(horse,new THREE.TubeGeometry(forelockCurve,24,0.045,8,false),mane);
+    const tailCurve=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.52,0.72,0),
+      new THREE.Vector3(-0.69,0.66,-0.02),
+      new THREE.Vector3(-0.81,0.48,-0.05),
+      new THREE.Vector3(-0.79,0.28,-0.09)
+    ]);
+    addMesh(horse,new THREE.TubeGeometry(tailCurve,28,0.048,8,false),mane);
+    const tailStrand=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.56,0.7,0.035),
+      new THREE.Vector3(-0.73,0.56,0.03),
+      new THREE.Vector3(-0.78,0.39,0.015)
+    ]);
+    addMesh(horse,new THREE.TubeGeometry(tailStrand,20,0.012,6,false),materials.gold,null,null,false,false);
+    // Sculpted saddle blanket, rounded leather seat and fine perimeter piping.
+    const saddleLeather=makeMaterial(0x43365f,0.38,0.24,{clearcoat:0.72,clearcoatRoughness:0.18});
+    addMesh(horse,new THREE.SphereGeometry(0.28,24,16),materials.trim,[0.02,0.86,0],[1.02,0.42,1.12]);
+    addMesh(horse,new THREE.SphereGeometry(0.22,24,16),saddleLeather,[0.02,0.94,0],[1.02,0.34,1.04]);
+    const saddlePiping=addMesh(horse,new THREE.TorusGeometry(0.21,0.018,7,40),materials.gold,[0.02,0.91,0]);
+    saddlePiping.rotation.x=Math.PI/2;saddlePiping.scale.set(1.2,1.0,1.0);
     addMesh(horse,new THREE.OctahedronGeometry(0.095,1),materials.crystal,[0.03,1.11,0.24],[0.72,1.2,0.72],null,false,false);
+    addMesh(horse,new THREE.TorusGeometry(0.15,0.022,6,28),materials.gold,[0.02,1.04,0.22]);
     for(let leg=0;leg<4;leg++){
       const lx=leg<2?0.27:-0.25,lz=leg%2?0.23:-0.23;
       addMesh(horse,new THREE.CylinderGeometry(0.055,0.07,0.56,12),coat,[lx,0.2,lz]);
