@@ -22,8 +22,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: starry-dreamland-production
@@ -169,6 +167,10 @@ jobs:
     name: 管理員確認後發布正式版
     needs: validate
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'Edward11031709' && inputs.confirm_release == true && inputs.publish_private_preview != true
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: production
       url: ${{ steps.deployment.outputs.page_url }}
