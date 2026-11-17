@@ -40,9 +40,10 @@
 ## 管理員私有預覽設計
 
 - 新增 `sd-admin-preview` Edge Function 原始碼：先驗證使用者 JWT，再呼叫 `sd_is_admin()`，僅簽發 5 分鐘私有 Storage URL。
-- 新增 main owner 手動觸發的私有預覽上傳 job；只讀取指定 commit 的靜態檔案，不執行候選程式碼，並拒絕 Public bucket。
-- 管理中心加入隔離 sandbox iframe 預覽，刻意不授予 `allow-same-origin`，不共享正式登入工作階段。
-- 這些是 repository 開發分支的程式與設定文件；尚未部署 Edge Function、建立 bucket 或設定 Actions secrets，未影響生產 Supabase。
+- Supabase Private bucket `sd-admin-previews` 已建立，並已部署 `sd-admin-preview` Edge Function（JWT verification 開啟）。
+- 私有預覽改由 Edge Function 從固定公開 GitHub repository 匯入指定 commit 的靜態檔案；僅接受管理員，且不執行候選程式碼，不需要 GitHub Actions secrets。
+- 管理中心使用隔離 sandbox iframe，刻意不授予 `allow-same-origin`，不共享正式登入工作階段。
+- 此次已建立獨立 Private Storage bucket 並部署 Edge Function；沒有修改玩家資料、星塵或既有資料表。
 
 ## 本次開發分支狀態
 
