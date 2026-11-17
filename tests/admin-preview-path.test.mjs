@@ -59,3 +59,12 @@ test("avatar face and hair use a proportion-adjusted head rig", () => {
   assert.equal(buildPlayer.slice(headStart, headEnd).includes("addMesh(player,"), false,
     "facial features and hair must stay inside the scaled rig");
 });
+
+test("castle lancet windows and carousel horses use sculpted geometry", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  assert.match(source, /function makeLancetGeometry\(/);
+  assert.match(source, /new THREE\.ShapeGeometry\(shape,24\)/);
+  assert.match(source, /const maneCurve=new THREE\.CatmullRomCurve3\(/);
+  assert.match(source, /const tailCurve=new THREE\.CatmullRomCurve3\(/);
+  assert.match(source, /const saddlePiping=addMesh\(horse/);
+});
