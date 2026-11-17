@@ -68,3 +68,10 @@ test("castle lancet windows and carousel horses use sculpted geometry", () => {
   assert.match(source, /const tailCurve=new THREE\.CatmullRomCurve3\(/);
   assert.match(source, /const saddlePiping=addMesh\(horse/);
 });
+
+test("Ferris wheel cabins use rounded shells and arched glass", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  assert.match(source, /const cabinGeometry=new THREE\.ExtrudeGeometry/);
+  assert.match(source, /makeLancetGeometry\(0\.325,0\.35\),cabinGlass/);
+  assert.match(source, /const canopy=addMesh\(gondola,new THREE\.SphereGeometry/);
+});
