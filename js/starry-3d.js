@@ -854,22 +854,22 @@ function buildEnvironment(scene) {
   const materials = {
     rock: makeMaterial(0x211e39, 0.92, 0.12),
     rockLight: makeMaterial(0x39345d, 0.84, 0.18),
-    wall: makeMaterial(0x494163, 0.58, 0.28),
-    roof: makeMaterial(0x262341, 0.32, 0.62),
-    trim: makeMaterial(0xb7a4df, 0.24, 0.74),
-    gold: makeMaterial(PALETTE.gold, 0.2, 0.82),
-    silver: makeMaterial(PALETTE.silver, 0.22, 0.76),
+    wall: makeMaterial(0x51496f, 0.42, 0.36, {clearcoat:0.42,clearcoatRoughness:0.28}),
+    roof: makeMaterial(0x292544, 0.24, 0.72, {clearcoat:0.7,clearcoatRoughness:0.16}),
+    trim: makeMaterial(0xc4b2ed, 0.18, 0.82, {clearcoat:0.9}),
+    gold: makeMaterial(0xf4dba3, 0.16, 0.88, {clearcoat:1,clearcoatRoughness:0.12}),
+    silver: makeMaterial(0xd8e1f1, 0.16, 0.84, {clearcoat:0.85}),
     silverMetal: new THREE.MeshPhysicalMaterial({color:0xc2c8dc,roughness:0.24,metalness:0.78,clearcoat:0.65}),
     darkStone: makeMaterial(0x17172e, 0.72, 0.42),
     top: makeMaterial(0x292747, 0.72, 0.22),
     wood: makeMaterial(0x2b2038, 0.8, 0.12),
     foliageA: makeMaterial(0x344b67, 0.95, 0.02), foliageB: makeMaterial(0x465578, 0.93, 0.03),
     foliageC: makeMaterial(0x675b88, 0.92, 0.04),
-    crystal: new THREE.MeshPhysicalMaterial({color:PALETTE.lilac,emissive:0x8e68e8,emissiveIntensity:0.62,roughness:0.12,metalness:0.32,clearcoat:1,clearcoatRoughness:0.08}),
-    water: new THREE.MeshPhysicalMaterial({color:0x648de0,emissive:0x171f68,emissiveIntensity:0.45,roughness:0.12,metalness:0.38,transparent:true,opacity:0.72}),
+    crystal: new THREE.MeshPhysicalMaterial({color:0xe0d5ff,emissive:0x8064d7,emissiveIntensity:0.48,roughness:0.1,metalness:0.38,clearcoat:1,clearcoatRoughness:0.045,ior:1.42,thickness:0.72}),
+    water: new THREE.MeshPhysicalMaterial({color:0x829fe8,emissive:0x222b75,emissiveIntensity:0.38,roughness:0.075,metalness:0.48,transparent:true,opacity:0.76,clearcoat:1,clearcoatRoughness:0.04,ior:1.36}),
     road: makeMaterial(0x292d50, 0.94, 0.08), roadEdge: makeMaterial(0xb5a0c9, 0.48, 0.48),
     paving: makeMaterial(0x393451, 0.78, 0.22),
-    lampGlow: new THREE.MeshStandardMaterial({color:0xffedc2,emissive:0xf1bb72,emissiveIntensity:2.6,roughness:0.18,metalness:0.18}),
+    lampGlow: new THREE.MeshStandardMaterial({color:0xfff1d2,emissive:0xffc979,emissiveIntensity:2.15,roughness:0.12,metalness:0.24}),
   };
   applyPattern(materials.wall,"stone","#655b83","rgba(15,13,36,0.42)","#e2d7ff",2.2,2.2);
   applyPattern(materials.roof,"roof","#393253","rgba(9,8,27,0.48)","#e5c58d",2.4,2.4);
@@ -1488,17 +1488,17 @@ function mount(host) {
   renderer.setSize(width, height, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.16;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = "starry-3d-canvas";
   renderer.domElement.setAttribute("aria-label", "可自由探索星夢夜遊園、漫遊各主題園區並點擊挑戰星門");
   host.appendChild(renderer.domElement);
 
-  const hemisphere = new THREE.HemisphereLight(0xcbd5ff, 0x171329, 1.28);
+  const hemisphere = new THREE.HemisphereLight(0xe0e5ff, 0x211832, 1.34);
   scene.add(hemisphere);
 
-  const moonLight = new THREE.DirectionalLight(0xffe9d0, 2.15);
+  const moonLight = new THREE.DirectionalLight(0xffefd9, 2.28);
   moonLight.position.set(-15, 28, 18);
   moonLight.castShadow = true;
   const shadowResolution = isSmall ? 768 : 1536;
