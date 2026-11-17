@@ -27,8 +27,8 @@
 
 在 Supabase Dashboard → Edge Functions → Secrets 確認以下值：
 - `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`（若專案改用新式 publishable key，可設 `SUPABASE_PUBLISHABLE_KEY`）
-- `SUPABASE_SERVICE_ROLE_KEY`（或可用的 server-side secret key；絕不可提供給瀏覽器）
+- `SUPABASE_ANON_KEY` 或 `SUPABASE_PUBLISHABLE_KEY`；若使用新式 key map，也支援 `SUPABASE_PUBLISHABLE_KEYS` JSON 的 `default` 項目。
+- `SUPABASE_SERVICE_ROLE_KEY` 或 `SUPABASE_SECRET_KEY`；若使用新式 key map，也支援 `SUPABASE_SECRET_KEYS` JSON 的 `default` 項目。這些 server-side key 絕不可提供給瀏覽器。
 - `ADMIN_PREVIEW_BUCKET=sd-admin-previews`
 - `ADMIN_PREVIEW_ALLOWED_ORIGINS=https://edward11031709.github.io`
 
