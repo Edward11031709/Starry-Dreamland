@@ -631,6 +631,16 @@ function buildFerrisWheel(scene,materials,x,y,z){
   addMesh(wheel,new THREE.TorusGeometry(2.8,0.028,7,88),materials.crystal,[0,0,0]);
   let rideSeat=null;const gondolas=[];
   const cabinGlass=new THREE.MeshPhysicalMaterial({color:0x8fd7ee,emissive:0x203d67,emissiveIntensity:0.18,roughness:0.16,metalness:0.2,transparent:true,opacity:0.58,clearcoat:1,side:THREE.DoubleSide});
+  // One shared bevelled cabin shell keeps the ten gondolas visually consistent and lightweight.
+  const cabinShape=new THREE.Shape();
+  cabinShape.moveTo(-0.24,-0.28);
+  cabinShape.lineTo(0.24,-0.28);
+  cabinShape.lineTo(0.24,0.04);
+  cabinShape.quadraticCurveTo(0.24,0.2,0,0.26);
+  cabinShape.quadraticCurveTo(-0.24,0.2,-0.24,0.04);
+  cabinShape.closePath();
+  const cabinGeometry=new THREE.ExtrudeGeometry(cabinShape,{depth:0.46,steps:1,bevelEnabled:true,bevelSegments:3,bevelSize:0.022,bevelThickness:0.022,curveSegments:16});
+  cabinGeometry.translate(0,0,-0.23);
   for(let i=0;i<10;i++){
     const a=i/10*Math.PI*2;
     const spoke=addMesh(wheel,new THREE.BoxGeometry(0.075,5.18,0.09),materials.silverMetal,[0,0,0]);spoke.rotation.z=a;
@@ -638,18 +648,22 @@ function buildFerrisWheel(scene,materials,x,y,z){
     const cx=Math.cos(a)*2.62,cy=Math.sin(a)*2.62;
     const gondola=new THREE.Group();gondola.position.set(cx,cy,0.18);wheel.add(gondola);gondolas.push(gondola);
     const gondolaMat=makeMaterial([0x6f8fc5,0xb18bcf,0xd7ad70,0x81a9a0,0xc27ea1][i%5],0.42,0.28);
-    addMesh(gondola,new THREE.BoxGeometry(0.52,0.55,0.46),gondolaMat,[0,-0.08,0]);
-    addMesh(gondola,new THREE.BoxGeometry(0.58,0.08,0.52),materials.gold,[0,0.22,0]);
+    addMesh(gondola,cabinGeometry,gondolaMat,[0,-0.08,0]);
+    addMesh(gondola,new THREE.TorusGeometry(0.27,0.028,7,40),materials.gold,[0,0.2,0]).rotation.x=Math.PI/2;
+    // Arched glass, slim mullions and a lower sill replace the flat rectangular front window.
+    addMesh(gondola,makeLancetGeometry(0.385,0.405),materials.gold,[0,-0.05,0.238],null,false,false);
+    addMesh(gondola,makeLancetGeometry(0.325,0.35),cabinGlass,[0,-0.05,0.255],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.025,0.31,0.018),materials.gold,[0,-0.05,0.271],null,false,false);
+    addMesh(gondola,new THREE.BoxGeometry(0.28,0.022,0.018),materials.gold,[0,-0.12,0.271],null,false,false);
     addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[-0.28,-0.05,0]);
     addMesh(gondola,new THREE.BoxGeometry(0.06,0.33,0.48),materials.trim,[0.28,-0.05,0]);
-    addMesh(gondola,new THREE.BoxGeometry(0.3,0.2,0.035),cabinGlass,[0,-0.06,0.255],null,false,false);
-    addMesh(gondola,new THREE.BoxGeometry(0.035,0.25,0.045),materials.gold,[-0.17,-0.06,0.275],null,false,false);
-    addMesh(gondola,new THREE.BoxGeometry(0.035,0.25,0.045),materials.gold,[0.17,-0.06,0.275],null,false,false);
     addMesh(gondola,new THREE.BoxGeometry(0.37,0.055,0.06),materials.gold,[0,-0.2,0.27],null,false,false);
     addMesh(gondola,new THREE.BoxGeometry(0.34,0.07,0.22),materials.paving,[0,-0.25,0],null,false,false);
     addMesh(gondola,new THREE.OctahedronGeometry(0.075,1),materials.crystal,[0,-0.38,0.265],[0.72,1.25,0.72],null,false,false);
-    const canopy=addMesh(gondola,new THREE.ConeGeometry(0.39,0.28,8),materials.trim,[0,0.44,0]);canopy.rotation.y=Math.PI/8;
-    addMesh(gondola,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[0,0.61,0],[0.8,1.2,0.8],null,false,false);
+    const canopy=addMesh(gondola,new THREE.SphereGeometry(0.34,20,12,0,Math.PI*2,0,Math.PI/2),materials.trim,[0,0.2,0],[1.05,0.78,0.92]);
+    const canopyRim=addMesh(gondola,new THREE.TorusGeometry(0.32,0.026,7,40),materials.gold,[0,0.2,0]);
+    canopyRim.rotation.x=Math.PI/2;
+    addMesh(gondola,new THREE.OctahedronGeometry(0.085,0),materials.crystal,[0,0.53,0],[0.8,1.2,0.8],null,false,false);
     addMesh(gondola,new THREE.SphereGeometry(0.075,10,8),materials.crystal,[0,-0.36,0.24]);
     const anchor=new THREE.Group();anchor.position.set(0,-0.1,0.32);gondola.add(anchor);
     if(i===0)rideSeat=anchor;
