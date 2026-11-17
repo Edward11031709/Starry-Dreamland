@@ -138,7 +138,7 @@ jobs:
             const bucketResponse = await fetch(bucketUrl,{headers:{apikey:key,Authorization:'Bearer '+key}});
             if (!bucketResponse.ok) throw new Error('找不到私有 bucket。請先建立 '+bucket+' 並確認它不是 Public。');
             const bucketInfo = await bucketResponse.json();
-            if (bucketInfo.public === true) throw new Error('預覽 bucket 是 Public，為保護未發布版本已中止上傳。');
+            if (bucketInfo.public !== false) throw new Error('Storage 未能確認 bucket 為 Private，為保護未發布版本已中止上傳。');
             const files = await walk(root);
             if (!files.length || files.length > 600) throw new Error('靜態檔案數量不合理，已中止上傳。');
             let total=0;
@@ -167,7 +167,7 @@ jobs:
   deploy:
     name: 管理員確認後發布正式版
     needs: validate
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_release == true && inputs.publish_private_preview != true
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'Edward11031709' && inputs.confirm_release == true && inputs.publish_private_preview != true
     environment:
       name: production
       url: ${{ steps.deployment.outputs.page_url }}
