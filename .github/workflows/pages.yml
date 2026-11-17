@@ -40,6 +40,7 @@ jobs:
           node --check js/starry-3d.js
           cp supabase/functions/sd-admin-preview/index.ts /tmp/sd-admin-preview.mjs
           node --check /tmp/sd-admin-preview.mjs
+          node --test tests/admin-preview-path.test.mjs
           node <<'NODE'
           const fs = require('node:fs');
           const vm = require('node:vm');
