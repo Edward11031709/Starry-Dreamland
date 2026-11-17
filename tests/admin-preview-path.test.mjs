@@ -45,3 +45,17 @@ test("avatar robe profiles flare toward the hem", () => {
   assert.ok(radii.length >= 4, "robe profile contains enough contour points");
   assert.ok(radii[0] > radii[radii.length - 1], "hem should be wider than the waist");
 });
+
+test("avatar face and hair use a proportion-adjusted head rig", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  const start = source.indexOf("function buildPlayer(");
+  const end = source.indexOf("\nfunction ", start + 1);
+  const buildPlayer = source.slice(start, end === -1 ? undefined : end);
+  assert.match(buildPlayer, /const headScale=0\.86;/);
+  assert.match(buildPlayer, /const headRig=new THREE\.Group\(\);/);
+  const headStart = buildPlayer.indexOf("// A visible neck and jeweled collar");
+  const headEnd = buildPlayer.indexOf("// Traveler archetype controls the silhouette");
+  assert.ok(headStart >= 0 && headEnd > headStart, "head rig block is present");
+  assert.equal(buildPlayer.slice(headStart, headEnd).includes("addMesh(player,"), false,
+    "facial features and hair must stay inside the scaled rig");
+});
