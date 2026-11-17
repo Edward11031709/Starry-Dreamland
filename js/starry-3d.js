@@ -1324,6 +1324,39 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     stitch.rotation.z=(seam-2)*0.035;
   }
   addMesh(player,new THREE.TorusGeometry(0.39,0.027,7,40),metal,[0,0.34,0]).rotation.x=Math.PI/2;
+
+  // Couture detailing: raised shoulder pieces, a jeweled collar and fine embroidery.
+  const coutureGold=makeMaterial(0xe8cb91,0.19,0.86,{clearcoat:1,clearcoatRoughness:0.08});
+  const coutureSilver=makeMaterial(0xdce4f4,0.16,0.88,{clearcoat:1,clearcoatRoughness:0.1});
+  const coutureGem=new THREE.MeshPhysicalMaterial({color:hex(appearance.accentColor),emissive:hex(appearance.accentColor),emissiveIntensity:0.22,roughness:0.08,metalness:0.24,clearcoat:1,clearcoatRoughness:0.04,ior:1.46,thickness:0.45});
+  const curveLine=(points,material,radius=0.012)=>{
+    const curve=new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(point[0],point[1],point[2])));
+    return addMesh(player,new THREE.TubeGeometry(curve,36,radius,7,false),material,null,null,false,false);
+  };
+  [-1,1].forEach(side=>{
+    const shoulder=addMesh(player,new THREE.SphereGeometry(0.19,20,14),mantle,[side*0.285,1.105,-0.015],[1.22,0.58,1.0]);
+    shoulder.rotation.z=side*-0.16;
+    const shoulderRim=addMesh(player,new THREE.TorusGeometry(0.145,0.022,7,32),coutureGold,[side*0.29,1.105,0.105]);
+    shoulderRim.rotation.x=Math.PI/2;
+    const shoulderGem=addMesh(player,new THREE.OctahedronGeometry(0.075,1),coutureGem,[side*0.29,1.13,0.17],[0.72,1.25,0.72],null,false,false);
+    shoulderGem.rotation.z=side*0.24;
+    curveLine([[side*0.17,1.18,0.105],[side*0.25,1.24,0.12],[side*0.36,1.19,0.1],[side*0.42,1.11,0.04]],coutureSilver,0.009);
+  });
+  curveLine([[-0.23,1.19,0.12],[-0.16,1.12,0.22],[0,1.075,0.255],[0.16,1.12,0.22],[0.23,1.19,0.12]],coutureGold,0.022);
+  addMesh(player,new THREE.OctahedronGeometry(0.105,1),coutureGem,[0,1.075,0.27],[0.72,1.32,0.72],null,false,false);
+  addMesh(player,new THREE.SphereGeometry(0.035,12,10),coutureSilver,[0,1.075,0.29],null,false,false);
+  curveLine([[-0.12,0.94,0.275],[-0.08,0.82,0.286],[0,0.72,0.292],[0.08,0.82,0.286],[0.12,0.94,0.275]],coutureGold,0.012);
+  curveLine([[-0.19,0.9,0.268],[-0.16,0.75,0.285],[-0.11,0.62,0.278]],coutureSilver,0.008);
+  curveLine([[0.19,0.9,0.268],[0.16,0.75,0.285],[0.11,0.62,0.278]],coutureSilver,0.008);
+  const breastStar=addMesh(player,new THREE.OctahedronGeometry(0.07,1),coutureGem,[0,0.69,0.302],[0.72,1.35,0.72],null,false,false);
+  breastStar.rotation.z=Math.PI/4;
+  [-1,1].forEach(side=>{
+    const sash=addMesh(player,new THREE.ConeGeometry(0.105,0.52,8,1,true),side<0?mantle:robe,[side*0.23,0.48,-0.12],[0.82,1,0.38]);
+    sash.rotation.z=side*0.12;
+    curveLine([[side*0.23,0.72,0.02],[side*0.25,0.5,0.015],[side*0.22,0.25,0.01]],coutureGold,0.009);
+    addMesh(player,new THREE.OctahedronGeometry(0.045,0),coutureGem,[side*0.22,0.2,0.02],[0.8,1.4,0.8],null,false,false);
+  });
+
   // Boots, sleeves, gloves and decorative arm cuffs.
   [-0.19,0.19].forEach(x=>{
     addMesh(player,new THREE.CylinderGeometry(0.105,0.13,0.31,14),shadow,[x,0.19,0.02]);
@@ -1365,6 +1398,11 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     highlight.rotation.z=side*0.18;
   }
   addMesh(player,new THREE.OctahedronGeometry(0.12,1),trim,[0,1.77,0.05],[0.72,1.2,0.72],false,false);
+
+  // A delicate diadem bridges the hairline; tiny side stones catch the rim light.
+  const diademCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-0.22,1.66,0.16),new THREE.Vector3(-0.13,1.72,0.2),new THREE.Vector3(0,1.76,0.205),new THREE.Vector3(0.13,1.72,0.2),new THREE.Vector3(0.22,1.66,0.16)]);
+  addMesh(player,new THREE.TubeGeometry(diademCurve,32,0.014,7,false),coutureGold,null,null,false,false);
+  [-1,1].forEach(side=>addMesh(player,new THREE.OctahedronGeometry(0.045,1),coutureGem,[side*0.2,1.665,0.19],[0.72,1.28,0.72],null,false,false));
   // Face sculpt: expressive eyes use the selected star-trim colour as the iris glow.
   [-1,1].forEach(side=>{
     addMesh(player,new THREE.SphereGeometry(0.047,18,14),eyeWhite,[side*0.095,1.5,0.236],[1.02,0.94,0.5]);
