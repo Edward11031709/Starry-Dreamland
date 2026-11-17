@@ -114,5 +114,6 @@ test("private preview import is admin-gated and does not require GitHub Actions 
   assert.ok(fn.includes("MAX_TOTAL_BYTES = 80 * 1024 * 1024"));
   assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE_KEY|publish_private_preview|preview_commit_sha/);
   assert.ok(html.includes('sandbox="allow-scripts allow-forms allow-pointer-lock"'));
+  assert.ok(html.includes("隔離預覽不會更新公開網站"));
   assert.doesNotMatch(html, /sandbox="[^"]*allow-same-origin/);
 });
