@@ -64,7 +64,15 @@ Deno.serve(async (request) => {
       publishableKey = undefined;
     }
   }
-  const privilegedKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SECRET_KEY");
+  let privilegedKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SECRET_KEY");
+  if (!privilegedKey) {
+    try {
+      const configuredSecrets = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
+      privilegedKey = configuredSecrets.default ?? Object.values(configuredSecrets)[0];
+    } catch {
+      privilegedKey = undefined;
+    }
+  }
   const bucket = Deno.env.get("ADMIN_PREVIEW_BUCKET") ?? "sd-admin-previews";
   if (!supabaseUrl || !publishableKey || !privilegedKey) {
     return jsonResponse(503, { error: "Private preview service is not configured." }, origin);
