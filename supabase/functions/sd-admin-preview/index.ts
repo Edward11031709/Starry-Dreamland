@@ -55,7 +55,15 @@ Deno.serve(async (request) => {
   if (!tokenMatch) return jsonResponse(401, { error: "Sign in is required." }, origin);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const publishableKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+  let publishableKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+  if (!publishableKey) {
+    try {
+      const configuredKeys = JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") ?? "{}");
+      publishableKey = configuredKeys.default ?? Object.values(configuredKeys)[0];
+    } catch {
+      publishableKey = undefined;
+    }
+  }
   const privilegedKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SECRET_KEY");
   const bucket = Deno.env.get("ADMIN_PREVIEW_BUCKET") ?? "sd-admin-previews";
   if (!supabaseUrl || !publishableKey || !privilegedKey) {
@@ -69,7 +77,7 @@ Deno.serve(async (request) => {
     return jsonResponse(400, { error: "Invalid JSON body." }, origin);
   }
 
-  const commitSha = body.commit_sha;
+  if (!body || typeof body !== "object" || Array.isArray(body)) {\n    return jsonResponse(400, { error: "A JSON object is required." }, origin);\n  }\n\n  const commitSha = body.commit_sha;
   const path = body.path;
   if (typeof commitSha !== "string" || !/^[a-f0-9]{40}$/.test(commitSha)) {
     return jsonResponse(400, { error: "A full 40-character commit SHA is required." }, origin);
