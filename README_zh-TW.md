@@ -83,3 +83,8 @@
 - 一般星夢樂園完整穩定後，才規劃恐怖系統；未來恐怖系統切換入口會明確標示「成人限定 18+」，並需要成年驗證及管理員同意。目前沒有恐怖模式切換功能。
 
 詳細技術規劃：docs/3D_ROADMAP_CINEMATIC_FREE_ROAM_zh-TW.md。
+
+
+## 管理員版本審核中心
+
+管理員帳號通過資料庫端 `sd_is_admin()` 驗證後，導覽列才會顯示「管理中心」。中心會讀取目前 `main`、開啟中的 PR、版本標籤及歷史提交，提供差異與自動檢查連結。此中心不會直接部署或修改玩家資料；正式發布仍須依 `docs/RELEASE_WORKFLOW_zh-TW.md` 的人工核准流程。私有預覽的管理介面、Edge Function 原始碼與獨立上傳流程已加入開發分支；仍需 owner 建立 Supabase Private Storage bucket、設定 GitHub Actions secrets 並部署 Edge Function，完成前不會把未核准版本放到公開 GitHub Pages。設定方式見 `docs/ADMIN_PREVIEW_SETUP_zh-TW.md`。
