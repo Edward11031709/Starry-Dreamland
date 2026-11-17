@@ -21,10 +21,14 @@
 - 回復時選擇先前核准的 commit，建立回復 PR 或由管理員核准回復 commit，再經相同正式發布流程。
 - 程式版本回復不執行 Supabase migration rollback，不改動玩家帳號、星塵、服裝、遊戲紀錄或聊天資料。
 
-## 預覽與存取限制
-- PR 的檢查結果與 artifact 透過 GitHub 登入後查看；不要把未核准的開發版部署到正式 Pages 網址。
-- GitHub Pages 是公開網站，不能把未受保護的 preview 路徑當成管理員私有空間。
-- 遊戲內管理中心目前提供版本資訊、PR 差異、CI 及歷史提交檢視；尚未提供可直接遊玩的私有預覽。若要開放此功能，必須先建立 Supabase 私有 Storage bucket 與管理員驗證的 Edge Function 預覽閘道，透過短效簽章讀取每個檔案；不能把公開 GitHub Pages 或公開 Actions artifact 假裝成私有預覽。
+## 私有預覽與存取限制
+- PR CI 不部署 GitHub Pages，也不取得 Supabase service-role secrets。
+- 私有預覽使用 Supabase Private Storage bucket `sd-admin-previews`，搭配 `sd-admin-preview` Edge Function。只有登入後通過資料庫 `sd_is_admin()` 驗證的管理員才能取得 5 分鐘短效檔案 URL。
+- 在 main 上手動執行 workflow，設定 `publish_private_preview=true`、`preview_commit_sha=<完整 SHA>`、`confirm_release=false)，只會上傳私有預覽，不會部署公開網站。
+- 私有預覽上傳工作只讀取指定 commit 的靜態檔案，不執行候選 commit 的腳本；GitHub Actions service-role secret 只供 main 上的 owner 手動工作使用。
+- 管理中心以不含 `allow-same-origin` 的 sandbox iframe 開啟預覽，不共享正式登入 session 或 localStorage。預覽以訪客模式運行，不測試需要正式雲端寫入的功能。
+- bucket、Edge Function、GitHub Actions secrets 尚未完成 owner 設定與部署前，管理中心會顯示設定錯誤，不會回退到公開預覽網址。
+- 詳細設定：`docs/ADMIN_PREVIEW_SETUP_zh-TW.md`。
 
 ## 發布前檢查
 - 自動檢查通過。
