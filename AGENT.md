@@ -15,6 +15,8 @@
 - Never expose service-role/secret keys in browser code, repository files, logs, or build artifacts.
 - Previewing locked cosmetics must never spend Stardust. Only a validated server-side unlock action may spend it.
 - Admin-only actions require server-side authorization, not merely hidden UI.
+- Private previews must use a private Storage bucket and an admin-verified Edge Function that issues short-lived signed URLs; never publish preview files to public Pages.
+- Preview upload workflows must run only by explicit owner dispatch from `main`, must not execute candidate-commit scripts while holding server secrets, and must use an isolated sandbox iframe without `allow-same-origin`.
 
 ## Development workflow
 1. Read this guide, README_zh-TW.md, the relevant docs, the existing implementation, and current tests before changing code.
