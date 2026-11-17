@@ -41,7 +41,7 @@ test("avatar robe profiles flare toward the hem", () => {
   const buildPlayer = source.slice(start, end === -1 ? undefined : end);
   const profile = buildPlayer.match(/const robeProfile=\[([\s\S]*?)\];/);
   assert.ok(profile, "robe profile exists");
-  const radii = [...profile[1].matchAll(/new THREE\\.Vector2\\((0?\\.\\d+),/g)].map(match => Number(match[1]));
+  const radii = profile[1].split("new THREE.Vector2(").slice(1).map(point => Number(point.split(",")[0]));
   assert.ok(radii.length >= 4, "robe profile contains enough contour points");
   assert.ok(radii[0] > radii[radii.length - 1], "hem should be wider than the waist");
 });
