@@ -1,11 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.119.0";
+import { isSafePreviewPath } from "../_shared/preview-path.mjs";
 
 const DEFAULT_ALLOWED_ORIGINS = ["https://edward11031709.github.io"];
-const ALLOWED_EXTENSIONS = new Set([
-  "html", "js", "css", "json", "png", "jpg", "jpeg", "webp", "svg", "ico",
-  "woff", "woff2", "ttf", "otf", "glb", "gltf", "bin", "mp3", "ogg", "wav",
-  "mp4", "webm", "wasm", "hdr", "ktx2"
-]);
 const SIGNED_URL_TTL_SECONDS = 300;
 
 function corsHeaders(origin) {
@@ -28,15 +24,6 @@ function jsonResponse(status, payload, origin) {
   });
 }
 
-function isSafePreviewPath(value) {
-  if (typeof value !== "string" || value.length < 1 || value.length > 240) return false;
-  if (value.startsWith("/") || value.includes("\\") || value.includes("?") || value.includes("#")) return false;
-  if (!/^[A-Za-z0-9._/-]+$/.test(value)) return false;
-  const segments = value.split("/");
-  if (segments.length > 10 || segments.some((part) => !part || part === "." || part === ".." || part.startsWith("."))) return false;
-  const extension = value.split(".").pop()?.toLowerCase() ?? "";
-  return ALLOWED_EXTENSIONS.has(extension);
-}
 
 Deno.serve(async (request) => {
   const origin = request.headers.get("origin");
