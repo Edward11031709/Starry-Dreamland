@@ -77,7 +77,11 @@ Deno.serve(async (request) => {
     return jsonResponse(400, { error: "Invalid JSON body." }, origin);
   }
 
-  if (!body || typeof body !== "object" || Array.isArray(body)) {\n    return jsonResponse(400, { error: "A JSON object is required." }, origin);\n  }\n\n  const commitSha = body.commit_sha;
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return jsonResponse(400, { error: "A JSON object is required." }, origin);
+  }
+
+  const commitSha = body.commit_sha;
   const path = body.path;
   if (typeof commitSha !== "string" || !/^[a-f0-9]{40}$/.test(commitSha)) {
     return jsonResponse(400, { error: "A full 40-character commit SHA is required." }, origin);
