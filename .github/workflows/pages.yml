@@ -1,9 +1,15 @@
-name: 發布星夢樂園到 GitHub Pages
+name: 星夢樂園檢查與正式發布
 
 on:
-  push:
+  pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      confirm_release:
+        description: 我已檢查此版本並確認發布到公開網站
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -11,14 +17,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: starry-dreamland-pages
-  cancel-in-progress: true
+  group: starry-dreamland-production
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  validate:
+    name: 檢查程式與園區必要元件
     runs-on: ubuntu-latest
     steps:
       - name: 下載 Repository 程式碼
@@ -52,6 +56,18 @@ jobs:
           console.log(`Validated js/starry-3d.js and ${scripts.length} inline script(s).`);
           NODE
 
+  deploy:
+    name: 管理員確認後發布正式版
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_release == true
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下載已核准的 main 版本
+        uses: actions/checkout@v6
+
       - name: 設定 GitHub Pages
         uses: actions/configure-pages@v5
 
@@ -60,6 +76,6 @@ jobs:
         with:
           path: .
 
-      - name: 發布網站
+      - name: 發布正式網站
         id: deployment
         uses: actions/deploy-pages@v4
