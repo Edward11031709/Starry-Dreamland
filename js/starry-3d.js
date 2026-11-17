@@ -94,12 +94,25 @@ function addMesh(parent, geometry, material, position, scale, cast = true, recei
   return mesh;
 }
 
+function makeLancetGeometry(width,height) {
+  const shape=new THREE.Shape();
+  shape.moveTo(-width/2,-height/2);
+  shape.lineTo(width/2,-height/2);
+  shape.lineTo(width/2,height*0.12);
+  shape.quadraticCurveTo(width*0.46,height*0.4,0,height/2);
+  shape.quadraticCurveTo(-width*0.46,height*0.4,-width/2,height*0.12);
+  shape.closePath();
+  return new THREE.ShapeGeometry(shape,24);
+}
 function makeWindow(parent, x, y, z, width, height, material) {
-  const frame = addMesh(parent, new THREE.BoxGeometry(width * 1.55, height * 1.35, 0.1),
+  // Recessed lancet window: the pointed crown makes the facade read as crafted Gothic fantasy architecture.
+  const frame = addMesh(parent, makeLancetGeometry(width * 1.38, height * 1.24),
     makeMaterial(0x252a4a, 0.52, 0.45), [x, y, z + 0.045], null, true, true);
-  const glass = addMesh(parent, new THREE.BoxGeometry(width, height, 0.12), material,
-    [x, y, z + 0.11], null, false, false);
-  return [frame, glass];
+  const innerRim = addMesh(parent, makeLancetGeometry(width * 1.12, height * 1.08),
+    makeMaterial(0x9e88c7, 0.28, 0.58), [x, y, z + 0.082], null, false, false);
+  const glass = addMesh(parent, makeLancetGeometry(width, height), material,
+    [x, y, z + 0.112], null, false, false);
+  return [frame, innerRim, glass];
 }
 
 function addTower(parent,x,z,baseY,height,radius,materials,detail=true){
