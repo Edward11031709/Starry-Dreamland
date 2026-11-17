@@ -37,10 +37,18 @@
 5. 更新 sd_avatar_state() 與 sd_avatar_unlock()，讓經驗證的獎勵和帳本調整共同決定餘額。
 6. 在隔離的開發資料庫／測試環境驗證 RLS、負數、超額、競態、重複請求、非管理員呼叫與管理員自我調整，再提出 production migration 供管理員審核。
 
+## 管理員私有預覽設計
+
+- 新增 `sd-admin-preview` Edge Function 原始碼：先驗證使用者 JWT，再呼叫 `sd_is_admin()`，僅簽發 5 分鐘私有 Storage URL。
+- 新增 main owner 手動觸發的私有預覽上傳 job；只讀取指定 commit 的靜態檔案，不執行候選程式碼，並拒絕 Public bucket。
+- 管理中心加入隔離 sandbox iframe 預覽，刻意不授予 `allow-same-origin`，不共享正式登入工作階段。
+- 這些是 repository 開發分支的程式與設定文件；尚未部署 Edge Function、建立 bucket 或設定 Actions secrets，未影響生產 Supabase。
+
 ## 本次開發分支狀態
 
 - 角色模型新增立體肩飾、寶石肩扣、V 字領飾、胸前刺繡、垂墜腰飾與額前冠飾。
 - 3D 園區加入城堡冷色輪廓補光與緩慢星空動態。
 - 管理中心可檢視公開版本、候選版本、PR 差異與歷史提交。
-- 遊戲內私有開發預覽、星塵帳本與伺服器權威獎勵流程尚未完成。
+- 私有預覽程式已加入，但需 owner 設定 Private bucket、GitHub secrets 並部署 Edge Function 才能實際使用。
+- 星塵帳本與伺服器權威獎勵流程尚未完成。
 - 沒有寫入或變更生產 Supabase 資料。
