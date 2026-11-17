@@ -75,3 +75,27 @@ test("Ferris wheel cabins use rounded shells and arched glass", () => {
   assert.match(source, /makeLancetGeometry\(0\.325,0\.35\),cabinGlass/);
   assert.match(source, /const canopy=addMesh\(gondola,new THREE\.SphereGeometry/);
 });
+
+test("administrator navigation is granted only by the verified database role", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /sb\.rpc\("sd_is_admin"\)/);
+  assert.match(html, /isAdmin:isAdmin===true/);
+  assert.match(html, /if\(p\?\.isAdmin&&navRoot&&!adminButton\)/);
+  assert.match(html, /else if\(!p\?\.isAdmin&&adminButton\)adminButton\.remove\(\)/);
+  assert.match(html, /if\(!me\(\)\?\.isAdmin\|\|!cloudUser\|\|!sb\)/);
+  assert.doesNotMatch(html, /<button[^>]+data-page=["']admin["']/i,
+    "administrator navigation must not be statically exposed to visitors");
+});
+
+test("drop tower geometry uses structural braces and sculpted open seats", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  const start = source.indexOf("function buildDropTower(");
+  const end = source.indexOf("\nfunction ", start + 1);
+  assert.notEqual(start, -1, "drop tower builder exists");
+  const builder = source.slice(start, end === -1 ? undefined : end);
+  assert.match(builder, /const addBrace=/);
+  assert.match(builder, /new THREE\.CylinderGeometry\(radius\*0\.78,radius,direction\.length\(\),9\)/);
+  assert.match(builder, /const seatProfile=/);
+  assert.match(builder, /new THREE\.LatheGeometry\(seatProfile,24\)/);
+  assert.match(builder, /id:"drop",name:"星際自由落體"/);
+});
