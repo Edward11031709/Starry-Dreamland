@@ -40,7 +40,7 @@
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-這兩個 secrets 只會被 main 上的手動 `workflow_dispatch` 私有預覽上傳工作使用；PR 驗證工作不會取得這些 secrets。上傳工作只執行 workflow 內固定的上傳程式，不執行候選 commit 的程式碼。
+這兩個 secrets 只會被 main 上的手動 `workflow_dispatch` 私有預覽上傳工作使用；目前 workflow 另外限制只有 repository owner 帳號 `Edward11031709` 能啟動私有預覽上傳與正式發布工作。PR 驗證工作不會取得這些 secrets。上傳工作只執行 workflow 內固定的上傳程式，不執行候選 commit 的程式碼。
 
 ## 上傳與預覽流程
 
