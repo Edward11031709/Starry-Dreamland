@@ -69,6 +69,7 @@ jobs:
 
   upload_private_preview:
     name: 上傳管理員私有預覽（不發布正式網站）
+    needs: validate
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'Edward11031709' && inputs.publish_private_preview == true
     permissions:
       contents: read
