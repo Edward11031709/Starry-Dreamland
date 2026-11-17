@@ -99,3 +99,19 @@ test("drop tower geometry uses structural braces and sculpted open seats", () =>
   assert.match(builder, /new THREE\.LatheGeometry\(seatProfile,24\)/);
   assert.match(builder, /id:"drop",name:"星際自由落體"/);
 });
+
+
+test("private preview import is server-side and never relies on GitHub Actions secrets", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const workflow = readFileSync(new URL("../.github/workflows/pages.yml", import.meta.url), "utf8");
+  const fn = readFileSync(new URL("../supabase/functions/sd-admin-preview/index.ts", import.meta.url), "utf8");
+  assert.match(html, /body:\\{action:\\"import\\",commit_sha:sha\\}/);
+  assert.match(fn, /sd_is_admin/);
+  assert.match(fn, /api\\.github\\.com\\/repos\\/Edward11031709\\/Starry-Dreamland\\/git\\/trees/);
+  assert.match(fn, /raw\\.githubusercontent\\.com/);
+  assert.match(fn, /MAX_FILES = 600/);
+  assert.match(fn, /MAX_TOTAL_BYTES = 80 \\* 1024 \\* 1024/);
+  assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE_KEY|publish_private_preview|preview_commit_sha/);
+  assert.match(html, /sandbox=\"allow-scripts allow-forms allow-pointer-lock\"/);
+  assert.doesNotMatch(html, /sandbox=\"[^\"]*allow-same-origin/);
+});
