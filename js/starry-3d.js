@@ -1315,8 +1315,8 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   const hex=value=>parseInt(String(value).replace("#",""),16);
   const player=new THREE.Group();player.name="StarryDreamlandPlayer";
   player.userData.avatarId=avatarId;player.userData.avatarType=avatarType;player.userData.appearance=appearance;
-  const robe=makeMaterial(style.robe,0.32,0.34,{clearcoat:0.72,clearcoatRoughness:0.18});
-  const mantle=makeMaterial(style.mantle,0.36,0.28,{clearcoat:0.68});
+  const robe=new THREE.MeshPhysicalMaterial({color:style.robe,roughness:0.48,metalness:0.12,clearcoat:0.48,clearcoatRoughness:0.24,sheen:0.62,sheenColor:new THREE.Color(0x9f9acb),sheenRoughness:0.72});
+  const mantle=new THREE.MeshPhysicalMaterial({color:style.mantle,roughness:0.42,metalness:0.1,clearcoat:0.56,clearcoatRoughness:0.2,sheen:0.78,sheenColor:new THREE.Color(0xc8b8ee),sheenRoughness:0.66});
   const trim=makeMaterial(hex(appearance.accentColor),0.2,0.82,{clearcoat:1});
   const hair=makeMaterial(hex(appearance.hairColor),0.5,0.08);
   const skin=makeMaterial(hex(appearance.skinTone),0.78,0.02);
@@ -1407,15 +1407,24 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     addMesh(player,new THREE.OctahedronGeometry(0.045,0),coutureGem,[side*0.22,0.2,0.02],[0.8,1.4,0.8],null,false,false);
   });
 
-  // Boots, sleeves, gloves and decorative arm cuffs.
+  // Boots, anatomically connected sleeves, gloves and decorative arm cuffs.
   [-0.19,0.19].forEach(x=>{
     addMesh(player,new THREE.CylinderGeometry(0.105,0.13,0.31,14),shadow,[x,0.19,0.02]);
     addMesh(player,new THREE.TorusGeometry(0.11,0.025,6,22),trim,[x,0.31,0.02]);
+    const sleeve=addMesh(player,new THREE.CylinderGeometry(0.082,0.12,0.37,18,2),mantle,[x*1.66,0.91,0.025]);
+    sleeve.rotation.z=x<0?0.13:-0.13;
+    const sleeveBand=addMesh(player,new THREE.TorusGeometry(0.092,0.018,6,24),coutureGold,[x*1.78,0.79,0.04]);
+    sleeveBand.rotation.x=Math.PI/2;
     addMesh(player,new THREE.SphereGeometry(0.13,16,12),robe,[x*1.55,1.03,0],[1,0.86,0.92]);
     addMesh(player,new THREE.SphereGeometry(0.09,14,10),skin,[x*1.78,0.76,0.06]);
     const cuff=addMesh(player,new THREE.TorusGeometry(0.095,0.022,6,20),metal,[x*1.78,0.82,0.06]);
     cuff.rotation.x=Math.PI/2;
   });
+  // A visible neck and jeweled collar bridge the face and tailored mantle.
+  addMesh(player,new THREE.CylinderGeometry(0.105,0.12,0.19,18),skin,[0,1.34,0.035]);
+  const neckCollar=addMesh(player,new THREE.TorusGeometry(0.14,0.022,7,32),coutureGold,[0,1.285,0.035]);
+  neckCollar.rotation.x=Math.PI/2;
+  addMesh(player,new THREE.OctahedronGeometry(0.045,1),coutureGem,[0,1.29,0.17],[0.72,1.2,0.72],false,false);
   // Face and selectable hair styles. The hood is an actual garment silhouette.
   addMesh(player,new THREE.SphereGeometry(0.255,24,18),skin,[0,1.48,0.025],[0.94,1.05,0.9]);
   addMesh(player,new THREE.SphereGeometry(0.27,24,16,0,Math.PI*2,0,Math.PI/2),hair,[0,1.56,-0.015],
