@@ -8,10 +8,10 @@ const ALLOWED_EXTENSIONS = new Set([
 ]);
 const SIGNED_URL_TTL_SECONDS = 300;
 
-function corsHeaders(origin: string | null) {
+function corsHeaders(origin) {
   const allowed = (Deno.env.get("ADMIN_PREVIEW_ALLOWED_ORIGINS") ?? DEFAULT_ALLOWED_ORIGINS.join(","))
     .split(",").map((value) => value.trim()).filter(Boolean);
-  const headers: Record<string, string> = {
+  const headers = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
     "Vary": "Origin",
@@ -21,14 +21,14 @@ function corsHeaders(origin: string | null) {
   return headers;
 }
 
-function jsonResponse(status: number, payload: Record<string, unknown>, origin: string | null) {
+function jsonResponse(status, payload, origin) {
   return new Response(JSON.stringify(payload), {
     status,
     headers: { ...corsHeaders(origin), "Content-Type": "application/json; charset=utf-8" }
   });
 }
 
-function isSafePreviewPath(value: unknown): value is string {
+function isSafePreviewPath(value) {
   if (typeof value !== "string" || value.length < 1 || value.length > 240) return false;
   if (value.startsWith("/") || value.includes("\\") || value.includes("?") || value.includes("#")) return false;
   if (!/^[A-Za-z0-9._/-]+$/.test(value)) return false;
@@ -38,7 +38,7 @@ function isSafePreviewPath(value: unknown): value is string {
   return ALLOWED_EXTENSIONS.has(extension);
 }
 
-Deno.serve(async (request: Request) => {
+Deno.serve(async (request) => {
   const origin = request.headers.get("origin");
   const headers = corsHeaders(origin);
   const allowed = (Deno.env.get("ADMIN_PREVIEW_ALLOWED_ORIGINS") ?? DEFAULT_ALLOWED_ORIGINS.join(","))
@@ -62,7 +62,7 @@ Deno.serve(async (request: Request) => {
     return jsonResponse(503, { error: "Private preview service is not configured." }, origin);
   }
 
-  let body: { commit_sha?: unknown; path?: unknown };
+  let body;
   try {
     body = await request.json();
   } catch {
