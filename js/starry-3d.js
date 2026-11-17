@@ -323,6 +323,20 @@ function buildCastle(scene,materials){
    const arch=addMesh(castle,new THREE.TorusGeometry(0.23,0.038,7,26,Math.PI),materials.gold,[x,y+(y>2?0.39:0.23),2.03]);arch.rotation.z=Math.PI;
   });
  });
+ // Hand-finished facade relief: narrow pilasters, stepped cornices and jewel-set bosses
+ // break the broad rectangular wall into smaller architectural bays.
+ [-3.05,3.05].forEach(x=>{
+   addMesh(castle,new THREE.BoxGeometry(0.12,3.22,0.12),materials.silverMetal,[x,2.12,2.12]);
+   addMesh(castle,new THREE.BoxGeometry(0.28,0.09,0.22),materials.gold,[x,0.62,2.16]);
+   addMesh(castle,new THREE.BoxGeometry(0.25,0.08,0.2),materials.trim,[x,3.67,2.16]);
+ });
+ for(let bay=0;bay<5;bay++){
+   const x=-2.42+bay*1.21;
+   const boss=addMesh(castle,new THREE.OctahedronGeometry(0.075,1),bay%2?materials.crystal:materials.gold,
+     [x,3.91,2.13],[0.7,1.25,0.7],null,false,false);
+   boss.rotation.z=Math.PI/4;
+   addMesh(castle,new THREE.BoxGeometry(0.56,0.035,0.035),materials.silverMetal,[x,3.79,2.13],null,false,false);
+ }
  // A stained-glass astral rose window above the entrance gives the castle a clear signature.
  const roseFrame=addMesh(castle,new THREE.TorusGeometry(0.56,0.075,10,64),materials.gold,[0,3.42,2.13]);
  const roseInner=addMesh(castle,new THREE.TorusGeometry(0.43,0.028,7,56),materials.trim,[0,3.42,2.18]);
@@ -876,6 +890,17 @@ function buildEnvironment(scene) {
   applyPattern(materials.road,"paving","#343451","rgba(13,13,34,0.5)","#bda7e6",1.4,2.8);
   applyPattern(materials.paving,"paving","#4a456b","rgba(22,18,48,0.34)","#ddc89b",2.8,2.8);
   applyPattern(materials.top,"stone","#373451","rgba(12,11,33,0.4)","#9c8cc6",2.5,2.5);
+  // Metals need a balanced dielectric response in this lightweight scene (no HDR reflection probe).
+  [materials.trim,materials.gold,materials.silver,materials.silverMetal].forEach((material,index)=>{
+    material.metalness=[0.52,0.58,0.48,0.56][index];
+    material.roughness=Math.max(material.roughness,0.24);
+    material.clearcoat=0.82;
+    material.clearcoatRoughness=0.16;
+    material.needsUpdate=true;
+  });
+  materials.wall.roughness=0.58;
+  materials.wall.metalness=0.12;
+  materials.wall.clearcoat=0.28;
 
   // A large connected floating island gives the park room for real exploration.
   const island = new THREE.Group();
@@ -1304,7 +1329,23 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   const lip=makeMaterial(0x9a657f,0.55,0.02);
 
   // Tailored robe, layered mantle and a gemstone clasp.
-  addMesh(player,new THREE.CylinderGeometry(0.25,0.48,0.98,24,3),robe,[0,0.77,0]);
+  // Sculpted couture silhouette: a softly tailored waist flowing into a layered bell-shaped hem.
+  const robeProfile=[
+    new THREE.Vector2(0.17,-0.49),new THREE.Vector2(0.29,-0.46),
+    new THREE.Vector2(0.39,-0.35),new THREE.Vector2(0.46,-0.18),
+    new THREE.Vector2(0.49,-0.02),new THREE.Vector2(0.43,0.16),
+    new THREE.Vector2(0.32,0.34),new THREE.Vector2(0.25,0.49)
+  ];
+  const robeBody=addMesh(player,new THREE.LatheGeometry(robeProfile,40),robe,[0,0.77,0]);
+  robeBody.castShadow=true;
+  // A second overskirt gives the silhouette depth without a flat boxy cape.
+  const overskirtMat=new THREE.MeshPhysicalMaterial({color:style.mantle,roughness:0.42,metalness:0.16,clearcoat:0.62,clearcoatRoughness:0.24,sheen:0.42,sheenColor:new THREE.Color(0xb9a8e8),side:THREE.DoubleSide});
+  const overskirt=addMesh(player,new THREE.LatheGeometry([
+    new THREE.Vector2(0.285,-0.43),new THREE.Vector2(0.365,-0.36),
+    new THREE.Vector2(0.425,-0.18),new THREE.Vector2(0.445,-0.04),
+    new THREE.Vector2(0.37,0.16),new THREE.Vector2(0.285,0.34)
+  ],40),overskirtMat,[0,0.77,-0.012]);
+  overskirt.rotation.y=Math.PI/8;
   addMesh(player,new THREE.CylinderGeometry(0.28,0.31,0.12,24),trim,[0,1.19,0]);
   const cape=addMesh(player,new THREE.CylinderGeometry(0.12,0.53,0.9,24,2,true),mantle,[0,0.72,-0.16]);
   cape.rotation.x=-0.1;
@@ -1323,7 +1364,16 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     const stitch=addMesh(player,new THREE.BoxGeometry(0.018,0.34,0.012),seam%2?trim:metal,[x,0.43,0.27],null,false,false);
     stitch.rotation.z=(seam-2)*0.035;
   }
-  addMesh(player,new THREE.TorusGeometry(0.39,0.027,7,40),metal,[0,0.34,0]).rotation.x=Math.PI/2;
+  // Double-layered metallic hem with fine radial stitchwork catches the rim light.
+  addMesh(player,new THREE.TorusGeometry(0.405,0.026,8,56),coutureGold,[0,0.345,0]).rotation.x=Math.PI/2;
+  addMesh(player,new THREE.TorusGeometry(0.382,0.012,6,56),coutureSilver,[0,0.385,0]).rotation.x=Math.PI/2;
+  for(let pleat=0;pleat<16;pleat++){
+    const angle=pleat/16*Math.PI*2;
+    const radius=0.405;
+    const stitch=addMesh(player,new THREE.OctahedronGeometry(0.018,0),pleat%4===0?coutureGem:coutureGold,
+      [Math.sin(angle)*radius,0.355,Math.cos(angle)*radius],[0.8,0.42,1.2],false,false);
+    stitch.rotation.y=angle;
+  }
 
   // Couture detailing: raised shoulder pieces, a jeweled collar and fine embroidery.
   const coutureGold=makeMaterial(0xe8cb91,0.19,0.86,{clearcoat:1,clearcoatRoughness:0.08});
