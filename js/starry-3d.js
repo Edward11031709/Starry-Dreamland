@@ -739,38 +739,87 @@ function buildTeacupRide(scene,materials,x,z){
 
 function buildDropTower(scene,materials,x,z){
   const root=new THREE.Group();root.position.set(x,0.78,z);root.userData.action="ride-drop";scene.add(root);
-  addMesh(root,new THREE.CylinderGeometry(2.2,2.45,0.38,40),materials.darkStone,[0,0.2,0]);
-  addMesh(root,new THREE.TorusGeometry(2.28,0.1,8,56),materials.gold,[0,0.42,0]).rotation.x=Math.PI/2;
-  addMesh(root,new THREE.CylinderGeometry(0.34,0.52,7.1,16),materials.silverMetal,[0,3.95,0]);
-  for(let i=0;i<4;i++){
-    const a=i/4*Math.PI*2,xp=Math.cos(a)*1.08,zp=Math.sin(a)*1.08;
-    const leg=addMesh(root,new THREE.CylinderGeometry(0.11,0.16,6.8,10),materials.darkStone,[xp,3.6,zp]);
-    leg.rotation.z=-Math.cos(a)*0.14;leg.rotation.x=Math.sin(a)*0.14;
-    addMesh(root,new THREE.SphereGeometry(0.16,12,10),materials.lampGlow,[xp,7.0,zp],null,false,false);
+  // A broad layered plinth gives the ride a deliberate architectural footprint.
+  addMesh(root,new THREE.CylinderGeometry(2.2,2.45,0.38,48),materials.darkStone,[0,0.2,0]);
+  addMesh(root,new THREE.TorusGeometry(2.28,0.1,10,72),materials.gold,[0,0.42,0]).rotation.x=Math.PI/2;
+  addMesh(root,new THREE.CylinderGeometry(1.98,2.05,0.08,48),materials.paving,[0,0.43,0]);
+  // Central mast, fluted rails and stepped collars.
+  addMesh(root,new THREE.CylinderGeometry(0.34,0.52,7.1,24,3),materials.silverMetal,[0,3.95,0]);
+  for(let rib=0;rib<10;rib++){
+    const angle=rib/10*Math.PI*2;
+    const radius=0.43;
+    const flute=addMesh(root,new THREE.BoxGeometry(0.038,6.62,0.055),rib%2?materials.gold:materials.trim,
+      [Math.cos(angle)*radius,3.92,Math.sin(angle)*radius],null,false,false);
+    flute.rotation.y=-angle;
   }
-  [1.0,3.8,6.55].forEach((yy,index)=>{
-    const band=addMesh(root,new THREE.TorusGeometry(index===1?0.72:0.56,0.045,8,48),index===1?materials.gold:materials.trim,[0,yy,0]);
+  [0.82,3.78,6.7].forEach((yy,index)=>{
+    const radius=index===1?0.66:0.54;
+    const band=addMesh(root,new THREE.TorusGeometry(radius,index===1?0.065:0.042,9,56),
+      index===1?materials.gold:materials.trim,[0,yy,0]);
     band.rotation.x=Math.PI/2;
+    addMesh(root,new THREE.CylinderGeometry(radius*0.9,radius*0.92,0.08,32),
+      materials.darkStone,[0,yy,0]);
   });
-  const crown=addMesh(root,new THREE.CylinderGeometry(0.72,0.88,0.2,12),materials.gold,[0,7.48,0]);
-  addMesh(root,new THREE.OctahedronGeometry(0.32,1),materials.crystal,[0,7.82,0],[0.76,1.3,0.76],null,false,false);
-  const gondola=new THREE.Group();root.add(gondola);gondola.position.y=1.7;
-  addMesh(gondola,new THREE.TorusGeometry(1.05,0.16,10,48),materials.gold,[0,0,0]);
-  addMesh(gondola,new THREE.TorusGeometry(0.9,0.045,8,48),materials.trim,[0,0.1,0]);
-  for(let i=0;i<8;i++){
-    const a=i/8*Math.PI*2;
-    addMesh(gondola,new THREE.BoxGeometry(0.42,0.48,0.52),
-      makeMaterial([0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9][i%4],0.38,0.22),
-      [Math.cos(a)*0.95,0,Math.sin(a)*0.95]);
+  const supportPoints=[];
+  for(let i=0;i<4;i++){
+    const a=i/4*Math.PI*2+Math.PI/4,xp=Math.cos(a)*1.08,zp=Math.sin(a)*1.08;
+    supportPoints.push({x:xp,z:zp,a});
+    const leg=addMesh(root,new THREE.CylinderGeometry(0.11,0.16,6.82,12),materials.darkStone,[xp,3.62,zp]);
+    leg.rotation.z=-Math.cos(a)*0.14;leg.rotation.x=Math.sin(a)*0.14;
+    const inlay=addMesh(root,new THREE.BoxGeometry(0.035,5.95,0.04),materials.gold,
+      [xp+Math.cos(a)*0.1,3.62,zp+Math.sin(a)*0.1]);
+    inlay.rotation.z=-Math.cos(a)*0.14;inlay.rotation.x=Math.sin(a)*0.14;
+    addMesh(root,new THREE.SphereGeometry(0.16,14,10),materials.lampGlow,[xp,7.0,zp],null,false,false);
   }
+  // Cross-bracing connects the four pylons into a believable steel ride frame.
+  const addBrace=(start,end,radius,material)=>{
+    const from=new THREE.Vector3(start[0],start[1],start[2]);
+    const to=new THREE.Vector3(end[0],end[1],end[2]);
+    const direction=to.clone().sub(from);
+    const beam=addMesh(root,new THREE.CylinderGeometry(radius*0.78,radius,direction.length(),9),material,
+      [(start[0]+end[0])/2,(start[1]+end[1])/2,(start[2]+end[2])/2],null,true,false);
+    beam.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
+    return beam;
+  };
+  [1.1,3.7,6.25].forEach((yy,index)=>{
+    const rail=addMesh(root,new THREE.TorusGeometry(1.18,index===1?0.052:0.034,8,64),
+      index===1?materials.gold:materials.silverMetal,[0,yy,0]);
+    rail.rotation.x=Math.PI/2;
+  });
+  supportPoints.forEach(point=>{
+    addBrace([0,2.45,0],[point.x*0.92,4.25,point.z*0.92],0.055,materials.silverMetal);
+    addBrace([0,5.35,0],[point.x*0.96,6.45,point.z*0.96],0.042,materials.gold);
+  });
+  const crown=addMesh(root,new THREE.CylinderGeometry(0.72,0.88,0.2,16),materials.gold,[0,7.48,0]);
+  addMesh(root,new THREE.TorusGeometry(0.72,0.055,8,48),materials.trim,[0,7.6,0]).rotation.x=Math.PI/2;
+  addMesh(root,new THREE.OctahedronGeometry(0.32,1),materials.crystal,[0,7.82,0],[0.76,1.3,0.76],null,false,false);
+  // The lifting ring is a complete circular platform with individual sculpted open seats.
+  const gondola=new THREE.Group();root.add(gondola);gondola.position.y=1.7;
+  addMesh(gondola,new THREE.TorusGeometry(1.05,0.16,12,64),materials.gold,[0,0,0]);
+  addMesh(gondola,new THREE.TorusGeometry(0.9,0.045,8,56),materials.trim,[0,0.1,0]);
+  const seatProfile=[
+    new THREE.Vector2(0,-0.18),new THREE.Vector2(0.22,-0.18),new THREE.Vector2(0.34,-0.08),
+    new THREE.Vector2(0.36,0.10),new THREE.Vector2(0.31,0.18),new THREE.Vector2(0.26,0.10),
+    new THREE.Vector2(0.24,-0.055),new THREE.Vector2(0,-0.055)
+  ];
+  const seatShellGeometry=new THREE.LatheGeometry(seatProfile,24);
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2,xp=Math.cos(a)*0.93,zp=Math.sin(a)*0.93;
+    const seat=new THREE.Group();seat.position.set(xp,0,zp);seat.rotation.y=-a;gondola.add(seat);
+    const seatColor=[0x8bb5dd,0xd88dba,0xe6c17f,0x8fc2a9][i%4];
+    const seatMaterial=makeMaterial(seatColor,0.32,0.2,{clearcoat:0.68,clearcoatRoughness:0.2});
+    addMesh(seat,seatShellGeometry,seatMaterial,[0,0,0]);
+    const cushion=addMesh(seat,new THREE.SphereGeometry(0.22,18,12),materials.darkStone,[0,-0.115,0],[1,0.28,1]);
+    const rim=addMesh(seat,new THREE.TorusGeometry(0.34,0.024,7,36),materials.gold,[0,0.12,0]);
+    rim.rotation.x=Math.PI/2;
+    addMesh(seat,new THREE.OctahedronGeometry(0.065,1),materials.crystal,[0,0.19,0.32],[0.72,1.2,0.72],null,false,false);
+  }
+  // A clear central mount point keeps the existing ride interaction and camera behavior intact.
   const rideSeat=new THREE.Group();rideSeat.position.set(0,0.24,0);gondola.add(rideSeat);
   const sign=makeLabelSprite({title:"星際自由落體",subtitle:"GALAXY DROP · RIDE"});
   if(sign){sign.position.set(0,8.8,0);sign.scale.set(3.7,0.98,1);root.add(sign)}
   return {id:"drop",name:"星際自由落體",action:"ride-drop",root,object:gondola,rideSeat,axis:"lift",baseY:1.4,range:3.9,speed:0.82,phase:Math.random()*Math.PI*2,interactionRadius:4.0,dismountRadius:5.0};
 }
-
-
-
 function buildShootingGallery(scene,materials,x,z){
   const hall=new THREE.Group();hall.position.set(x,0.78,z);hall.userData.gameId="shooting-range";scene.add(hall);
   addMesh(hall,new THREE.CylinderGeometry(4.0,4.2,0.24,48),materials.darkStone,[0,0.12,0]);
