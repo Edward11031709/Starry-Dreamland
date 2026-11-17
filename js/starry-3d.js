@@ -1561,6 +1561,10 @@ function mount(host) {
   warmLight.position.set(0, 7, -4);
   scene.add(warmLight);
 
+  const castleRimLight = new THREE.DirectionalLight(0xc7b7ff, 0.42);
+  castleRimLight.position.set(7, 13, -28);
+  scene.add(castleRimLight);
+
   const blueLight = new THREE.PointLight(0x6d80dc, 23, 28, 2);
   blueLight.position.set(-7, 4, 5);
   scene.add(blueLight);
@@ -1879,6 +1883,8 @@ function mount(host) {
     environment.compassHalo.rotation.z += delta * 0.17;
     environment.planet.rotation.y += delta * 0.045;
     environment.planetRing.rotation.z += delta * 0.06;
+    starfield.rotation.y += delta * 0.0011;
+    starfield.material.opacity = 0.84 + Math.sin(t * 0.34) * 0.035;
     if(parkMotes){
       const position=parkMotes.geometry.attributes.position,base=parkMotes.userData.basePositions,phases=parkMotes.userData.phases;
       for(let i=0;i<phases.length;i++)position.array[i*3+1]=base[i*3+1]+Math.sin(t*0.8+phases[i])*0.16;
