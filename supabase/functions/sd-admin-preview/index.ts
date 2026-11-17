@@ -12,7 +12,7 @@ const SKIP_TOP_LEVEL = new Set([
   "node_modules", "coverage"
 ]);
 
-const MIME_TYPES: Record<string, string> = {
+const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -40,10 +40,10 @@ const MIME_TYPES: Record<string, string> = {
   ".ktx2": "image/ktx2"
 };
 
-function corsHeaders(origin: string | null) {
+function corsHeaders(origin) {
   const allowed = (Deno.env.get("ADMIN_PREVIEW_ALLOWED_ORIGINS") ?? DEFAULT_ALLOWED_ORIGINS.join(","))
     .split(",").map((value) => value.trim()).filter(Boolean);
-  const headers: Record<string, string> = {
+  const headers = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
     "Vary": "Origin",
@@ -53,14 +53,14 @@ function corsHeaders(origin: string | null) {
   return headers;
 }
 
-function jsonResponse(status: number, payload: Record<string, unknown>, origin: string | null) {
+function jsonResponse(status, payload, origin) {
   return new Response(JSON.stringify(payload), {
     status,
     headers: { ...corsHeaders(origin), "Content-Type": "application/json; charset=utf-8" }
   });
 }
 
-function getEnvironmentKey(primary: string, fallback: string, mapName: string): string | undefined {
+function getEnvironmentKey(primary, fallback, mapName) {
   let value = Deno.env.get(primary) ?? Deno.env.get(fallback);
   if (value) return value;
   try {
@@ -72,17 +72,14 @@ function getEnvironmentKey(primary: string, fallback: string, mapName: string): 
   return typeof value === "string" ? value : undefined;
 }
 
-function isAllowedRepositoryPath(path: string): boolean {
+function isAllowedRepositoryPath(path) {
   if (!isSafePreviewPath(path)) return false;
   const firstSegment = path.split("/")[0];
   if (SKIP_TOP_LEVEL.has(firstSegment)) return false;
   return true;
 }
 
-async function importCommitToPrivateStorage(
-  storageClient: ReturnType<typeof createClient>,
-  commitSha: string
-): Promise<{ filesUploaded: number; totalBytes: number }> {
+async function importCommitToPrivateStorage(storageClient, commitSha) {
   const treeUrl = `https://api.github.com/repos/${GITHUB_REPO}/git/trees/${commitSha}?recursive=1`;
   const treeResponse = await fetch(treeUrl, {
     headers: {
@@ -100,11 +97,11 @@ async function importCommitToPrivateStorage(
     throw new Error("GitHub 版本檔案清單不完整，已中止匯入。");
   }
 
-  const files = treeData.tree.filter((item: { path?: string; type?: string; size?: number }) =>
+  const files = treeData.tree.filter((item) =>
     item.type === "blob" &&
     typeof item.path === "string" &&
     isAllowedRepositoryPath(item.path)
-  ).map((item: { path: string; size?: number }) => ({
+  ).map((item) => ({
     path: item.path,
     size: Number.isFinite(item.size) ? Number(item.size) : 0,
     extension: `.${item.path.split(".").pop()?.toLowerCase() ?? ""}`
@@ -113,11 +110,11 @@ async function importCommitToPrivateStorage(
   if (files.length === 0 || files.length > MAX_FILES) {
     throw new Error("候選版本的靜態檔案數量不合理，已中止匯入。");
   }
-  if (!files.some((file: { path: string }) => file.path === "index.html")) {
+  if (!files.some((file) => file.path === "index.html")) {
     throw new Error("候選版本缺少 index.html，無法建立網站預覽。");
   }
 
-  const expectedBytes = files.reduce((sum: number, file: { size: number }) => sum + file.size, 0);
+  const expectedBytes = files.reduce((sum, file) => sum + file.size, 0);
   if (expectedBytes > MAX_TOTAL_BYTES) {
     throw new Error("候選版本靜態檔案超過 80 MB，已中止匯入。");
   }
@@ -127,7 +124,7 @@ async function importCommitToPrivateStorage(
   const batchSize = 8;
   for (let offset = 0; offset < files.length; offset += batchSize) {
     const batch = files.slice(offset, offset + batchSize);
-    const results = await Promise.all(batch.map(async (file: { path: string; size: number; extension: string }) => {
+    const results = await Promise.all(batch.map(async (file) => {
       const encodedPath = file.path.split("/").map(encodeURIComponent).join("/");
       const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${commitSha}/${encodedPath}`;
       const response = await fetch(rawUrl, {
