@@ -107,7 +107,8 @@ test("private preview import is admin-gated and does not require GitHub Actions 
   const fn = readFileSync(new URL("../supabase/functions/sd-admin-preview/index.ts", import.meta.url), "utf8");
   assert.ok(html.includes('body:{action:"import",commit_sha:sha}'));
   assert.ok(fn.includes("sd_is_admin"));
-  assert.ok(fn.includes("https://api.github.com/repos/Edward11031709/Starry-Dreamland/git/trees/"));
+  assert.ok(fn.includes("const GITHUB_REPO = \"Edward11031709/Starry-Dreamland\""));
+  assert.ok(fn.includes("git/trees/${commitSha}?recursive=1"));
   assert.ok(fn.includes("https://raw.githubusercontent.com/"));
   assert.ok(fn.includes("MAX_FILES = 600"));
   assert.ok(fn.includes("MAX_TOTAL_BYTES = 80 * 1024 * 1024"));
