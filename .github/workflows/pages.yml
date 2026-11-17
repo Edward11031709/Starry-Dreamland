@@ -71,6 +71,12 @@ jobs:
       - name: 設定 GitHub Pages
         uses: actions/configure-pages@v5
 
+      - name: 記錄本次正式發布版本
+        run: |
+          cat > release.json <<EOF
+          {"commit":"${GITHUB_SHA}","published_at":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","ref":"${GITHUB_REF_NAME}"}
+          EOF
+
       - name: 打包網站檔案
         uses: actions/upload-pages-artifact@v4
         with:
