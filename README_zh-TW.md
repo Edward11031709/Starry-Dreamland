@@ -87,4 +87,4 @@
 
 ## 管理員版本審核中心
 
-管理員帳號通過資料庫端 `sd_is_admin()` 驗證後，導覽列才會顯示「管理中心」。中心會讀取目前 `main`、開啟中的 PR、版本標籤及歷史提交，提供差異與自動檢查連結。此中心不會直接部署或修改玩家資料；正式發布仍須依 `docs/RELEASE_WORKFLOW_zh-TW.md` 的人工核准流程。**遊戲內私有預覽尚未啟用**，未核准版本不會放到公開 GitHub Pages。
+管理員帳號通過資料庫端 `sd_is_admin()` 驗證後，導覽列才會顯示「管理中心」。中心會讀取目前 `main`、開啟中的 PR、版本標籤及歷史提交，提供差異與自動檢查連結。此中心不會直接部署或修改玩家資料；正式發布仍須依 `docs/RELEASE_WORKFLOW_zh-TW.md` 的人工核准流程。私有預覽的管理介面、Edge Function 原始碼與獨立上傳流程已加入開發分支；仍需 owner 建立 Supabase Private Storage bucket、設定 GitHub Actions secrets 並部署 Edge Function，完成前不會把未核准版本放到公開 GitHub Pages。設定方式見 `docs/ADMIN_PREVIEW_SETUP_zh-TW.md`。
