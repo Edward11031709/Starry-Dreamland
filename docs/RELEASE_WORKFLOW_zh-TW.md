@@ -6,8 +6,8 @@
 ## 分支與環境
 - `main`：已通過檢查、等待管理員驗收的候選版本；合併 PR 本身不代表發布。
 - `dev/*`、`feature/*`：日常開發分支。
-- GitHub Pages：只由受保護的 `production` 環境部署。
-- PR CI：執行語法與測試，保留可供管理員檢查的 Actions artifact；不部署到公開 Pages。
+- GitHub Pages：只由受保護的 `production` 環境部署；部署時產生 `release.json`，記錄實際公開的 commit SHA。
+- PR CI：執行語法與測試；不部署到公開 Pages。管理員中心會讀取 PR、歷史提交與 `release.json`，區分「公開版本」和「main 最新候選」。
 
 ## 管理員發布步驟
 1. 在 PR 檢查變更、CI 與測試結果，並親自驗收預覽。
@@ -24,7 +24,7 @@
 ## 預覽與存取限制
 - PR 的檢查結果與 artifact 透過 GitHub 登入後查看；不要把未核准的開發版部署到正式 Pages 網址。
 - GitHub Pages 是公開網站，不能把未受保護的 preview 路徑當成管理員私有空間。
-- 若未來需要在遊戲內管理中心直接預覽，應使用具真正存取控制的私有預覽主機／私有儲存與後端簽發短效連結；不能只靠前端隱藏按鈕或 URL 難猜來保護。
+- 遊戲內管理中心目前提供版本資訊、PR 差異、CI 及歷史提交檢視；尚未提供可直接遊玩的私有預覽。若要開放此功能，必須先建立 Supabase 私有 Storage bucket 與管理員驗證的 Edge Function 預覽閘道，透過短效簽章讀取每個檔案；不能把公開 GitHub Pages 或公開 Actions artifact 假裝成私有預覽。
 
 ## 發布前檢查
 - 自動檢查通過。
