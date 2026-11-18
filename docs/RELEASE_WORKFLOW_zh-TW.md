@@ -29,7 +29,7 @@
 
 1. 在 PR 檢查程式差異、CI 與私有預覽；桌機與手機實機驗收需由管理員完成。
 2. 管理員明確核准後，才由 owner 合併 PR 至 `main`。
-3. 開啟 Actions 的「星夢樂園檢查與正式發布」，選擇 `main)，並將 `confirm_release=true`。
+3. 開啟 Actions 的「星夢樂園檢查與正式發布」，選擇 main，並將 confirm_release 設為 true。
 4. 確認 GitHub `production` Environment 已設定 Required reviewers（管理員本人）及只允許 `main`；未確認前不得發布。
 5. 通過 Environment 審核後才會執行 Pages deploy。完成後核對 `release.json` 的 commit SHA 與發布時間。
 
