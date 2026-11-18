@@ -1427,6 +1427,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   const mantle=new THREE.MeshPhysicalMaterial({color:style.mantle,roughness:0.42,metalness:0.1,clearcoat:0.56,clearcoatRoughness:0.2,sheen:0.78,sheenColor:new THREE.Color(0xc8b8ee),sheenRoughness:0.66});
   const trim=makeMaterial(hex(appearance.accentColor),0.2,0.82,{clearcoat:1});
   const hair=makeMaterial(hex(appearance.hairColor),0.5,0.08);
+  const hairHighlight=makeMaterial(hex(appearance.hairColor),0.28,0.1,{clearcoat:0.92,clearcoatRoughness:0.12});
   const skin=makeMaterial(hex(appearance.skinTone),0.78,0.02);
   const metal=makeMaterial(style.metal,0.2,0.76,{clearcoat:1});
   const shadow=makeMaterial(0x1a1930,0.82,0.05);
@@ -1536,6 +1537,13 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   headRig.scale.setScalar(headScale);
   headRig.position.set(0,1.45*(1-headScale),0.025*(1-headScale));
   player.add(headRig);
+  let hairStrandCount=0;
+  const addHairStrand=(points,radius=0.012,material=hairHighlight)=>{
+    const curve=new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(point[0],point[1],point[2])));
+    const strand=addMesh(headRig,new THREE.TubeGeometry(curve,18,radius,5,false),material,null,null,false,false);
+    hairStrandCount++;
+    return strand;
+  };
   // A visible neck and jeweled collar bridge the face and tailored mantle.
   addMesh(headRig,new THREE.CylinderGeometry(0.105,0.12,0.19,18),skin,[0,1.34,0.035]);
   const neckCollar=addMesh(headRig,new THREE.TorusGeometry(0.14,0.022,7,32),coutureGold,[0,1.285,0.035]);
@@ -1565,12 +1573,29 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     [-1,1].forEach(side=>addMesh(headRig,new THREE.SphereGeometry(0.07,12,10),hair,[side*0.23,1.39,-0.01],[0.8,1.4,0.9]));
     addMesh(headRig,new THREE.TorusGeometry(0.11,0.018,6,24),trim,[0,1.67,-0.02]);
   }
-  // Fine strand highlights make the selected hairstyle read clearly in third person.
-  for(let strand=0;strand<3;strand++){
-    const side=strand-1;
-    const highlight=addMesh(headRig,new THREE.SphereGeometry(0.018,8,8),trim,
-      [side*0.12,1.61-Math.abs(side)*0.025,0.19-Math.abs(side)*0.018],[0.7,1.45,0.48],false,false);
-    highlight.rotation.z=side*0.18;
+  // Refined, low-segment hair locks add readable silhouettes without a heavy skinned mesh.
+  if(appearance.hairStyle==="long"){
+    [-1,1].forEach(side=>addHairStrand([
+      [side*0.235,1.61,0.15],[side*0.27,1.48,0.155],
+      [side*0.27,1.29,0.135],[side*0.245,1.08,0.095]
+    ],0.022,hair));
+  }else if(appearance.hairStyle==="twin"){
+    [-1,1].forEach(side=>addHairStrand([
+      [side*0.29,1.56,-0.035],[side*0.36,1.4,-0.055],
+      [side*0.34,1.2,-0.025],[side*0.29,1.12,0.015]
+    ],0.028,hair));
+  }else if(appearance.hairStyle==="short"){
+    addHairStrand([[-0.18,1.62,0.18],[-0.12,1.68,0.22],[-0.02,1.67,0.235],
+      [0.09,1.64,0.22],[0.17,1.59,0.18]],0.025,hair);
+  }else{
+    addHairStrand([[-0.24,1.68,0.08],[-0.18,1.74,0.13],[0,1.77,0.16],
+      [0.18,1.74,0.13],[0.24,1.68,0.08]],0.012,coutureSilver);
+  }
+  if(appearance.hairStyle==="hood"){
+    addHairStrand([[-0.18,1.66,0.12],[-0.1,1.7,0.16],[0,1.71,0.17]],0.007,hairHighlight);
+  }else{
+    addHairStrand([[-0.11,1.68,0.2],[-0.06,1.71,0.235],[0,1.72,0.24]],0.006,hairHighlight);
+    addHairStrand([[0.02,1.72,0.24],[0.09,1.7,0.23],[0.14,1.66,0.21]],0.006,hairHighlight);
   }
   addMesh(headRig,new THREE.OctahedronGeometry(0.12,1),trim,[0,1.77,0.05],[0.72,1.2,0.72],false,false);
 
@@ -1652,6 +1677,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   halo.rotation.x=Math.PI/2;
   [-0.26,0.26].forEach(x=>addMesh(player,new THREE.OctahedronGeometry(0.075,1),trim,[x,1.08,0.09],null,false,false));
   player.userData.halo=halo;player.userData.floatingStar=floatingStar;player.userData.walkPhase=0;
+  player.userData.hairStrandCount=hairStrandCount;
   scene.add(player);return player;
 }
 
