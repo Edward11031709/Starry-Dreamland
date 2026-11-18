@@ -14,7 +14,7 @@
 ## 正式發布安全邊界
 
 - `.github/workflows/pages.yml` 僅由 PR 觸發驗證，或由管理員手動 `workflow_dispatch`。
-- 正式部署 job 另要求：分支為 `main`、觸發者為 Repository owner、`confirm_release=true)，並通過 `production` Environment 審核。
+- 正式部署 job 另要求：分支為 main、觸發者為 Repository owner、confirm_release 設為 true，並通過 production Environment 審核。
 - PR 檢查成功、建立私有預覽、建立或更新 PR，都不代表正式發布核准。
 - 每日開發不得合併 PR、推送 `main`、觸發正式發布或更改 GitHub Pages 設定。
 - 正式發布後應以 `release.json` 記錄實際部署 SHA 與時間；在取得可讀的正式部署紀錄前，正式版 SHA 維持「待 owner 確認」。
