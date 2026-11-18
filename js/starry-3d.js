@@ -1194,6 +1194,32 @@ function buildEnvironment(scene) {
     [-34,13,0.76,PALETTE.blue],[34,13,0.76,PALETTE.violet]
   ].forEach(([x,z,s,color])=>addStarPlanter(x,z,s,color));
 
+  // Moonlit path lanterns: a restrained, repeatable fixture that gives the
+  // pedestrian routes a deliberate rhythm without filling the paths with props.
+  function addPathLantern(x,z,scale=1,tint=PALETTE.gold){
+    const lamp=new THREE.Group();lamp.position.set(x,0.78,z);lamp.scale.setScalar(scale);island.add(lamp);
+    addMesh(lamp,new THREE.CylinderGeometry(0.25,0.34,0.16,16),materials.darkStone,[0,0.08,0]);
+    const footRing=addMesh(lamp,new THREE.TorusGeometry(0.25,0.035,7,32),materials.gold,[0,0.17,0]);footRing.rotation.x=Math.PI/2;
+    addMesh(lamp,new THREE.CylinderGeometry(0.075,0.12,1.18,12),materials.silverMetal,[0,0.78,0]);
+    addMesh(lamp,new THREE.CylinderGeometry(0.14,0.18,0.12,12),materials.gold,[0,1.38,0]);
+    const cage=new THREE.Group();cage.position.set(0,1.68,0);lamp.add(cage);
+    const glass=new THREE.MeshPhysicalMaterial({color:tint,emissive:tint,emissiveIntensity:0.52,roughness:0.16,metalness:0.16,transparent:true,opacity:0.82,clearcoat:1});
+    addMesh(cage,new THREE.OctahedronGeometry(0.31,1),glass,[0,0,0],[0.78,1.12,0.78],false,false);
+    const halo=addMesh(cage,new THREE.TorusGeometry(0.39,0.025,6,40),materials.gold,[0,0,0]);halo.rotation.x=Math.PI/2;
+    addMesh(cage,new THREE.OctahedronGeometry(0.11,1),materials.lampGlow,[0,0.48,0],[0.7,1.35,0.7],false,false);
+    addMesh(lamp,new THREE.ConeGeometry(0.22,0.34,8),materials.trim,[0,2.13,0],null,false,false);
+    const finial=addMesh(lamp,new THREE.OctahedronGeometry(0.105,1),materials.crystal,[0,2.38,0],[0.72,1.35,0.72],false,false);
+    finial.rotation.y=Math.PI/4;
+  }
+  [
+    [-3.35,35,0.88], [3.35,35,0.88],
+    [-3.35,25,0.92], [3.35,25,0.92],
+    [-3.35,14,0.92], [3.35,14,0.92],
+    [-3.35,3,0.92], [3.35,3,0.92],
+    [-3.35,-9,0.9], [3.35,-9,0.9],
+    [-3.35,-20,0.86], [3.35,-20,0.86]
+  ].forEach(([x,z,scale],index)=>addPathLantern(x,z,scale,index%3===0?PALETTE.blue:PALETTE.gold));
+
   // The old satellite islands become reachable themed gardens at the far end of the park.
   buildCastle(scene,materials);
   addCollider(0,-18.2,5.7,"星夢城堡");
@@ -1210,6 +1236,30 @@ function buildEnvironment(scene) {
   addMesh(planet,new THREE.SphereGeometry(6.2,48,32),new THREE.MeshStandardMaterial({color:0x545e9d,emissive:0x151d55,emissiveIntensity:0.55,roughness:0.92,metalness:0.06}),[0,0,0],[1,1,0.92],false,false);
   const planetRing=addMesh(planet,new THREE.TorusGeometry(8.5,0.11,8,96),makeMaterial(0xaab7ef,0.24,0.8),[0,0,0]);
   planetRing.rotation.x=1.15;planetRing.rotation.y=0.45;
+
+  // Soft aurora arcs sit behind the castle skyline. They are mesh-based and
+  // static, so they add depth without a costly full-screen shader or extra lights.
+  const auroraPalette=[0x8e83dc,0x72a9d5,0xc59bdc];
+  for(let band=0;band<3;band++){
+    const points=[];
+    for(let step=0;step<7;step++){
+      const x=-48+step*16;
+      const z=-56+band*4+Math.sin(step*0.92+band*0.8)*3.2;
+      const y=20+Math.sin(step*0.78+band*0.65)*3.8+band*1.15;
+      points.push(new THREE.Vector3(x,y,z));
+    }
+    const curve=new THREE.CatmullRomCurve3(points);
+    const veil=new THREE.Mesh(
+      new THREE.TubeGeometry(curve,96,0.19+band*0.035,7,false),
+      new THREE.MeshBasicMaterial({color:auroraPalette[band],transparent:true,opacity:0.105,depthWrite:false,blending:THREE.AdditiveBlending})
+    );
+    veil.renderOrder=1;scene.add(veil);
+    const highlight=new THREE.Mesh(
+      new THREE.TubeGeometry(curve,96,0.035,5,false),
+      new THREE.MeshBasicMaterial({color:0xe1d8ff,transparent:true,opacity:0.12,depthWrite:false,blending:THREE.AdditiveBlending})
+    );
+    highlight.renderOrder=2;scene.add(highlight);
+  }
 
   for(let i=0;i<17;i++){
     const angle=(i/17)*Math.PI*2,radius=25+(i%3)*5;
