@@ -6,7 +6,7 @@
 - 預設分支：`main`
 - `main` 最新候選 commit：`607836fe88fe9a21396571b622306b909ec615a1`（2026-11-18，移除私有預覽對 GitHub Actions Secrets 的依賴）。
 - 本次每日開發從上述 SHA 建立獨立 `dev/*` 分支；不直接提交 `main`。
-- 最近可見的 PR 驗證 run #134（PR #17）已成功；它只執行驗證，正式部署 job 為 skipped，並非正式發布。
+- 本次開發 PR 的自動驗證已成功；正式部署 job 為 skipped，並非正式發布。
 - 以 `workflow_dispatch` 篩選目前可見的 Actions 執行紀錄，沒有找到正式發布 run；main 最新 commit 也沒有回報 combined status。
 - GitHub Pages 的 `release.json` 公開端點目前無法由本次檢查工具讀取，因此**無法可靠確認目前玩家實際看到的正式版 commit SHA**。不得把 `main` 最新候選 SHA 當成已發布版本。
 - GitHub integration 無法讀取 main branch protection 設定；正式發布前仍須由 Repository owner 確認 `production` Environment 的 Required reviewers 與分支限制。
