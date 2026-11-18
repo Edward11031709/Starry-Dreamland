@@ -10,15 +10,6 @@ on:
         required: true
         type: boolean
         default: false
-      publish_private_preview:
-        description: 只上傳指定 commit 到 Supabase 私有預覽區，不發布公開網站
-        required: false
-        type: boolean
-        default: false
-      preview_commit_sha:
-        description: 要預覽的完整 40 字元 commit SHA（例如 PR head SHA）
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -66,108 +57,10 @@ jobs:
           console.log(`Validated js/starry-3d.js and ${scripts.length} inline script(s).`);
           NODE
 
-  upload_private_preview:
-    name: 上傳管理員私有預覽（不發布正式網站）
-    needs: validate
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'Edward11031709' && inputs.publish_private_preview == true
-    permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    steps:
-      - name: 驗證預覽 SHA 與必要 secrets
-        env:
-          PREVIEW_SHA: ${{ inputs.preview_commit_sha }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          if ! [[ "$PREVIEW_SHA" =~ ^[a-f0-9]{40}$ ]]; then
-            echo "::error::請提供完整 40 字元小寫 commit SHA。"
-            exit 1
-          fi
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::請先設定 GitHub Actions secrets：SUPABASE_URL 與 SUPABASE_SERVICE_ROLE_KEY。"
-            exit 1
-          fi
-
-      # This checks out static source only. No scripts, dependencies, or build commands
-      # from the candidate commit are executed in this privileged job.
-      - name: 下載指定候選 commit（只讀取靜態檔案）
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.preview_commit_sha }}
-          path: preview-source
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: 上傳至 Supabase 私有 Storage
-        env:
-          PREVIEW_SHA: ${{ inputs.preview_commit_sha }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          PREVIEW_BUCKET: sd-admin-previews
-        run: |
-          node <<'NODE'
-          const fs = require('node:fs/promises');
-          const path = require('node:path');
-          const root = path.resolve('preview-source');
-          const base = process.env.SUPABASE_URL.replace(/\/+$/, '');
-          const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-          const bucket = process.env.PREVIEW_BUCKET;
-          const sha = process.env.PREVIEW_SHA;
-          const allowed = new Set(['.html','.js','.css','.json','.png','.jpg','.jpeg','.webp','.svg','.ico','.woff','.woff2','.ttf','.otf','.glb','.gltf','.bin','.mp3','.ogg','.wav','.mp4','.webm','.wasm','.hdr','.ktx2']);
-          const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.ico':'image/x-icon','.woff':'font/woff','.woff2':'font/woff2','.ttf':'font/ttf','.otf':'font/otf','.glb':'model/gltf-binary','.gltf':'model/gltf+json','.bin':'application/octet-stream','.mp3':'audio/mpeg','.ogg':'audio/ogg','.wav':'audio/wav','.mp4':'video/mp4','.webm':'video/webm','.wasm':'application/wasm','.hdr':'application/octet-stream','.ktx2':'image/ktx2'};
-          const skipDirs = new Set(['.git','.github','supabase','docs','node_modules','tests','test','coverage']);
-          async function walk(dir, out=[]) {
-            for (const entry of await fs.readdir(dir,{withFileTypes:true})) {
-              if (entry.isSymbolicLink()) continue;
-              if (entry.isDirectory()) {
-                if (!skipDirs.has(entry.name) && !entry.name.startsWith('.')) await walk(path.join(dir,entry.name),out);
-                continue;
-              }
-              if (!entry.isFile()) continue;
-              const full=path.join(dir,entry.name);
-              const rel=path.relative(root,full).split(path.sep).join('/');
-              if (rel.split('/').some(part=>part.startsWith('.'))) continue;
-              if (!allowed.has(path.extname(entry.name).toLowerCase())) continue;
-              out.push({full,rel,ext:path.extname(entry.name).toLowerCase()});
-            }
-            return out;
-          }
-          async function main() {
-            const bucketUrl = base+'/storage/v1/bucket/'+encodeURIComponent(bucket);
-            const bucketResponse = await fetch(bucketUrl,{headers:{apikey:key,Authorization:'Bearer '+key}});
-            if (!bucketResponse.ok) throw new Error('找不到私有 bucket。請先建立 '+bucket+' 並確認它不是 Public。');
-            const bucketInfo = await bucketResponse.json();
-            if (bucketInfo.public !== false) throw new Error('Storage 未能確認 bucket 為 Private，為保護未發布版本已中止上傳。');
-            const files = await walk(root);
-            if (!files.length || files.length > 600) throw new Error('靜態檔案數量不合理，已中止上傳。');
-            let total=0;
-            for (const file of files) {
-              const body=await fs.readFile(file.full);
-              total+=body.length;
-              if (total > 80*1024*1024) throw new Error('預覽檔案總量超過 80 MB，已中止上傳。');
-              const objectPath='releases/'+sha+'/'+file.rel;
-              const encoded=objectPath.split('/').map(encodeURIComponent).join('/');
-              const response=await fetch(base+'/storage/v1/object/'+encodeURIComponent(bucket)+'/'+encoded,{
-                method:'POST',
-                headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':mime[file.ext]||'application/octet-stream','x-upsert':'true','cache-control':'0'},
-                body
-              });
-              if(!response.ok) {
-                const detail=(await response.text()).slice(0,240);
-                throw new Error('上傳失敗 '+file.rel+'（HTTP '+response.status+'）：'+detail);
-              }
-            }
-            console.log('已上傳 '+files.length+' 個靜態檔案至私有預覽前綴 releases/'+sha+'/。沒有部署公開網站。');
-          }
-          main().catch(error=>{console.error(error.message);process.exit(1)});
-          NODE
-
-
   deploy:
     name: 管理員確認後發布正式版
     needs: validate
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'Edward11031709' && inputs.confirm_release == true && inputs.publish_private_preview != true
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'Edward11031709' && inputs.confirm_release == true
     permissions:
       contents: read
       pages: write

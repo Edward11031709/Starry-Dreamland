@@ -99,3 +99,21 @@ test("drop tower geometry uses structural braces and sculpted open seats", () =>
   assert.match(builder, /new THREE\.LatheGeometry\(seatProfile,24\)/);
   assert.match(builder, /id:"drop",name:"星際自由落體"/);
 });
+
+
+test("private preview import is admin-gated and does not require GitHub Actions secrets", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const workflow = readFileSync(new URL("../.github/workflows/pages.yml", import.meta.url), "utf8");
+  const fn = readFileSync(new URL("../supabase/functions/sd-admin-preview/index.ts", import.meta.url), "utf8");
+  assert.ok(html.includes('body:{action:"import",commit_sha:sha}'));
+  assert.ok(fn.includes("sd_is_admin"));
+  assert.ok(fn.includes("const GITHUB_REPO = \"Edward11031709/Starry-Dreamland\""));
+  assert.ok(fn.includes("git/trees/${commitSha}?recursive=1"));
+  assert.ok(fn.includes("https://raw.githubusercontent.com/"));
+  assert.ok(fn.includes("MAX_FILES = 600"));
+  assert.ok(fn.includes("MAX_TOTAL_BYTES = 80 * 1024 * 1024"));
+  assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE_KEY|publish_private_preview|preview_commit_sha/);
+  assert.ok(html.includes('sandbox="allow-scripts allow-forms allow-pointer-lock"'));
+  assert.ok(html.includes("隔離預覽不會更新公開網站"));
+  assert.doesNotMatch(html, /sandbox="[^"]*allow-same-origin/);
+});
