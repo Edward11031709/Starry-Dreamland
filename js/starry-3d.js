@@ -1627,15 +1627,15 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
       [side*0.092,1.586,0.243],[side*0.06,1.576,0.235]
     ],0.0085,hairHighlight);
     addMesh(headRig,new THREE.SphereGeometry(0.052,16,12),skin,[side*0.252,1.455,0.012],[0.72,1,0.58]);
-    addMesh(headRig,new THREE.SphereGeometry(0.022,12,10),blush,[side*0.263,1.458,0.056],[0.62,1.25,0.48],false,false);
+    const earInner=addMesh(headRig,new THREE.SphereGeometry(0.022,12,10),blush,[side*0.263,1.458,0.056],[0.62,1.25,0.48],false,false);
     const earring=addMesh(headRig,new THREE.TorusGeometry(0.043,0.012,6,24),trim,[side*0.255,1.38,0.055]);
     earring.rotation.x=Math.PI/2;
     addMesh(headRig,new THREE.OctahedronGeometry(0.018,1),coutureGem,[side*0.255,1.325,0.06],[0.62,1.1,0.62],false,false);
     addMesh(headRig,new THREE.SphereGeometry(0.023,12,10),blush,[side*0.155,1.415,0.226],[1.2,0.62,0.22],false,false);
   });
   // A subtle bridge, rounded tip and tiny nostril shadows give the face a more sculpted profile.
-  addMesh(headRig,new THREE.SphereGeometry(0.026,18,14),skin,[0,1.462,0.266],[0.68,1.5,0.72],false,false);
-  addMesh(headRig,new THREE.SphereGeometry(0.024,16,12),skin,[0,1.431,0.287],[0.94,0.72,0.78],false,false);
+  const noseBridge=addMesh(headRig,new THREE.SphereGeometry(0.026,18,14),skin,[0,1.462,0.266],[0.68,1.5,0.72],false,false);
+  const noseTip=addMesh(headRig,new THREE.SphereGeometry(0.024,16,12),skin,[0,1.431,0.287],[0.94,0.72,0.78],false,false);
   [-1,1].forEach(side=>{
     addMesh(headRig,new THREE.SphereGeometry(0.006,10,8),shadow,[side*0.016,1.423,0.296],[1,0.8,0.55],false,false);
   });
