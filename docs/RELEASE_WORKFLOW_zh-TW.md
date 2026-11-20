@@ -1,41 +1,36 @@
 # 星夢樂園版本發布流程
 
-## 分支與版本角色
+## 目標
+日常開發與正式公開分離。開發成果先留在 PR／開發分支，玩家只看到管理員明確核准並部署的版本。
 
-- `main`：經審查的候選程式碼；合併 PR 不等於已發布。
-- `dev/*`、`feature/*`：日常開發分支。每個可審查批次以 PR 提交。
-- GitHub Pages：只由受保護的 `production` Environment 發布。
-- 正式部署會產生 `release.json`，記錄實際公開的 commit SHA、UTC 發布時間與 ref。
-- 若沒有可讀的 `release.json` 或正式部署 run，不可推定 `main` 就是目前公開版本。
+## 分支與環境
+- `main`：已通過檢查、等待管理員驗收的候選版本；合併 PR 本身不代表發布。
+- `dev/*`、`feature/*`：日常開發分支。
+- GitHub Pages：只由受保護的 `production` 環境部署；部署時產生 `release.json`，記錄實際公開的 commit SHA。
+- PR CI：執行語法與測試；不部署到公開 Pages。管理員中心會讀取 PR、歷史提交與 `release.json`，區分「公開版本」和「main 最新候選」。
 
-## 開發與審核
+## 管理員發布步驟
+1. 在 PR 檢查變更、CI 與測試結果，並親自驗收預覽。
+2. 管理員明確核准後才合併至 `main`。
+3. 到 Actions 執行「星夢樂園檢查與正式發布」，選擇 `main`，並將 `confirm_release` 設為 `true`。
+4. GitHub 的 `production` Environment 應設定 Required reviewers（管理員本人），且只允許 `main` 分支部署。未能確認這些設定前，不可把 workflow 條件式檢查當成完整保護。
+5. 通過環境審核後才會更新公開網站；發布完成後記錄 `release.json` 的 SHA 與時間。
 
-1. 先讀取 `AGENT.md`、`README_zh-TW.md`、相關 docs、現有程式、Issues／PR 與 Actions 狀態。
-2. 只在 `dev/*` 或 `feature/*` 分支開發，不直接提交 `main`。
-3. 每批變更執行語法檢查與相關測試，記錄測試限制。
-4. 開啟 PR，列出 commit、變更摘要、CI 證據及尚未完成的瀏覽器／手機驗收。
-5. 管理員檢查 PR 與私有預覽後，明確批准才可進入正式發布流程。
-6. 每日自動開發不得合併 PR、推送 `main` 或啟動 production workflow。
-
-## 管理員私有預覽
-
-- 私有預覽使用 Supabase Private Storage bucket `sd-admin-previews` 與 `sd-admin-preview` Edge Function。
-- Edge Function 先驗證使用者 JWT，再以資料庫 `sd_is_admin()` 確認管理員權限；只有通過驗證的管理員可匯入或取得短效簽名 URL。
-- 匯入來源固定為公開 repository 的完整 40 字元 commit SHA，只讀取允許的靜態檔案，不執行候選 commit 的程式碼。
-- 管理中心以不含 `allow-same-origin` 的 sandbox iframe 開啟預覽，不共享正式玩家的 Cookie、localStorage 或 Supabase session。
-- 私有預覽不會部署 GitHub Pages、不會修改正式玩家資料，也不需要 GitHub Actions Secrets。使用步驟見 `docs/ADMIN_PREVIEW_SETUP_zh-TW.md`。
-
-## 正式發布（只限 owner 手動操作）
-
-1. 在 PR 檢查程式差異、CI 與私有預覽；桌機與手機實機驗收需由管理員完成。
-2. 管理員明確核准後，才由 owner 合併 PR 至 `main`。
-3. 開啟 Actions 的「星夢樂園檢查與正式發布」，選擇 main，並將 confirm_release 設為 true。
-4. 確認 GitHub `production` Environment 已設定 Required reviewers（管理員本人）及只允許 `main`；未確認前不得發布。
-5. 通過 Environment 審核後才會執行 Pages deploy。完成後核對 `release.json` 的 commit SHA 與發布時間。
-
-## 回復與資料安全
-
-- 回復程式版本時，選擇先前已核准的 commit，建立回復 PR，再走相同人工發布流程。
+## 舊版與回復
+- 每次正式發布記錄 commit SHA，建議同時建立版本 tag（例如 `release-YYYYMMDD-N`）。
+- 回復時選擇先前核准的 commit，建立回復 PR 或由管理員核准回復 commit，再經相同正式發布流程。
 - 程式版本回復不執行 Supabase migration rollback，不改動玩家帳號、星塵、服裝、遊戲紀錄或聊天資料。
-- 未經使用者對該項變更另行明確批准，不建立／執行 migration，不修改正式 Supabase schema、RLS、RPC 或資料。
-- 星塵調整只能由資料庫後端驗證管理員身分，並以不可任意修改的流水與原因記錄；任何真實餘額調整都需要使用者另行明確要求。
+
+## 私有預覽與存取限制
+- PR CI 不部署 GitHub Pages，也不取得 Supabase service-role secrets。
+- 私有預覽由 `sd-admin-preview` Supabase Edge Function 處理：先驗證登入者 JWT，再由資料庫 `sd_is_admin()` 確認管理員權限。
+- Edge Function 只接受固定公開 Repository 的完整 commit SHA，讀取允許的靜態檔案，寫入 Supabase Private Storage，再簽發短效 URL；不執行候選 commit 的腳本、套件安裝或建置命令。
+- 管理中心以不含 `allow-same-origin` 的 sandbox iframe 開啟預覽，不共享正式登入 session 或 localStorage；預覽以訪客模式運行，不測試需要正式雲端寫入的功能。
+- 私有預覽不需要 GitHub Actions secrets，也不需要手動啟動 GitHub Pages workflow；它與正式發布完全分離。
+- bucket、Edge Function 尚未完成設定或不可用時，管理中心應顯示錯誤，不可回退到公開預覽網址。
+
+## 發布前檢查
+- 自動檢查通過。
+- 管理員實際驗收桌機與手機版。
+- 確認沒有把尚未完成的功能標成已上線。
+- 確認 Supabase 相容性；未經另行批准不執行資料庫寫入。
