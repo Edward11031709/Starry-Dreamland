@@ -1155,6 +1155,113 @@ function buildEnvironment(scene) {
     addCollider(x,z,0.82*scale,"星晶花圃");
   }
 
+  // Two mirrored rest gardens give the central promenade a human-scale pause point.
+  // Their low plinths share the park paving height; only the bench footprint blocks movement.
+  function addPromenadeRestNook(x,z,rotation,accent=PALETTE.blue){
+    const nook=new THREE.Group();
+    nook.name="MoonlitPromenadeRestNook";
+    nook.position.set(x,0.70,z);
+    nook.rotation.y=rotation;
+    island.add(nook);
+
+    addMesh(nook,new THREE.CylinderGeometry(1.62,1.74,0.12,48),materials.darkStone,
+      [0,0.06,0],[1.16,1,0.88],false,true);
+    const padRim=addMesh(nook,new THREE.TorusGeometry(1.56,0.035,8,64),materials.gold,
+      [0,0.13,0],[1.16,1,0.88],false,false);
+    padRim.rotation.x=Math.PI/2;
+    const padInlay=addMesh(nook,new THREE.TorusGeometry(1.34,0.018,6,64),materials.trim,
+      [0,0.132,0],[1.12,1,0.84],false,false);
+    padInlay.rotation.x=Math.PI/2;
+
+    // Brushed-metal feet, dark timber slats and fine champagne-gold seat inlays.
+    [-1,1].forEach(side=>{
+      addMesh(nook,new THREE.BoxGeometry(0.24,0.085,0.68),materials.gold,
+        [side*0.76,0.17,0.02],null,false,false);
+      const leg=addMesh(nook,new THREE.CylinderGeometry(0.052,0.078,0.42,12),materials.silverMetal,
+        [side*0.76,0.39,-0.035]);
+      leg.rotation.z=side*0.045;
+      addMesh(nook,new THREE.CylinderGeometry(0.035,0.04,0.48,10),materials.trim,
+        [side*0.78,0.94,-0.285],null,false,false);
+    });
+    for(let slat=0;slat<5;slat++){
+      const px=(slat-2)*0.36;
+      addMesh(nook,new THREE.BoxGeometry(0.34,0.095,0.58),materials.wood,[px,0.585,0.02]);
+      addMesh(nook,new THREE.BoxGeometry(0.25,0.014,0.022),materials.gold,
+        [px,0.638,0.312],null,false,false);
+    }
+
+    // A softly pointed, bevelled back panel replaces a plain rectangular board.
+    const backrestShape=new THREE.Shape();
+    backrestShape.moveTo(-0.94,0);
+    backrestShape.lineTo(0.94,0);
+    backrestShape.lineTo(0.94,0.55);
+    backrestShape.quadraticCurveTo(0.92,0.79,0,0.88);
+    backrestShape.quadraticCurveTo(-0.92,0.79,-0.94,0.55);
+    backrestShape.closePath();
+    const backrestGeometry=new THREE.ExtrudeGeometry(backrestShape,{
+      depth:0.085,steps:1,bevelEnabled:true,bevelSegments:2,
+      bevelSize:0.025,bevelThickness:0.02,curveSegments:12
+    });
+    addMesh(nook,backrestGeometry,materials.top,[0,0.625,-0.34]);
+    const backCurve=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.88,1.28,-0.225),
+      new THREE.Vector3(-0.68,1.42,-0.225),
+      new THREE.Vector3(0,1.50,-0.225),
+      new THREE.Vector3(0.68,1.42,-0.225),
+      new THREE.Vector3(0.88,1.28,-0.225)
+    ]);
+    addMesh(nook,new THREE.TubeGeometry(backCurve,28,0.028,8,false),materials.gold,
+      null,null,false,false);
+    const inset=addMesh(nook,makeLancetGeometry(0.43,0.57),materials.crystal,
+      [0,1.03,-0.242],null,false,false);
+    inset.renderOrder=2;
+    const crest=addMesh(nook,new THREE.OctahedronGeometry(0.13,1),materials.gold,
+      [0,1.08,-0.205],[0.72,1.25,0.42],false,false);
+    crest.rotation.z=Math.PI/4;
+    addMesh(nook,new THREE.TorusGeometry(0.19,0.018,6,36),materials.silver,
+      [0,1.08,-0.205],[1,1.2,0.55],false,false);
+
+    // Curved arm rails and faceted end caps finish both sides of the seat.
+    [-1,1].forEach(side=>{
+      const armCurve=new THREE.CatmullRomCurve3([
+        new THREE.Vector3(side*0.98,0.60,0.25),
+        new THREE.Vector3(side*1.02,0.77,0.14),
+        new THREE.Vector3(side*1.02,0.83,-0.08),
+        new THREE.Vector3(side*0.96,0.86,-0.28)
+      ]);
+      addMesh(nook,new THREE.TubeGeometry(armCurve,18,0.043,8,false),materials.gold,
+        null,null,false,false);
+      addMesh(nook,new THREE.OctahedronGeometry(0.075,1),materials.crystal,
+        [side*0.98,0.82,0.12],[0.8,1.1,0.8],false,false);
+    });
+
+    // Paired crystal-flower bowls sit behind the seat, away from the walking line.
+    [-1,1].forEach(side=>{
+      const bowl=new THREE.Group();
+      bowl.position.set(side*1.02,0.015,-1.03);
+      nook.add(bowl);
+      addMesh(bowl,new THREE.CylinderGeometry(0.31,0.4,0.18,18),materials.darkStone,[0,0.09,0]);
+      const bowlRim=addMesh(bowl,new THREE.TorusGeometry(0.305,0.035,8,32),materials.gold,[0,0.19,0]);
+      bowlRim.rotation.x=Math.PI/2;
+      addMesh(bowl,new THREE.CylinderGeometry(0.25,0.28,0.045,18),materials.wood,
+        [0,0.19,0],null,false,false);
+      for(let bloom=0;bloom<3;bloom++){
+        const angle=bloom/3*Math.PI*2+side*0.28;
+        addMesh(bowl,new THREE.SphereGeometry(0.095,12,10),bloom%2?materials.lampGlow:materials.trim,
+          [Math.cos(angle)*0.12,0.31,Math.sin(angle)*0.12],[1,0.62,0.82],null,false,false);
+        const crystal=addCrystal(bowl,Math.cos(angle)*0.13,0.36,Math.sin(angle)*0.13,
+          0.12+(bloom%2)*0.035,accent);
+        crystal.rotation.z=(bloom%2?1:-1)*0.2;
+      }
+      addMesh(bowl,new THREE.OctahedronGeometry(0.12,1),materials.crystal,
+        [0,0.38,0],[0.72,1.25,0.72],false,false);
+    });
+
+    terrainZones.push({x,z,radius:2.3,surfaceY:0.82});
+    addCollider(x,z,1.75,"星夢休憩長椅");
+    return nook;
+  }
+
   function addOrnamentalArch(x,z,width,title,subtitle){
     const arch=new THREE.Group();arch.position.set(x,0.78,z);island.add(arch);
     const radius=width/2-0.38;
@@ -1193,6 +1300,9 @@ function buildEnvironment(scene) {
     [-9,-27,0.92,PALETTE.violet],[9,-27,0.92,PALETTE.pink],
     [-34,13,0.76,PALETTE.blue],[34,13,0.76,PALETTE.violet]
   ].forEach(([x,z,s,color])=>addStarPlanter(x,z,s,color));
+  // Symmetrical moonstone seating alcoves frame the promenade without narrowing it.
+  addPromenadeRestNook(-12,23.2,Math.PI/2,PALETTE.violet);
+  addPromenadeRestNook(12,23.2,-Math.PI/2,PALETTE.blue);
 
   // Moonlit path lanterns: a restrained, repeatable fixture that gives the
   // pedestrian routes a deliberate rhythm without filling the paths with props.

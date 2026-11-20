@@ -117,3 +117,32 @@ test("private preview import is admin-gated and does not require GitHub Actions 
   assert.ok(html.includes("隔離預覽不會更新公開網站"));
   assert.doesNotMatch(html, /sandbox="[^"]*allow-same-origin/);
 });
+
+
+test("central promenade rest gardens use carved seats, crystal planters, and walkable-height pads", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  const start = source.indexOf("function addPromenadeRestNook(");
+  const end = source.indexOf("function addOrnamentalArch(", start);
+  assert.notEqual(start, -1, "promenade rest nook builder exists");
+  assert.ok(end > start, "rest nook builder has a clear boundary");
+  const builder = source.slice(start, end);
+  assert.ok(builder.includes("new THREE.ExtrudeGeometry(backrestShape"));
+  assert.ok(builder.includes("new THREE.TubeGeometry(backCurve"));
+  assert.ok(builder.includes("new THREE.CatmullRomCurve3("));
+  assert.ok(builder.includes("addCrystal(bowl"));
+  assert.ok(builder.includes("terrainZones.push({x,z,radius:2.3,surfaceY:0.82})"));
+  assert.ok(builder.includes('addCollider(x,z,1.75,"星夢休憩長椅")'));
+  assert.equal(builder.includes("new THREE.PointLight"), false, "rest nodes must not add real-time lights");
+  assert.ok(source.includes("addPromenadeRestNook(-12,23.2,Math.PI/2,PALETTE.violet)"));
+  assert.ok(source.includes("addPromenadeRestNook(12,23.2,-Math.PI/2,PALETTE.blue)"));
+});
+
+test("promenade rest nook does not generate placeholder bystanders", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  const start = source.indexOf("function addPromenadeRestNook(");
+  const end = source.indexOf("function addOrnamentalArch(", start);
+  const builder = source.slice(start, end);
+  assert.equal(builder.includes("spawnNpc("), false);
+  assert.equal(builder.includes("addNPC("), false);
+  assert.equal(builder.includes("createPlayer("), false);
+});
