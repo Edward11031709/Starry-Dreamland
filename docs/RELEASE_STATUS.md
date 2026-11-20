@@ -1,23 +1,23 @@
 # 正式版本與發布狀態
 
-## 2026-11-18 唯讀核對
+## 2026-11-20 唯讀核對
 
-- Repository：`Edward11031709/Starry-Dreamland`
-- 預設分支：`main`
-- `main` 最新候選 commit：`607836fe88fe9a21396571b622306b909ec615a1`（2026-11-18，移除私有預覽對 GitHub Actions Secrets 的依賴）。
-- 本次每日開發從上述 SHA 建立獨立 `dev/*` 分支；不直接提交 `main`。
-- 本次開發 PR 的自動驗證已成功；正式部署 job 為 skipped，並非正式發布。
-- 以 `workflow_dispatch` 篩選目前可見的 Actions 執行紀錄，沒有找到正式發布 run；main 最新 commit 也沒有回報 combined status。
-- GitHub Pages 的 `release.json` 公開端點目前無法由本次檢查工具讀取，因此**無法可靠確認目前玩家實際看到的正式版 commit SHA**。不得把 `main` 最新候選 SHA 當成已發布版本。
-- GitHub integration 無法讀取 main branch protection 設定；正式發布前仍須由 Repository owner 確認 `production` Environment 的 Required reviewers 與分支限制。
+- Repository：`Edward11031709/Starry-Dreamland`；預設分支：`main`。
+- `main` 最新 commit：`607836fe88fe9a21396571b622306b909ec615a1`。
+- GitHub Actions run #138（2026-11-18，`workflow_dispatch`，`main`）的「管理員確認後發布正式版」job 與「發布正式網站」步驟均為 `success`；該 run 的 `head_sha` 為上述 commit。依 workflow 的 `release.json` 產生步驟，這是目前可確認的最近一次成功 Pages 發布候選 SHA。
+- 最近可見的 Actions 執行紀錄中，#138 之後沒有更新的 production workflow dispatch；#139 及 #140–#143 均為 PR 驗證，沒有部署正式網站。
+- 本次無法從外部讀取 Pages 的 `release.json` 端點，因此發布 SHA 的確認依據是 GitHub Actions #138 的成功部署 job，而非即時 HTTP 讀取。
+- 開啟中的 PR #17（角色模型／外觀）及 PR #18（園區氛圍）皆為 Draft，未合併；目前沒有開啟中的正式發布 PR。
+- GitHub branch list 回報 `main` 的 `protected=false`，目前可讀取的 repository rulesets 清單為空；目前連線無法確認 `production` Environment 的 Required reviewers 設定。**不得因此宣稱 main 或 production 環境已完整受保護**，發布前需由 owner 在 GitHub 設定中再次核對。
+- 今日開發只更新 `dev/*` 分支；不得把開發分支或 PR head SHA 當成正式版本。
 
 ## 正式發布安全邊界
 
-- `.github/workflows/pages.yml` 僅由 PR 觸發驗證，或由管理員手動 `workflow_dispatch`。
-- 正式部署 job 另要求：分支為 main、觸發者為 Repository owner、confirm_release 設為 true，並通過 production Environment 審核。
+- `.github/workflows/pages.yml` 只由 PR 觸發驗證，或由管理員手動 `workflow_dispatch`。
+- 正式部署 job 另要求：分支為 main、觸發者為 Repository owner、`confirm_release=true`，並使用名為 `production` 的 GitHub Environment。
 - PR 檢查成功、建立私有預覽、建立或更新 PR，都不代表正式發布核准。
 - 每日開發不得合併 PR、推送 `main`、觸發正式發布或更改 GitHub Pages 設定。
-- 正式發布後應以 `release.json` 記錄實際部署 SHA 與時間；在取得可讀的正式部署紀錄前，正式版 SHA 維持「待 owner 確認」。
+- 正式發布後應保留 `release.json` 的實際部署 SHA 與時間；若外部端點無法讀取，應以成功的 Pages deploy job 作為有限度證據，並明確記錄驗證限制。
 
 ## 資料安全
 
