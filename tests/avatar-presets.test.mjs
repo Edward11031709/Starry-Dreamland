@@ -75,7 +75,7 @@ test("random appearance drafts stay inside the existing allowlists and only upda
     accentColor: "avatarAccentColor"
   };
   for (const [key, id] of Object.entries(controlIds)) {
-    assert.ok(AVATAR_OPTIONS[key].some(option => option.id === controls[id].value), \`randomized \${key} stays allowlisted\`);
+    assert.ok(AVATAR_OPTIONS[key].some(option => option.id === controls[id].value), "randomized " + key + " stays allowlisted");
   }
   assert.ok(AVATAR_TYPES.some(option => option.id === controls.avatarTypeSelect.value));
   assert.equal(previewUpdates, 1);
