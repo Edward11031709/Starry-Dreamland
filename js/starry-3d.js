@@ -1330,6 +1330,49 @@ function buildEnvironment(scene) {
     [-3.35,-20,0.86], [3.35,-20,0.86]
   ].forEach(([x,z,scale],index)=>addPathLantern(x,z,scale,index%3===0?PALETTE.blue:PALETTE.gold));
 
+
+  // Moonlit flower species for the observatory-side garden island.
+  // Shared geometry/materials keep this detail light on mobile devices.
+  const moonflowerPetalGeometry=new THREE.SphereGeometry(1,12,8);
+  const moonflowerLeafGeometry=new THREE.SphereGeometry(1,10,8);
+  const moonflowerPetals=[
+    new THREE.MeshPhysicalMaterial({color:0xd9ccff,roughness:0.28,metalness:0.12,clearcoat:0.82,clearcoatRoughness:0.18}),
+    new THREE.MeshPhysicalMaterial({color:0xa9c9ed,roughness:0.3,metalness:0.1,clearcoat:0.8,clearcoatRoughness:0.2}),
+    new THREE.MeshPhysicalMaterial({color:0xe8b8dc,roughness:0.3,metalness:0.1,clearcoat:0.8,clearcoatRoughness:0.2})
+  ];
+  const moonflowerStem=makeMaterial(0x557b72,0.86,0.04);
+  const moonflowerLeaf=makeMaterial(0x416c68,0.9,0.02);
+  function addMoonflower(parent,x,z,scale=1,variant=0){
+    const flower=new THREE.Group();
+    flower.position.set(x,0.22,z);
+    parent.add(flower);
+    addMesh(flower,new THREE.CylinderGeometry(0.018,0.032,0.48*scale,8),
+      moonflowerStem,[0,0.24*scale,0],null,false,false);
+    [-1,1].forEach(side=>{
+      const leaf=addMesh(flower,moonflowerLeafGeometry,moonflowerLeaf,
+        [side*0.12*scale,0.2*scale,0.025],
+        [0.34*scale,0.09*scale,0.68*scale],false,false);
+      leaf.rotation.z=-side*0.58;
+      leaf.rotation.y=side*0.28;
+    });
+    const head=new THREE.Group();
+    head.position.y=0.48*scale;
+    flower.add(head);
+    for(let petal=0;petal<6;petal++){
+      const angle=petal/6*Math.PI*2+(variant%2)*0.16;
+      const bloom=addMesh(head,moonflowerPetalGeometry,moonflowerPetals[variant%moonflowerPetals.length],
+        [Math.cos(angle)*0.13*scale,0.025*scale,Math.sin(angle)*0.13*scale],
+        [0.72*scale,0.18*scale,1.22*scale],false,false);
+      bloom.rotation.y=angle;
+    }
+    addMesh(head,new THREE.SphereGeometry(0.085*scale,12,10),materials.lampGlow,
+      [0,0.065*scale,0],[1,0.8,1],null,false,false);
+    const star=addMesh(head,new THREE.OctahedronGeometry(0.055*scale,0),materials.gold,
+      [0,0.12*scale,0],[0.9,0.6,0.9],false,false);
+    star.rotation.y=Math.PI/4;
+    return flower;
+  }
+
   // The old satellite islands become reachable themed gardens at the far end of the park.
   buildCastle(scene,materials);
   addCollider(0,-18.2,5.7,"星夢城堡");
@@ -1339,7 +1382,31 @@ function buildEnvironment(scene) {
   addCollider(-30,-16.5,3.0,"星辰觀測站");
   const right=makeIsland(scene,30,0.68,-16.5,4.1,{rock:materials.rock,top:materials.top,trim:materials.silver});
   right.rotation.y=0.18;
-  for(let i=0;i<5;i++)createTree(right,-1.45+i*0.72,-0.35+(i%2)*0.85,0.7+(i%2)*0.16,{wood:materials.wood});
+  // Seat every tree on the satellite island's actual deck height (0.21), not the main island's 0.62 level.
+  for(let i=0;i<5;i++){
+    const tree=createTree(right,-1.45+i*0.72,-0.35+(i%2)*0.85,0.7+(i%2)*0.16,{wood:materials.wood});
+    tree.position.y=0.21;
+  }
+
+  // A quiet silver-and-champagne promenade ring and stepping stones frame the flower grove.
+  const gardenEdge=addMesh(right,new THREE.TorusGeometry(3.52,0.052,8,96),materials.gold,[0,0.245,0]);
+  gardenEdge.rotation.x=Math.PI/2;
+  const gardenInner=addMesh(right,new THREE.TorusGeometry(2.02,0.026,7,80),materials.trim,[0,0.238,0]);
+  gardenInner.rotation.x=Math.PI/2;
+  for(let tile=0;tile<8;tile++){
+    const angle=tile/8*Math.PI*2+Math.PI/8;
+    const x=Math.cos(angle)*3.04,z=Math.sin(angle)*3.04;
+    const stepping=addMesh(right,new THREE.CylinderGeometry(0.25,0.29,0.085,8),
+      tile%2?materials.top:materials.paving,[x,0.255,z],[1,1,0.86],false,true);
+    stepping.rotation.y=angle;
+    const inset=addMesh(right,new THREE.OctahedronGeometry(0.065,0),tile%2?materials.crystal:materials.gold,
+      [x,0.315,z],[0.78,0.3,1.4],false,false);
+    inset.rotation.y=angle;
+  }
+  for(let bloom=0;bloom<6;bloom++){
+    const angle=bloom/6*Math.PI*2+Math.PI/6;
+    addMoonflower(right,Math.cos(angle)*2.55,Math.sin(angle)*2.55,0.88+(bloom%2)*0.1,bloom%3);
+  }
   addCrystal(right,1.1,0.55,-1.0,0.6,PALETTE.pink);
 
   const planet=new THREE.Group();planet.position.set(58,27,-82);scene.add(planet);

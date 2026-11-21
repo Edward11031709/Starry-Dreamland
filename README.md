@@ -133,7 +133,19 @@ Supabase stores player profiles and game records. Email sign-up/sign-in, sign-ou
 
 ## Deployment
 
-The repository contains a GitHub Actions Pages workflow. Pushing to the main branch triggers deployment. Three.js is loaded from a pinned CDN version; if the CDN is unavailable, the game cards still provide access to the games.
+正式網站：https://edward11031709.github.io/Starry-Dreamland/
+
+本專案使用 GitHub Actions 手動發布。**合併 Pull Request 或更新 `main` 不會自動更新公開網站。**
+
+1. 先在 Pull Request 檢查變更與 CI，並由管理員實際測試預覽。
+2. 驗收完成後，管理員才將 PR 合併至 `main`。
+3. GitHub → Actions → 選擇 **「星夢樂園檢查與正式發布」** → **Run workflow**。
+4. 分支選 `main`，勾選 **「我已檢查此版本並確認發布到公開網站」**，再執行。
+5. 部署成功後，重新整理正式網站。部署工作會產生 `release.json`，記錄公開版本的 commit SHA。
+
+正式部署只接受從 `main` 手動觸發、由 GitHub 帳號 `Edward11031709` 執行且明確勾選確認的工作流程。PR 檢查 job 不會部署公開網站。
+
+完整圖文步驟、發布前檢查與失敗處理請見 [docs/RELEASE_WORKFLOW_zh-TW.md](docs/RELEASE_WORKFLOW_zh-TW.md)。
 
 ## Deferred idea: Anomaly / horror-world mode
 

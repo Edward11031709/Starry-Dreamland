@@ -1,28 +1,26 @@
-# GitHub Pages 發布（繁體中文）
+# 星夢樂園 GitHub Pages 發布（目前版本）
 
-本專案目前是靜態 HTML/CSS/JavaScript，V4.1 不需要 npm build。Repository 已預先建立 GitHub Actions 部署工作流程：`.github/workflows/pages.yml`。
+正式網站：https://edward11031709.github.io/Starry-Dreamland/
 
-## 第一步：上傳完整網站檔案
-1. 下載 Starry Dreamland GitHub Pages 上傳包。
-2. 在 Windows 對 ZIP 按右鍵 → **全部解壓縮**。
-3. 打開解壓後的資料夾，選取裡面的所有檔案與資料夾（不要只選最外層資料夾）。
-4. 開啟 Repository：https://github.com/Edward11031709/Starry-Dreamland
-5. 點 **Add file → Upload files**。
-6. 將選取的檔案拖入上傳區。確認 `index.html`、`app.js`、`styles.css`、`config.js` 和 `assets/` 都位於 Repository 根目錄。
-7. 點 **Commit changes**，提交到 `main`。
+本專案已改用 GitHub Actions 的人工核准發布流程，不再使用舊版 ZIP 上傳或直接把檔案提交到 `main` 的方式。
 
-## 第二步：啟用 GitHub Pages
-1. Repository → **Settings → Pages**。
-2. Build and deployment 的 **Source** 選 **GitHub Actions**。
-3. 不需再建立新的 workflow，因為 `.github/workflows/pages.yml` 已經存在。
-4. 儲存後，打開 **Actions** 分頁，確認「Deploy Starry Dreamland to GitHub Pages」執行成功。
-5. 成功後開啟：https://Edward11031709.github.io/Starry-Dreamland/
+## 正確更新方式
 
-## 後續更新
-將新版網站檔案更新到 `main` 分支，GitHub Actions 會自動重新發布。請先在本機測試，再上傳新版。務必保留根目錄的 `index.html`。
+1. 開發者將更新放在 `dev/*` 或 `feature/*` 分支，建立 Pull Request。
+2. 在 PR 的 Checks、Files changed 及管理員預覽確認功能。
+3. 驗收完成後，由管理員合併 PR 至 `main`。
+4. GitHub → Actions → **星夢樂園檢查與正式發布** → **Run workflow**。
+5. Branch 選 `main`，勾選 **「我已檢查此版本並確認發布到公開網站」**，再執行。
+6. 確認檢查與部署兩個 job 都成功，開啟正式網站並按 `Ctrl + F5`。
 
-## 注意
-- GitHub Pages 是靜態託管，無法自行執行安全的伺服器端計分或帳號驗證。
-- V4.1 使用 localStorage，資料只在同一瀏覽器，不會跨裝置同步。
-- 如要跨裝置玩家帳號、共用排行榜及安全積分，需另接 Supabase 等後端並設定 Row Level Security。
-- 公開 Repository 不可放置密碼、私密 API key、service-role key 或真實玩家個人資料。
+**重要：** PR 合併或更新 `main` 不會自動發布。工作流程只接受由 `Edward11031709` 帳號從 `main` 手動觸發且勾選確認的正式部署。
+
+## 發布前安全檢查
+
+- PR 不是尚未完成的 Draft。
+- 所有必要 Checks 都成功。
+- 管理員已完成桌機與手機實際測試。
+- 沒有把 Supabase service-role key、密碼或私密資料加入網站。
+- `production` Environment 的部署分支與 Required reviewers 已在 Repository Settings 核對。
+
+完整流程及失敗處理請見 [RELEASE_WORKFLOW_zh-TW.md](RELEASE_WORKFLOW_zh-TW.md)。
