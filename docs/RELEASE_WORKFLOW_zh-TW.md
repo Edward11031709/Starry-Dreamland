@@ -12,9 +12,9 @@
 ## 管理員發布步驟
 1. 在 PR 檢查變更、CI 與測試結果，並親自驗收預覽。
 2. 管理員明確核准後才合併至 `main`。
-3. 到 Actions 執行「發布星夢樂園到 GitHub Pages」，選擇 `main`，並勾選確認輸入。
-4. GitHub 的 `production` Environment 必須設定 Required reviewers（管理員本人），且只允許 `main` 分支部署。沒有完成這項設定前，不可把 workflow_dispatch 當成已受保護。
-5. 通過環境審核後才會更新公開網站。
+3. 到 Actions 執行「星夢樂園檢查與正式發布」，選擇 `main`，並將 `confirm_release` 設為 `true`。
+4. GitHub 的 `production` Environment 應設定 Required reviewers（管理員本人），且只允許 `main` 分支部署。未能確認這些設定前，不可把 workflow 條件式檢查當成完整保護。
+5. 通過環境審核後才會更新公開網站；發布完成後記錄 `release.json` 的 SHA 與時間。
 
 ## 舊版與回復
 - 每次正式發布記錄 commit SHA，建議同時建立版本 tag（例如 `release-YYYYMMDD-N`）。
@@ -23,12 +23,11 @@
 
 ## 私有預覽與存取限制
 - PR CI 不部署 GitHub Pages，也不取得 Supabase service-role secrets。
-- 私有預覽使用 Supabase Private Storage bucket `sd-admin-previews`，搭配 `sd-admin-preview` Edge Function。只有登入後通過資料庫 `sd_is_admin()` 驗證的管理員才能取得 5 分鐘短效檔案 URL。
-- 在 main 上手動執行 workflow，設定 `publish_private_preview=true`、`preview_commit_sha=<完整 SHA>`、`confirm_release=false)，只會上傳私有預覽，不會部署公開網站。
-- 私有預覽上傳工作只讀取指定 commit 的靜態檔案，不執行候選 commit 的腳本；GitHub Actions service-role secret 只供 main 上的 owner 手動工作使用。
-- 管理中心以不含 `allow-same-origin` 的 sandbox iframe 開啟預覽，不共享正式登入 session 或 localStorage。預覽以訪客模式運行，不測試需要正式雲端寫入的功能。
-- bucket、Edge Function、GitHub Actions secrets 尚未完成 owner 設定與部署前，管理中心會顯示設定錯誤，不會回退到公開預覽網址。
-- 詳細設定：`docs/ADMIN_PREVIEW_SETUP_zh-TW.md`。
+- 私有預覽由 `sd-admin-preview` Supabase Edge Function 處理：先驗證登入者 JWT，再由資料庫 `sd_is_admin()` 確認管理員權限。
+- Edge Function 只接受固定公開 Repository 的完整 commit SHA，讀取允許的靜態檔案，寫入 Supabase Private Storage，再簽發短效 URL；不執行候選 commit 的腳本、套件安裝或建置命令。
+- 管理中心以不含 `allow-same-origin` 的 sandbox iframe 開啟預覽，不共享正式登入 session 或 localStorage；預覽以訪客模式運行，不測試需要正式雲端寫入的功能。
+- 私有預覽不需要 GitHub Actions secrets，也不需要手動啟動 GitHub Pages workflow；它與正式發布完全分離。
+- bucket、Edge Function 尚未完成設定或不可用時，管理中心應顯示錯誤，不可回退到公開預覽網址。
 
 ## 發布前檢查
 - 自動檢查通過。
