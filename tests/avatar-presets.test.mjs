@@ -30,7 +30,7 @@ test("preset application updates the live preview without saving or spending", (
   const apply = source.slice(start, end);
   assert.notEqual(start, -1, "applyAvatarPreset exists");
   assert.match(apply, /AVATAR_PRESETS\.find/);
-  assert.match(apply, /updateAvatarAtelierPreview\(\)/);
+  assert.match(apply, /applyAvatarAppearanceDraft\(/);
   assert.doesNotMatch(apply, /saveAvatarCustomization|sd_customize_avatar|sb\.rpc|avatarPoints|localStorage/);
 });
 
@@ -44,9 +44,10 @@ test("preset controls are accessible, responsive and explicitly unsaved until co
 });
 
 
+
 test("random appearance drafts stay inside the existing allowlists and only update preview controls", () => {
   const start = source.indexOf("function applyAvatarAppearanceDraft(");
-  const end = source.indexOf("\\nlet atelierPreviewWaiting", start);
+  const end = source.indexOf("\nlet atelierPreviewWaiting", start);
   assert.ok(start >= 0 && end > start, "appearance draft helpers exist");
   const helpers = source.slice(start, end);
   const controls = {
@@ -65,7 +66,7 @@ test("random appearance drafts stay inside the existing allowlists and only upda
     updateAvatarAtelierPreview: () => { previewUpdates += 1; },
     Math: math
   };
-  vm.runInNewContext("let atelierPreviewOutfit = \"wanderer\";\\n" + helpers + "\\nrandomizeAvatarAppearance();", context);
+  vm.runInNewContext("let atelierPreviewOutfit = \"wanderer\";\n" + helpers + "\nrandomizeAvatarAppearance();", context);
   const controlIds = {
     hairStyle: "avatarHairStyle",
     hairColor: "avatarHairColor",
@@ -73,16 +74,16 @@ test("random appearance drafts stay inside the existing allowlists and only upda
     accentColor: "avatarAccentColor"
   };
   for (const [key, id] of Object.entries(controlIds)) {
-    assert.ok(AVATAR_OPTIONS[key].some(option => option.id === controls[id].value), `randomized ${key} stays allowlisted`);
+    assert.ok(AVATAR_OPTIONS[key].some(option => option.id === controls[id].value), \`randomized \${key} stays allowlisted\`);
   }
   assert.ok(AVATAR_TYPES.some(option => option.id === controls.avatarTypeSelect.value));
   assert.equal(previewUpdates, 1);
-  assert.doesNotMatch(helpers, /saveAvatarCustomization|sd_customize_avatar|sb\\.rpc|avatarPoints|localStorage/);
+  assert.doesNotMatch(helpers, /saveAvatarCustomization|sd_customize_avatar|sb\.rpc|avatarPoints|localStorage/);
 });
 
 test("restore action returns the editor and outfit preview to the saved profile without writing", () => {
   const start = source.indexOf("function applyAvatarAppearanceDraft(");
-  const end = source.indexOf("\\nlet atelierPreviewWaiting", start);
+  const end = source.indexOf("\nlet atelierPreviewWaiting", start);
   assert.ok(start >= 0 && end > start, "appearance draft helpers exist");
   const helpers = source.slice(start, end);
   const profile = {
@@ -106,7 +107,7 @@ test("restore action returns the editor and outfit preview to the saved profile 
     document: { getElementById: id => controls[id] || null },
     updateAvatarAtelierPreview: () => { previewUpdates += 1; }
   };
-  vm.runInNewContext("let atelierPreviewOutfit = \"wanderer\";\\n" + helpers + "\\nrestoreSavedAvatarAppearance();", context);
+  vm.runInNewContext("let atelierPreviewOutfit = \"wanderer\";\n" + helpers + "\nrestoreSavedAvatarAppearance();", context);
   assert.equal(controls.avatarHairStyle.value, profile.appearance.hairStyle);
   assert.equal(controls.avatarHairColor.value, profile.appearance.hairColor);
   assert.equal(controls.avatarSkinTone.value, profile.appearance.skinTone);
@@ -116,11 +117,11 @@ test("restore action returns the editor and outfit preview to the saved profile 
   assert.equal(previewUpdates, 1);
 });
 
-test("randomize and restore controls are wired and clearly remain preview-only", () => {
+test("randomize and restore controls are wired and saved-state feedback is visible", () => {
   assert.match(source, /data-avatar-randomize/);
   assert.match(source, /data-avatar-restore/);
-  assert.match(source, /if\\(b\\.dataset\\.avatarRandomize!==undefined\\)\\{randomizeAvatarAppearance\\(\\);return\\}/);
-  assert.match(source, /if\\(b\\.dataset\\.avatarRestore!==undefined\\)\\{restoreSavedAvatarAppearance\\(\\);return\\}/);
+  assert.match(source, /if\(b\.dataset\.avatarRandomize!==undefined\)\{randomizeAvatarAppearance\(\);return\}/);
+  assert.match(source, /if\(b\.dataset\.avatarRestore!==undefined\)\{restoreSavedAvatarAppearance\(\);return\}/);
   assert.match(source, /目前為已保存的自訂外觀/);
   assert.match(source, /目前預覽：.*尚未保存/);
 });
