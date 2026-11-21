@@ -1008,7 +1008,8 @@ function syncAvatarPresetSelection(){
  const savedAppearance=Object.assign({},DEFAULT_APPEARANCE,profile?.appearance||{});
  const savedType=profile?.avatarType||"wanderer";
  const currentType=document.getElementById("avatarTypeSelect")?.value||savedType;
- const isSaved=currentType===savedType&&Object.keys(DEFAULT_APPEARANCE).every(key=>current[key]===savedAppearance[key]);
+ const savedOutfit=profile?.avatarId||"wanderer";
+ const isSaved=atelierPreviewOutfit===savedOutfit&&currentType===savedType&&Object.keys(DEFAULT_APPEARANCE).every(key=>current[key]===savedAppearance[key]);
  const matched=AVATAR_PRESETS.find(preset=>Object.entries(preset.appearance).every(([key,value])=>current[key]===value));
  document.querySelectorAll("[data-avatar-preset]").forEach(button=>{
   const selected=button.dataset.avatarPreset===(matched?.id||"");
