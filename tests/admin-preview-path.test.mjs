@@ -164,11 +164,12 @@ test("GitHub Pages release requires a manual owner-confirmed dispatch from main"
 
 test("moonlit garden island trees sit on the correct deck and use lightweight flower detailing", () => {
   const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
-  const start = source.indexOf("function addMoonflower(");
+  const start = source.indexOf("const moonflowerPetalGeometry=");
   const end = source.indexOf("// The old satellite islands", start);
-  assert.notEqual(start, -1, "moonflower builder exists");
+  assert.notEqual(start, -1, "moonflower shared geometry and builder exist");
   assert.ok(end > start, "garden helper has a clear boundary");
   const helper = source.slice(start, end);
+  assert.ok(helper.includes("function addMoonflower("));
   assert.ok(helper.includes("new THREE.SphereGeometry(1,12,8)"));
   assert.ok(helper.includes("for(let petal=0;petal<6;petal++)"));
   assert.ok(helper.includes("moonflowerPetals[variant%moonflowerPetals.length]"));
