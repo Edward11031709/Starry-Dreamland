@@ -125,4 +125,6 @@ test("randomize and restore controls are wired and saved-state feedback is visib
   assert.match(source, /if\(b\.dataset\.avatarRestore!==undefined\)\{restoreSavedAvatarAppearance\(\);return\}/);
   assert.match(source, /目前為已保存的自訂外觀/);
   assert.match(source, /目前預覽：.*尚未保存/);
+  assert.match(source, /const savedOutfit=profile\?\.avatarId\|\|"wanderer"/);
+  assert.match(source, /atelierPreviewOutfit===savedOutfit/);
 });
