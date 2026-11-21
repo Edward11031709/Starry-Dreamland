@@ -1,37 +1,63 @@
-# 星夢樂園版本發布流程
+# 星夢樂園正式發布流程（照著畫面操作）
 
-## 目標
-日常開發與正式公開分離。開發成果先留在 PR／開發分支，玩家只看到管理員明確核准並部署的版本。
+正式網站：https://edward11031709.github.io/Starry-Dreamland/
 
-## 分支與環境
-- `main`：已通過檢查、等待管理員驗收的候選版本；合併 PR 本身不代表發布。
-- `dev/*`、`feature/*`：日常開發分支。
-- GitHub Pages：只由受保護的 `production` 環境部署；部署時產生 `release.json`，記錄實際公開的 commit SHA。
-- PR CI：執行語法與測試；不部署到公開 Pages。管理員中心會讀取 PR、歷史提交與 `release.json`，區分「公開版本」和「main 最新候選」。
+## 先理解兩種版本
 
-## 管理員發布步驟
-1. 在 PR 檢查變更、CI 與測試結果，並親自驗收預覽。
-2. 管理員明確核准後才合併至 `main`。
-3. 到 Actions 執行「發布星夢樂園到 GitHub Pages」，選擇 `main`，並勾選確認輸入。
-4. GitHub 的 `production` Environment 必須設定 Required reviewers（管理員本人），且只允許 `main` 分支部署。沒有完成這項設定前，不可把 workflow_dispatch 當成已受保護。
-5. 通過環境審核後才會更新公開網站。
+- **測試候選版**：位於 `dev/*` 或 `feature/*` 分支及 Pull Request。Actions 只執行程式檢查，不會覆蓋公開網站。
+- **正式公開版**：只有經管理員驗收、合併至 `main`，再由管理員手動執行正式發布工作流程的版本。
 
-## 舊版與回復
-- 每次正式發布記錄 commit SHA，建議同時建立版本 tag（例如 `release-YYYYMMDD-N`）。
-- 回復時選擇先前核准的 commit，建立回復 PR 或由管理員核准回復 commit，再經相同正式發布流程。
-- 程式版本回復不執行 Supabase migration rollback，不改動玩家帳號、星塵、服裝、遊戲紀錄或聊天資料。
+**合併 PR 不會自動發布。** 目前 `.github/workflows/pages.yml` 沒有 `push` 部署觸發條件；正式部署使用 `workflow_dispatch`。
 
-## 私有預覽與存取限制
-- PR CI 不部署 GitHub Pages，也不取得 Supabase service-role secrets。
-- 私有預覽使用 Supabase Private Storage bucket `sd-admin-previews`，搭配 `sd-admin-preview` Edge Function。只有登入後通過資料庫 `sd_is_admin()` 驗證的管理員才能取得 5 分鐘短效檔案 URL。
-- 在 main 上手動執行 workflow，設定 `publish_private_preview=true`、`preview_commit_sha=<完整 SHA>`、`confirm_release=false)，只會上傳私有預覽，不會部署公開網站。
-- 私有預覽上傳工作只讀取指定 commit 的靜態檔案，不執行候選 commit 的腳本；GitHub Actions service-role secret 只供 main 上的 owner 手動工作使用。
-- 管理中心以不含 `allow-same-origin` 的 sandbox iframe 開啟預覽，不共享正式登入 session 或 localStorage。預覽以訪客模式運行，不測試需要正式雲端寫入的功能。
-- bucket、Edge Function、GitHub Actions secrets 尚未完成 owner 設定與部署前，管理中心會顯示設定錯誤，不會回退到公開預覽網址。
-- 詳細設定：`docs/ADMIN_PREVIEW_SETUP_zh-TW.md`。
+## A. 測試候選版本
 
-## 發布前檢查
-- 自動檢查通過。
-- 管理員實際驗收桌機與手機版。
-- 確認沒有把尚未完成的功能標成已上線。
-- 確認 Supabase 相容性；未經另行批准不執行資料庫寫入。
+1. 開啟 Repository 的 **Pull requests** 分頁。
+2. 點選要驗收的 PR，先看 **Checks** 是否全部成功。
+3. 若管理員中心已完成私有預覽設定，使用私有預覽實際檢查桌機與手機畫面、角色移動、碰撞、遊樂設施和操作流程。若頁面顯示預覽設定錯誤，先完成私有預覽設定；不要拿公開網站當作尚未發布程式碼的預覽。
+4. 若 PR 顯示 **Draft**，代表仍是草稿；確認可交付後才按 **Ready for review**。
+5. 測試尚未完成時，不要合併 PR，也不要執行正式發布。
+
+## B. 將驗收版本合併到 main
+
+1. 在 PR 的 **Files changed** 再確認變更範圍。
+2. 確認所有必要 Checks 成功，並完成實際預覽驗收。
+3. 管理員確認可以公開後，才按 **Merge pull request**。
+4. 合併完成後，記下 main 上的最新 commit SHA。
+
+注意：合併只是把候選程式碼放到 `main`，此時公開網站仍是上一次成功發布的版本。
+
+## C. 手動發布到所有訪客可見的網站
+
+1. 回到 Repository，點上方 **Actions**。
+2. 在左側工作流程清單選 **「星夢樂園檢查與正式發布」**。
+3. 點右側 **Run workflow**。
+4. Branch 下拉選單選 **`main`**。
+5. 勾選 **「我已檢查此版本並確認發布到公開網站」**（對應 `confirm_release=true`）。
+6. 點綠色 **Run workflow** 按鈕。
+7. 開啟這次執行紀錄，確認 **「檢查程式與園區必要元件」** 和 **「管理員確認後發布正式版」** 都顯示 Success。
+8. 開啟正式網站並強制重新整理：Windows 可按 `Ctrl + F5`。
+
+正式發布的工作流程有四個必要條件：事件必須是手動 `workflow_dispatch`、分支必須是 `main`、執行者必須是 GitHub 帳號 `Edward11031709`、且必須勾選 `confirm_release`。任何一項不符合，正式部署 job 都會跳過。
+
+## D. 如何確認大家看到的是新版本
+
+- Actions 執行成功後，開啟正式網站：<https://edward11031709.github.io/Starry-Dreamland/>
+- 也可開啟 <https://edward11031709.github.io/Starry-Dreamland/release.json>，查看這次正式發布的 commit SHA 與時間。
+- 若畫面仍是舊版，先用 `Ctrl + F5` 強制重新整理，再確認 `release.json` 的 commit 是否與此次 main 版本一致。
+
+## E. 發布失敗或需要回復
+
+- 若檢查 job 失敗：不要繼續發布；回 PR 修正後重新測試。
+- 若部署 job 失敗：先看 Actions 失敗步驟，公開網站不應被視為已更新。
+- 若新版本有嚴重問題：從先前核准的 commit 建立回復 PR，經同樣驗收與正式發布程序處理。
+- 回復程式版本不會回滾 Supabase 玩家帳號、星塵、外觀、紀錄或聊天資料。
+
+## 安全設定提醒（目前仍需管理員確認）
+
+截至 2026-11-21，GitHub 回報 `main` **尚未啟用 branch protection**。正式使用前，建議在 Repository → **Settings → Branches** 為 `main` 設定禁止直接推送、必須經 Pull Request 合併及必要狀態檢查。
+
+工作流程會使用名為 `production` 的 GitHub Environment；請在 Settings → **Environments → production** 確認部署分支限制及 Required reviewers。這些 Environment 審核人設定無法只從工作流程 YAML 推斷；尚未核對前，不應宣稱已啟用人工審核。
+
+## 與私有預覽的差別
+
+管理員私有預覽是測試用途，與公開 GitHub Pages 發布分開。私有預覽不會讓一般訪客看到，也不會取代本文件的正式發布程序。私有預覽設定請見 [ADMIN_PREVIEW_SETUP_zh-TW.md](ADMIN_PREVIEW_SETUP_zh-TW.md)。

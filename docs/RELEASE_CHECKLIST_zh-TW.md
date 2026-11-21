@@ -1,24 +1,31 @@
-# GitHub Pages 發布檢查表
+# 星夢樂園正式發布檢查表
 
-## 上傳前
-- [ ] 解壓縮發布 ZIP。
-- [ ] 確認 index.html、app.js、styles.css、config.js 都在根目錄。
-- [ ] 確認 assets/ 資料夾也在根目錄。
-- [ ] 不要上傳 ZIP 本身取代檔案；需要上傳解壓後內容。
-- [ ] 確認沒有密碼、service-role key 或真實玩家資料。
+## PR 驗收
+- [ ] PR 目標分支是 `main`，來源為 `dev/*` 或 `feature/*`。
+- [ ] PR 不再是未驗收的 Draft。
+- [ ] Files changed 只包含本次預期的變更。
+- [ ] GitHub Actions 的必要檢查全部成功。
+- [ ] 管理員已檢查私有預覽或可用測試版本。
+- [ ] 桌機／手機操作、角色碰撞、遊樂設施及主要遊戲均已實際驗收。
+- [ ] 沒有不必要的 Supabase schema、RLS/RPC 或正式資料變更。
+- [ ] 管理員明確同意將此候選版本公開。
 
-## GitHub
-- [ ] 將解壓後所有內容上傳至 main 分支根目錄。
-- [ ] Settings → Pages → Source 選 GitHub Actions。
-- [ ] Actions 出現綠色成功狀態。
-- [ ] 開啟 https://Edward11031709.github.io/Starry-Dreamland/
+## 合併
+- [ ] 管理員核准後，才合併 PR 至 `main`。
+- [ ] 記錄合併後的 main commit SHA。
+- [ ] 確認 GitHub Environment `production` 的分支限制及 Required reviewers 設定。
 
-## 瀏覽器測試
-- [ ] 登入／展示帳號流程可用。
-- [ ] 三款遊戲可開始、結束及返回廣場。
-- [ ] 積分及歷史紀錄可保存於目前瀏覽器。
-- [ ] 手機畫面沒有主要按鈕被裁切。
-- [ ] 3D／星塵動畫失敗時有可用 fallback。
+## 正式發布
+- [ ] Actions → **星夢樂園檢查與正式發布**。
+- [ ] Run workflow 的 Branch 選 `main`。
+- [ ] 勾選 `confirm_release`（「我已檢查此版本並確認發布到公開網站」）。
+- [ ] 檢查 job 成功。
+- [ ] 部署 job 成功。
+- [ ] `release.json` 記錄的 SHA 與預期版本一致。
+- [ ] 正式網站已用 `Ctrl + F5` 重新整理並完成基本冒煙測試。
 
-## 已知限制
-目前 localStorage 資料不跨裝置同步。全體玩家共用帳號及排行榜需另外連接 Supabase 等後端。
+## 失敗／回復
+- [ ] 任一檢查失敗時不繼續發布。
+- [ ] 部署失敗時先檢查 Actions log，不宣稱已上線。
+- [ ] 必要時建立回復 PR，仍經同樣驗收與手動發布。
+- [ ] 不以程式回復流程回滾 Supabase 玩家資料。
