@@ -4,11 +4,12 @@ import vm from "node:vm";
 import test from "node:test";
 
 const source = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const typesStart = source.indexOf("const AVATAR_TYPES=");
 const optionsStart = source.indexOf("const AVATAR_OPTIONS=");
 const optionsEnd = source.indexOf("const PARK_DISCOVERIES", optionsStart);
-assert.ok(optionsStart >= 0 && optionsEnd > optionsStart, "avatar option configuration exists");
+assert.ok(typesStart >= 0 && optionsStart > typesStart && optionsEnd > optionsStart, "avatar type and appearance configuration exist");
 const config = vm.runInNewContext(
-  source.slice(optionsStart, optionsEnd) + "\n({ AVATAR_OPTIONS, AVATAR_TYPES, DEFAULT_APPEARANCE, AVATAR_PRESETS })"
+  source.slice(typesStart, optionsEnd) + "\n({ AVATAR_OPTIONS, AVATAR_TYPES, DEFAULT_APPEARANCE, AVATAR_PRESETS })"
 );
 const { AVATAR_OPTIONS, AVATAR_TYPES, DEFAULT_APPEARANCE, AVATAR_PRESETS } = JSON.parse(JSON.stringify(config));
 
