@@ -134,6 +134,8 @@
 .avatar-preset{width:100%;min-width:0;padding:10px 7px;font-size:11px;letter-spacing:.2px}
 .avatar-preset.selected-preset{border-color:#f1d18e;background:linear-gradient(135deg,#4d426f,#252345);color:#f8e5b7;box-shadow:0 0 0 1px #f1d18e44,0 0 18px #caa66d20}
 #avatarPresetStatus{margin:10px 0 0;color:#aeb3d3;font-size:10px;line-height:1.6}
+.avatar-draft-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+.avatar-draft-actions .btn{padding:8px 12px;font-size:11px}
 .avatar-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .avatar-setting{display:flex;flex-direction:column;gap:7px;min-width:0}
 .avatar-setting span{color:#e2d6f5;font-size:11px;font-weight:700;letter-spacing:.5px}
@@ -987,8 +989,26 @@ function currentAvatarAppearanceControls(){
   accentColor:get("avatarAccentColor")||DEFAULT_APPEARANCE.accentColor
  };
 }
+function applyAvatarAppearanceDraft(appearance,avatarType){
+ const controlIds={hairStyle:"avatarHairStyle",hairColor:"avatarHairColor",skinTone:"avatarSkinTone",accentColor:"avatarAccentColor"};
+ Object.entries(AVATAR_OPTIONS).forEach(([key,options])=>{
+  const requested=appearance?.[key];
+  const value=options.some(option=>option.id===requested)?requested:DEFAULT_APPEARANCE[key];
+  const control=document.getElementById(controlIds[key]);
+  if(control)control.value=value;
+ });
+ const safeType=AVATAR_TYPES.some(item=>item.id===avatarType)?avatarType:"wanderer";
+ const typeControl=document.getElementById("avatarTypeSelect");
+ if(typeControl)typeControl.value=safeType;
+ updateAvatarAtelierPreview();
+}
 function syncAvatarPresetSelection(){
  const current=currentAvatarAppearanceControls();
+ const profile=me();
+ const savedAppearance=Object.assign({},DEFAULT_APPEARANCE,profile?.appearance||{});
+ const savedType=profile?.avatarType||"wanderer";
+ const currentType=document.getElementById("avatarTypeSelect")?.value||savedType;
+ const isSaved=currentType===savedType&&Object.keys(DEFAULT_APPEARANCE).every(key=>current[key]===savedAppearance[key]);
  const matched=AVATAR_PRESETS.find(preset=>Object.entries(preset.appearance).every(([key,value])=>current[key]===value));
  document.querySelectorAll("[data-avatar-preset]").forEach(button=>{
   const selected=button.dataset.avatarPreset===(matched?.id||"");
@@ -996,17 +1016,30 @@ function syncAvatarPresetSelection(){
   button.setAttribute("aria-pressed",selected?"true":"false");
  });
  const status=document.getElementById("avatarPresetStatus");
- if(status)status.textContent=matched?"目前預覽："+matched.name+"；尚未保存。":"目前為自訂組合；尚未保存。";
+ if(status)status.textContent=isSaved
+  ?(matched?"目前造型："+matched.name+"（已保存）。":"目前為已保存的自訂外觀。")
+  :(matched?"目前預覽："+matched.name+"；尚未保存。":"目前為自訂預覽；尚未保存。");
 }
 function applyAvatarPreset(id){
  const preset=AVATAR_PRESETS.find(item=>item.id===id);
  if(!preset)return;
- const controlIds={hairStyle:"avatarHairStyle",hairColor:"avatarHairColor",skinTone:"avatarSkinTone",accentColor:"avatarAccentColor"};
- Object.entries(preset.appearance).forEach(([key,value])=>{
-  const control=document.getElementById(controlIds[key]);
-  if(control)control.value=value;
- });
- updateAvatarAtelierPreview();
+ applyAvatarAppearanceDraft(preset.appearance,document.getElementById("avatarTypeSelect")?.value||"wanderer");
+}
+function randomizeAvatarAppearance(){
+ const appearance=Object.fromEntries(Object.entries(AVATAR_OPTIONS).map(([key,options])=>{
+  const choice=options[Math.min(options.length-1,Math.floor(Math.random()*options.length))];
+  return [key,choice?.id||DEFAULT_APPEARANCE[key]];
+ }));
+ const typeChoice=AVATAR_TYPES[Math.min(AVATAR_TYPES.length-1,Math.floor(Math.random()*AVATAR_TYPES.length))];
+ applyAvatarAppearanceDraft(appearance,typeChoice?.id||"wanderer");
+}
+function restoreSavedAvatarAppearance(){
+ const profile=me();
+ if(!profile)return;
+ atelierPreviewOutfit=profile.avatarId||"wanderer";
+ const name=document.getElementById("avatarPreviewName");
+ if(name)name.textContent=AVATARS.find(item=>item.id===atelierPreviewOutfit)?.name||"旅人";
+ applyAvatarAppearanceDraft(Object.assign({},DEFAULT_APPEARANCE,profile.appearance||{}),profile.avatarType||"wanderer");
 }
 let atelierPreviewWaiting=false;
 function avatarAtelierPreviewOptions(){
@@ -1072,7 +1105,7 @@ function wardrobe(){
  const skinColor=avatarSelectMarkup("avatarSkinTone","膚色",AVATAR_OPTIONS.skinTone,appearance.skinTone);
  const accentColor=avatarSelectMarkup("avatarAccentColor","星紋／眼睛光色",AVATAR_OPTIONS.accentColor,appearance.accentColor);
  const presetButtons=AVATAR_PRESETS.map(preset=>'<button type="button" class="btn alt avatar-preset" data-avatar-preset="'+preset.id+'" aria-pressed="false">'+preset.name+'</button>').join("");
- shell('<section class="hero"><div class="eyebrow">TRAVELER ATELIER · CHARACTER STUDIO</div><h1>旅人角色工坊</h1><p>選擇旅人類型與服裝，即時旋轉查看 3D 角色，再自訂髮型、髮色、膚色與星紋／眼睛光色。儲存後會同步到其他在線旅人。</p></section><div class="wardrobe-balance"><span>目前服裝：<b>'+esc(AVATARS.find(a=>a.id===activeId)?.name||"星旅者")+'</b></span><span>可用星塵：<b>'+balance+' ✦</b></span></div><section class="avatar-customizer"><div class="customizer-title"><div><small>CHARACTER IDENTITY</small><h2>角色類型與外觀</h2><p>調整下面選項，預覽角色會即時更新；服裝收藏可先預覽再決定是否套用。</p></div><span class="customizer-gem">✧</span></div><div class="avatar-live-preview-wrap"><div id="avatarLivePreview" class="avatar-live-preview" aria-label="旅人 3D 角色即時預覽"></div><div class="avatar-live-preview-caption"><b id="avatarPreviewName">'+esc(AVATARS.find(a=>a.id===activeId)?.name||"星旅者")+'</b><span>拖曳旋轉 · 即時外觀</span></div></div><div class="avatar-presets"><div class="avatar-presets-heading"><b>快速造型預設</b><span>先套用，再自行微調</span></div><div class="avatar-preset-list">'+presetButtons+'</div><p id="avatarPresetStatus" aria-live="polite">套用預設只會更新 3D 預覽；按下「保存角色設定」才會保存。</p></div><div class="avatar-settings-grid">'+typeOptions+hairOptions+hairColor+skinColor+accentColor+'</div><div class="customizer-actions"><button class="btn" data-avatar-save>保存角色設定</button><span>預覽不會立即扣除星塵或變更已裝備服裝。</span></div></section><div class="head"><div><h2>星幻服裝收藏</h2><p>每套服裝可先試穿；未解鎖服裝仍可預覽，解鎖後才能正式套用。</p></div></div><section class="wardrobe-grid">'+cards+'</section><div class="panel" style="margin-top:18px"><p style="margin:0;color:var(--muted);font-size:12px;line-height:1.8">已解鎖的服裝永久保存在帳號。購買後可隨時切換，不會影響遊戲成績或排行榜。</p><button class="btn alt" data-page="home" style="margin-top:12px">返回星夢廣場</button></div>');
+ shell('<section class="hero"><div class="eyebrow">TRAVELER ATELIER · CHARACTER STUDIO</div><h1>旅人角色工坊</h1><p>選擇旅人類型與服裝，即時旋轉查看 3D 角色，再自訂髮型、髮色、膚色與星紋／眼睛光色。儲存後會同步到其他在線旅人。</p></section><div class="wardrobe-balance"><span>目前服裝：<b>'+esc(AVATARS.find(a=>a.id===activeId)?.name||"星旅者")+'</b></span><span>可用星塵：<b>'+balance+' ✦</b></span></div><section class="avatar-customizer"><div class="customizer-title"><div><small>CHARACTER IDENTITY</small><h2>角色類型與外觀</h2><p>調整下面選項，預覽角色會即時更新；服裝收藏可先預覽再決定是否套用。</p></div><span class="customizer-gem">✧</span></div><div class="avatar-live-preview-wrap"><div id="avatarLivePreview" class="avatar-live-preview" aria-label="旅人 3D 角色即時預覽"></div><div class="avatar-live-preview-caption"><b id="avatarPreviewName">'+esc(AVATARS.find(a=>a.id===activeId)?.name||"星旅者")+'</b><span>拖曳旋轉 · 即時外觀</span></div></div><div class="avatar-presets"><div class="avatar-presets-heading"><b>快速造型預設</b><span>先套用，再自行微調</span></div><div class="avatar-preset-list">'+presetButtons+'</div><div class="avatar-draft-actions"><button type="button" class="btn alt" data-avatar-randomize>隨機造型</button><button type="button" class="btn alt" data-avatar-restore>還原已保存外觀</button></div><p id="avatarPresetStatus" aria-live="polite">套用預設只會更新 3D 預覽；按下「保存角色設定」才會保存。</p></div><div class="avatar-settings-grid">'+typeOptions+hairOptions+hairColor+skinColor+accentColor+'</div><div class="customizer-actions"><button class="btn" data-avatar-save>保存角色設定</button><span>預覽不會立即扣除星塵或變更已裝備服裝。</span></div></section><div class="head"><div><h2>星幻服裝收藏</h2><p>每套服裝可先試穿；未解鎖服裝仍可預覽，解鎖後才能正式套用。</p></div></div><section class="wardrobe-grid">'+cards+'</section><div class="panel" style="margin-top:18px"><p style="margin:0;color:var(--muted);font-size:12px;line-height:1.8">已解鎖的服裝永久保存在帳號。購買後可隨時切換，不會影響遊戲成績或排行榜。</p><button class="btn alt" data-page="home" style="margin-top:12px">返回星夢廣場</button></div>');
  ["avatarTypeSelect","avatarHairStyle","avatarHairColor","avatarSkinTone","avatarAccentColor"].forEach(id=>{
   document.getElementById(id)?.addEventListener("change",updateAvatarAtelierPreview);
  });
@@ -1397,7 +1430,7 @@ async function adminCenter(){
 
 function render(){if(!me()){login();return}home()}
 document.addEventListener("submit",e=>{if(e.target&&e.target.id==="parkChatForm"){e.preventDefault();sendParkChat()}});
-document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.parkReaction){sendParkReaction(b.dataset.parkReaction);return}if(b.dataset.parkFullscreen!==undefined){toggleParkFullscreen();return}if(b.dataset.cameraToggle!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-camera-toggle"));return}if(b.dataset.parkInteract!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-touch-interact"));return}if(b.dataset.enterLandscape!==undefined){enterLandscapeMode();return}if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="adminPreviewOpen"){openAdminPrivatePreview();return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.mapExpand!==undefined){openParkMap();return}if(b.dataset.mapClose!==undefined){document.getElementById("parkMapModal")?.remove();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();if(b.dataset.page==="admin")adminCenter();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarPreset){applyAvatarPreset(b.dataset.avatarPreset);return}if(b.dataset.avatarPreview){atelierPreviewOutfit=b.dataset.avatarPreview;updateAvatarAtelierPreview();document.getElementById("avatarPreviewName").textContent=AVATARS.find(a=>a.id===atelierPreviewOutfit)?.name||"旅人";return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarSave!==undefined){saveAvatarCustomization();return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.parkReaction){sendParkReaction(b.dataset.parkReaction);return}if(b.dataset.parkFullscreen!==undefined){toggleParkFullscreen();return}if(b.dataset.cameraToggle!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-camera-toggle"));return}if(b.dataset.parkInteract!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-touch-interact"));return}if(b.dataset.enterLandscape!==undefined){enterLandscapeMode();return}if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="adminPreviewOpen"){openAdminPrivatePreview();return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.mapExpand!==undefined){openParkMap();return}if(b.dataset.mapClose!==undefined){document.getElementById("parkMapModal")?.remove();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();if(b.dataset.page==="admin")adminCenter();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarPreset){applyAvatarPreset(b.dataset.avatarPreset);return}if(b.dataset.avatarRandomize!==undefined){randomizeAvatarAppearance();return}if(b.dataset.avatarRestore!==undefined){restoreSavedAvatarAppearance();return}if(b.dataset.avatarPreview){atelierPreviewOutfit=b.dataset.avatarPreview;updateAvatarAtelierPreview();document.getElementById("avatarPreviewName").textContent=AVATARS.find(a=>a.id===atelierPreviewOutfit)?.name||"旅人";return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarSave!==undefined){saveAvatarCustomization();return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
 document.getElementById("logout").onclick=async()=>{stop();await stopParkSocial();if(cloudMode&&sb){const {error}=await sb.auth.signOut();if(error)say("登出時發生問題："+friendlyAuthError(error))}cloudUser=null;state.player=null;state.players=[];state.records=[];save();render()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&active)result(0,"abandoned",active.id)});
 window.addEventListener("starry-supabase-ready",bootCloud);
