@@ -1565,10 +1565,14 @@ function buildEnvironment(scene) {
       addMesh(arch,new THREE.OctahedronGeometry(0.24,1),materials.crystal,[px,3.34,0],[0.75,1.35,0.75],false,false);
       addCollider(x+px,z,0.46,title+"門柱");
     });
-    const crown=addMesh(arch,new THREE.TorusGeometry(radius,0.14,12,56,Math.PI),materials.gold,[0,3.1,0]);
-    const inner=addMesh(arch,new THREE.TorusGeometry(radius-0.22,0.045,8,56,Math.PI),materials.crystal,[0,3.1,-0.06]);
-    const crest=addMesh(arch,new THREE.OctahedronGeometry(0.25,1),materials.crystal,[0,4.52,0],[0.8,1.2,0.8],false,false);
+    // Pointed double-lancet arches repeat the castle and park entrance language.
+    const crown=addMesh(arch,new THREE.TubeGeometry(
+      makeLancetArchCurve(0,3.06,0,width-0.76,1.55),72,0.13,10,false),materials.gold,null,null,false,false);
+    const inner=addMesh(arch,new THREE.TubeGeometry(
+      makeLancetArchCurve(0,3.09,-0.065,width-1.18,1.34),64,0.038,8,false),materials.crystal,null,null,false,false);
+    const crest=addMesh(arch,new THREE.OctahedronGeometry(0.25,1),materials.crystal,[0,4.69,0],[0.8,1.2,0.8],false,false);
     crest.rotation.y=Math.PI/4;
+    addMesh(arch,new THREE.TorusGeometry(0.44,0.022,6,40),materials.silverMetal,[0,4.69,0.06],null,false,false);
     const sign=makeLabelSprite({title,subtitle});
     if(sign){sign.position.set(0,4.17,0.22);sign.scale.set(width*0.72,0.92,1);arch.add(sign)}
     return arch;
