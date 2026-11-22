@@ -577,22 +577,59 @@ function buildCastle(scene,materials){
 
 function buildObservatory(scene, x, y, z, materials) {
   const group = new THREE.Group();
+  group.name="StargazerObservatory";
   group.position.set(x, y, z);
   scene.add(group);
-  addMesh(group, new THREE.CylinderGeometry(1.2, 1.45, 0.45, 20),
-    materials.trim, [0, 0.23, 0]);
-  addTower(group, 0, 0, 0.35, 3.1, 0.72, materials, true);
-  const dome = addMesh(group, new THREE.SphereGeometry(0.78, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
-    materials.silverMetal, [0, 3.65, 0], [1.15, 0.8, 1.15]);
-  dome.rotation.y = 0.2;
-  addMesh(group, new THREE.TorusGeometry(0.78, 0.07, 8, 36),
-    materials.gold, [0, 3.66, 0]).rotation.x = Math.PI / 2;
-  const lens = addMesh(group, new THREE.CylinderGeometry(0.16, 0.16, 1.35, 16),
-    materials.silverMetal, [0, 4.1, 0.14]);
-  lens.rotation.x = Math.PI / 2.8;
-  addCrystal(group, 1.2, 0.65, -0.5, 0.38, PALETTE.blue);
+  // A wider stepped podium gives the observatory the scale of a destination landmark.
+  addMesh(group,new THREE.CylinderGeometry(2.12,2.34,0.34,48),materials.darkStone,[0,0.18,0]);
+  addMesh(group,new THREE.TorusGeometry(2.08,0.075,8,80),materials.gold,[0,0.36,0]).rotation.x=Math.PI/2;
+  addMesh(group,new THREE.CylinderGeometry(1.82,1.9,0.12,48),materials.top,[0,0.42,0]);
+  addTower(group,0,0,0.46,3.08,0.86,materials,true);
+  // The upper drum carries a ring balcony, twelve supports and a ribbed telescope dome.
+  addMesh(group,new THREE.CylinderGeometry(1.18,1.3,0.22,48),materials.darkStone,[0,3.68,0]);
+  const drumRing=addMesh(group,new THREE.TorusGeometry(1.24,0.075,8,72),materials.gold,[0,3.82,0]);
+  drumRing.rotation.x=Math.PI/2;
+  for(let rib=0;rib<12;rib++){
+    const angle=rib/12*Math.PI*2,rr=1.18;
+    addMesh(group,new THREE.CylinderGeometry(0.025,0.038,0.48,8),materials.silverMetal,
+      [Math.cos(angle)*rr,4.02,Math.sin(angle)*rr],null,false,false);
+    addMesh(group,new THREE.OctahedronGeometry(0.052,0),materials.crystal,
+      [Math.cos(angle)*rr,4.3,Math.sin(angle)*rr],[0.7,1.35,0.7],null,false,false);
+  }
+  const dome=addMesh(group,new THREE.SphereGeometry(1.08,40,24,0,Math.PI*2,0,Math.PI/2),
+    materials.silverMetal,[0,3.86,0],[1.16,0.92,1.16]);
+  dome.rotation.y=0.2;
+  const domeRim=addMesh(group,new THREE.TorusGeometry(1.08,0.075,10,80),materials.gold,[0,3.88,0],[1.16,1,1.16]);
+  domeRim.rotation.x=Math.PI/2;
+  for(let rib=0;rib<16;rib++){
+    const angle=rib/16*Math.PI*2;
+    const points=[
+      new THREE.Vector3(Math.cos(angle)*1.12,3.9,Math.sin(angle)*1.12),
+      new THREE.Vector3(Math.cos(angle)*0.98,4.2,Math.sin(angle)*0.98),
+      new THREE.Vector3(Math.cos(angle)*0.68,4.55,Math.sin(angle)*0.68),
+      new THREE.Vector3(Math.cos(angle)*0.3,4.72,Math.sin(angle)*0.3),
+      new THREE.Vector3(0,4.82,0)
+    ];
+    addMesh(group,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),24,0.021,6,false),
+      rib%2?materials.gold:materials.trim,null,null,false,false);
+  }
+  const crown=addMesh(group,new THREE.OctahedronGeometry(0.24,1),materials.crystal,[0,4.95,0],[0.72,1.42,0.72],null,false,false);
+  crown.rotation.z=Math.PI/4;
+  const telescope=new THREE.Group();telescope.position.set(0.14,4.34,0.12);telescope.rotation.z=-0.52;group.add(telescope);
+  const lens=addMesh(telescope,new THREE.CylinderGeometry(0.19,0.24,1.65,24),materials.silverMetal,[0,0,0]);
+  lens.rotation.x=Math.PI/2;
+  addMesh(telescope,new THREE.CylinderGeometry(0.28,0.28,0.16,24),materials.gold,[0,0,0.82]);
+  const eyepiece=addMesh(telescope,new THREE.TorusGeometry(0.22,0.035,8,40),materials.crystal,[0,0,0.91]);
+  eyepiece.rotation.x=Math.PI/2;
+  const support=addMesh(group,new THREE.CylinderGeometry(0.09,0.15,0.78,12),materials.darkStone,[0.12,3.93,0.08]);
+  support.rotation.z=-0.52;
+  [-1,1].forEach(side=>{
+    const wing=addMesh(group,new THREE.BoxGeometry(0.24,0.68,0.34),materials.wall,[side*1.42,0.65,0.18]);
+    wing.rotation.z=side*0.08;
+    addMesh(group,new THREE.OctahedronGeometry(0.13,1),materials.crystal,[side*1.43,1.08,0.2],[0.7,1.3,0.7],null,false,false);
+  });
   const sign=makeLabelSprite({title:"星辰觀測站",subtitle:"STARGAZER OBSERVATORY"});
-  if(sign){sign.position.set(0,5.4,0.1);sign.scale.set(4.0,1.08,1);group.add(sign)}
+  if(sign){sign.position.set(0,5.62,0.1);sign.scale.set(4.25,1.12,1);group.add(sign)}
   return group;
 }
 
