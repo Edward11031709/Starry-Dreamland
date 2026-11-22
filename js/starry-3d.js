@@ -507,9 +507,17 @@ function buildEntranceGate(scene,materials){
     }
   });
   // Two nested illuminated arches replace the heavy rectangular lintel.
-  const outer=addMesh(gate,new THREE.TorusGeometry(3.12,0.2,14,88,Math.PI),materials.trim,[0,3.72,0]);
-  const inner=addMesh(gate,new THREE.TorusGeometry(2.86,0.075,10,80,Math.PI),materials.gold,[0,3.72,-0.04]);
-  const innerGlow=addMesh(gate,new THREE.TorusGeometry(2.64,0.028,8,72,Math.PI),materials.crystal,[0,3.72,-0.08]);
+  // Repeat the castle's pointed lancet profile at the park threshold so the
+  // entrance gate and keep share one architectural silhouette.
+  const outer=addMesh(gate,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,3.72,0,6.24,3.05),88,0.2,12,false),
+    materials.trim,null,null,false,false);
+  const inner=addMesh(gate,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,3.72,-0.04,5.72,2.78),80,0.075,10,false),
+    materials.gold,null,null,false,false);
+  const innerGlow=addMesh(gate,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,3.72,-0.08,5.28,2.55),72,0.028,8,false),
+    materials.crystal,null,null,false,false);
   const keystone=addMesh(gate,new THREE.OctahedronGeometry(0.48,1),materials.crystal,[0,6.9,0.05],[0.8,1.45,0.8],false,false);
   keystone.rotation.z=Math.PI/4;
   addMesh(gate,new THREE.TorusGeometry(0.7,0.045,8,48),materials.gold,[0,6.18,0.05]);
