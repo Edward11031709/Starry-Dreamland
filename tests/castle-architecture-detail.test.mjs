@@ -5,7 +5,7 @@ import vm from "node:vm";
 
 const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
 const start = source.indexOf("function makeLancetArchCurve(");
-const end = source.indexOf("\\nfunction makeWindow(", start);
+const end = source.indexOf("function makeWindow(", start);
 assert.notEqual(start, -1, "makeLancetArchCurve must exist");
 assert.notEqual(end, -1, "makeLancetArchCurve must end before makeWindow");
 
@@ -42,7 +42,7 @@ test("lancet arch control points form a centred, symmetric pointed profile", () 
 
 test("castle entrance uses nested lancet trim and stair balustrades", () => {
   const castleStart = source.indexOf("function buildCastle(");
-  const castleEnd = source.indexOf("\\nfunction buildObservatory(", castleStart);
+  const castleEnd = source.indexOf("function buildObservatory(", castleStart);
   const castle = source.slice(castleStart, castleEnd);
   assert.ok(castle.includes("makeLancetArchCurve(0,1.37,2.17,1.62,1.47)"));
   assert.ok(castle.includes("makeLancetArchCurve(0,1.43,2.215,1.39,1.35)"));
