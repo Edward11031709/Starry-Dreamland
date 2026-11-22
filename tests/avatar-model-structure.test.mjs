@@ -83,10 +83,10 @@ const buildPlayer = context.buildPlayer;
 
 test("all existing hairstyle options build refined strands without changing appearance keys", () => {
   const expectedStrands = new Map([
-    ["long", 4],
-    ["short", 3],
-    ["twin", 4],
-    ["hood", 2]
+    ["long", 6],
+    ["short", 5],
+    ["twin", 6],
+    ["hood", 4]
   ]);
 
   for (const [hairStyle, expectedCount] of expectedStrands) {
