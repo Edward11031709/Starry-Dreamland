@@ -134,32 +134,69 @@ function makeWindow(parent, x, y, z, width, height, material) {
 
 function addTower(parent,x,z,baseY,height,radius,materials,detail=true){
  const group=new THREE.Group();group.position.set(x,baseY,z);parent.add(group);
- addMesh(group,new THREE.CylinderGeometry(radius*1.34,radius*1.42,0.32,20),materials.darkStone,[0,0.16,0]);
- addMesh(group,new THREE.CylinderGeometry(radius*1.08,radius*1.18,0.14,20),materials.gold,[0,0.37,0]);
- addMesh(group,new THREE.CylinderGeometry(radius*0.84,radius,height,24,2),materials.wall,[0,height/2+0.42,0]);
- // Narrow silver ribs catch the moonlight and give each round tower a carved silhouette.
- for(let rib=0;rib<10;rib++){
-  const angle=rib/10*Math.PI*2,rr=radius*0.86;
-  const strip=addMesh(group,new THREE.BoxGeometry(0.055,height*0.78,0.065),materials.silverMetal,
-   [Math.cos(angle)*rr,height*0.46+0.42,Math.sin(angle)*rr],null,false,false);
+ addMesh(group,new THREE.CylinderGeometry(radius*1.38,radius*1.48,0.36,24),materials.darkStone,[0,0.18,0]);
+ addMesh(group,new THREE.CylinderGeometry(radius*1.13,radius*1.22,0.13,24),materials.gold,[0,0.42,0]);
+ addMesh(group,new THREE.CylinderGeometry(radius*0.86,radius,height,32,3),materials.wall,[0,height/2+0.48,0]);
+ // Vertical stone ribs and recessed lancet windows make the shaft read as crafted masonry.
+ for(let rib=0;rib<12;rib++){
+  const angle=rib/12*Math.PI*2,rr=radius*0.865;
+  const strip=addMesh(group,new THREE.BoxGeometry(0.052,height*0.82,0.068),rib%3===0?materials.gold:materials.silverMetal,
+   [Math.cos(angle)*rr,height*0.47+0.48,Math.sin(angle)*rr],null,false,false);
   strip.rotation.y=-angle;
  }
- addMesh(group,new THREE.CylinderGeometry(radius*0.98,radius*0.98,0.16,20),materials.trim,[0,height+0.42,0]);
  if(detail){
-  const windowMat=new THREE.MeshStandardMaterial({color:0xffe5b0,emissive:0xffc66f,emissiveIntensity:1.7,roughness:0.26,metalness:0.12});
-  [0.34,0.66].forEach(f=>{
-   makeWindow(group,0,height*f,radius*0.91,radius*0.23,height*0.115,windowMat);
-   addMesh(group,new THREE.BoxGeometry(radius*0.38,0.075,0.11),materials.gold,[0,height*f-height*0.085,radius*1.02]);
+  const windowMat=new THREE.MeshStandardMaterial({color:0xffe6c3,emissive:0xffc77d,emissiveIntensity:1.55,roughness:0.3,metalness:0.08});
+  [0.32,0.61,0.82].forEach((f,index)=>{
+   makeWindow(group,0,height*f,radius*0.9,radius*(index===2?0.24:0.28),height*(index===2?0.13:0.15),windowMat);
+   addMesh(group,new THREE.BoxGeometry(radius*0.52,0.065,0.14),materials.gold,
+     [0,height*f-height*0.09,radius*1.03],null,false,false);
   });
-  const balcony=addMesh(group,new THREE.TorusGeometry(radius*0.96,0.055,8,40),materials.gold,[0,height*0.78+0.42,0]);balcony.rotation.x=Math.PI/2;
+  const balcony=addMesh(group,new THREE.TorusGeometry(radius*0.98,0.045,8,48),materials.gold,[0,height*0.76+0.48,0]);balcony.rotation.x=Math.PI/2;
+  for(let post=0;post<16;post++){
+   const angle=post/16*Math.PI*2,rr=radius*0.97;
+   addMesh(group,new THREE.CylinderGeometry(0.018,0.026,0.24,7),materials.silverMetal,
+    [Math.cos(angle)*rr,height*0.76+0.6,Math.sin(angle)*rr],null,false,false);
+  }
  }
- const roofHeight=Math.max(0.55,Math.min(height*0.24,radius*0.86));
- addMesh(group,new THREE.CylinderGeometry(radius*1.32,radius*1.02,0.22,16),materials.trim,[0,height+0.53,0]);
- const roof=addMesh(group,new THREE.ConeGeometry(radius*1.22,roofHeight,14),materials.roof,[0,height+0.64+roofHeight/2,0]);roof.rotation.y=Math.PI/14;
- addMesh(group,new THREE.SphereGeometry(radius*0.15,14,10),materials.gold,[0,height+0.66+roofHeight,0]);
- addMesh(group,new THREE.CylinderGeometry(0.035,0.055,radius*0.55,8),materials.gold,[0,height+0.68+roofHeight+radius*0.23,0]);
+ const roofHeight=Math.max(0.72,Math.min(height*0.3,radius*1.05));
+ addMesh(group,new THREE.CylinderGeometry(radius*1.12,radius*1.28,0.18,24),materials.trim,[0,height+0.56,0]);
+ const spireProfile=[
+  new THREE.Vector2(0,0),new THREE.Vector2(radius*1.25,0),
+  new THREE.Vector2(radius*1.16,roofHeight*0.10),new THREE.Vector2(radius*0.94,roofHeight*0.22),
+  new THREE.Vector2(radius*0.72,roofHeight*0.48),new THREE.Vector2(radius*0.48,roofHeight*0.73),
+  new THREE.Vector2(radius*0.24,roofHeight*0.92),new THREE.Vector2(0,roofHeight)
+ ];
+ addMesh(group,new THREE.LatheGeometry(spireProfile,32),materials.roof,[0,height+0.64,0],null,true,true);
+ for(let rib=0;rib<8;rib++){
+  const angle=rib/8*Math.PI*2;
+  const points=[
+   new THREE.Vector3(Math.cos(angle)*radius*1.12,0.07,Math.sin(angle)*radius*1.12),
+   new THREE.Vector3(Math.cos(angle)*radius*0.98,roofHeight*0.22,Math.sin(angle)*radius*0.98),
+   new THREE.Vector3(Math.cos(angle)*radius*0.7,roofHeight*0.49,Math.sin(angle)*radius*0.7),
+   new THREE.Vector3(Math.cos(angle)*radius*0.42,roofHeight*0.75,Math.sin(angle)*radius*0.42),
+   new THREE.Vector3(Math.cos(angle)*radius*0.08,roofHeight*0.98,Math.sin(angle)*radius*0.08)
+  ];
+  addMesh(group,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),28,0.018,6,false),
+   rib%2?materials.gold:materials.trim,[0,height+0.64,0],null,false,false);
+ }
+ [0.2,0.52,0.8].forEach((fraction,index)=>{
+  const ringRadius=radius*(1.1-fraction*0.78);
+  const band=addMesh(group,new THREE.TorusGeometry(ringRadius,0.022,6,40),index===1?materials.gold:materials.silverMetal,
+    [0,height+0.64+roofHeight*fraction,0],null,false,false);
+  band.rotation.x=Math.PI/2;
+ });
+ addMesh(group,new THREE.SphereGeometry(radius*0.16,16,12),materials.gold,[0,height+0.66+roofHeight,0],null,false,false);
+ addMesh(group,new THREE.CylinderGeometry(radius*0.035,radius*0.045,radius*0.62,8),materials.silverMetal,
+   [0,height+0.88+roofHeight,0],null,false,false);
+ const finial=addMesh(group,new THREE.OctahedronGeometry(radius*0.19,1),materials.crystal,
+   [0,height+1.22+roofHeight,0],[0.72,1.4,0.72],null,false,false);
+ finial.rotation.z=Math.PI/4;
+ const halo=addMesh(group,new THREE.TorusGeometry(radius*0.25,0.018,6,40),materials.gold,
+   [0,height+1.22+roofHeight,0],null,false,false);
+ halo.rotation.x=Math.PI/2;
  return group;
 }
+
 function addCrystal(parent, x, y, z, size, color) {
   const material = new THREE.MeshPhysicalMaterial({
     color, emissive: color, emissiveIntensity: 0.42, roughness: 0.2,
