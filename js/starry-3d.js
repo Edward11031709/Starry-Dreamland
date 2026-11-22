@@ -104,6 +104,23 @@ function makeLancetGeometry(width,height) {
   shape.closePath();
   return new THREE.ShapeGeometry(shape,24);
 }
+
+function makeLancetArchCurve(x,baseY,z,width,height) {
+  const half=width/2;
+  const shoulder=height*0.56;
+  const crown=height*0.87;
+  const inset=width*0.38;
+  const points=[
+    new THREE.Vector3(x-half,baseY,z),
+    new THREE.Vector3(x-half,baseY+shoulder,z),
+    new THREE.Vector3(x-inset,baseY+crown,z),
+    new THREE.Vector3(x,baseY+height,z),
+    new THREE.Vector3(x+inset,baseY+crown,z),
+    new THREE.Vector3(x+half,baseY+shoulder,z),
+    new THREE.Vector3(x+half,baseY,z)
+  ];
+  return new THREE.CatmullRomCurve3(points,false,"centripetal");
+}
 function makeWindow(parent, x, y, z, width, height, material) {
   // Recessed lancet window: the pointed crown makes the facade read as crafted Gothic fantasy architecture.
   const frame = addMesh(parent, makeLancetGeometry(width * 1.38, height * 1.24),
@@ -373,13 +390,48 @@ function buildCastle(scene,materials){
   addMesh(castle,new THREE.CylinderGeometry(0.17,0.17,0.1,16),materials.trim,[x,0.4,2.0]);
  });
  addMesh(castle,new THREE.BoxGeometry(1.1,1.72,0.16),materials.darkStone,[0,1.49,2.02]);
- const doorArch=addMesh(castle,new THREE.TorusGeometry(0.6,0.105,12,48),materials.gold,[0,2.28,2.1]);doorArch.scale.set(1,1.25,1);
+ // A pointed double-lancet portal replaces the rounded ring, giving the entrance
+ // the same Gothic silhouette language as the castle windows and tower roofs.
+ addMesh(castle,new THREE.TubeGeometry(
+   makeLancetArchCurve(0,1.37,2.17,1.62,1.47),56,0.078,10,false),
+   materials.gold,null,null,false,false);
+ addMesh(castle,new THREE.TubeGeometry(
+   makeLancetArchCurve(0,1.43,2.215,1.39,1.35),56,0.027,8,false),
+   materials.silverMetal,null,null,false,false);
+ const doorKeystone=addMesh(castle,new THREE.OctahedronGeometry(0.105,1),materials.crystal,
+   [0,2.91,2.23],[0.72,1.22,0.72],null,false,false);
+ doorKeystone.rotation.z=Math.PI/4;
  const doorGlow=addMesh(castle,new THREE.CircleGeometry(0.48,48),new THREE.MeshBasicMaterial({color:0x8a75c6,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false}),[0,1.95,2.08],null,false,false);
  for(let i=0;i<5;i++){
   const width=2.7+i*0.22;
   addMesh(castle,new THREE.BoxGeometry(width,0.16,0.42),i%2?materials.trim:materials.darkStone,[0,0.86-i*0.075,2.35+i*0.39]);
   addMesh(castle,new THREE.BoxGeometry(width+0.08,0.035,0.46),materials.gold,[0,0.95-i*0.075,2.35+i*0.39],null,false,false);
  }
+ // Fine twin balustrades finish the grand stair without narrowing its walking line.
+ [-1,1].forEach(side=>{
+   const railX=side*1.62;
+   const upperRail=addMesh(castle,new THREE.BoxGeometry(0.09,0.09,2.16),materials.gold,
+     [railX,1.045,3.15],null,false,false);
+   upperRail.rotation.x=0.19;
+   const lowerRail=addMesh(castle,new THREE.BoxGeometry(0.045,0.045,2.08),materials.silverMetal,
+     [railX,0.865,3.15],null,false,false);
+   lowerRail.rotation.x=0.19;
+   for(let postIndex=0;postIndex<4;postIndex++){
+     const z=2.42+postIndex*0.47;
+     const progress=(z-2.35)/1.56;
+     const treadY=0.94-progress*0.30;
+     const railY=1.18-progress*0.30;
+     const postHeight=railY-treadY+0.07;
+     const postY=(railY+treadY)/2;
+     addMesh(castle,new THREE.CylinderGeometry(0.032,0.046,postHeight,10),materials.silverMetal,
+       [railX,postY,z],null,false,false);
+     addMesh(castle,new THREE.CylinderGeometry(0.078,0.082,0.065,12),materials.gold,
+       [railX,treadY+0.032,z],null,false,false);
+     const cap=addMesh(castle,new THREE.OctahedronGeometry(0.065,1),materials.crystal,
+       [railX,railY+0.055,z],[0.72,1.2,0.72],null,false,false);
+     cap.rotation.z=Math.PI/4;
+   }
+ });
  // Five towers: the rear spire is taller to give the skyline a clear focal point.
  const towers=[[-3.32,-1.62,4.0,0.9],[3.32,-1.62,4.0,0.9],[-3.34,1.44,3.8,0.84],[3.34,1.44,3.8,0.84],[0,-2.32,7.65,1.02]];
  towers.forEach(t=>addTower(castle,t[0],t[1],0.2,t[2],t[3],materials,true));
