@@ -88,3 +88,5 @@
 ## 管理員版本審核中心
 
 管理員帳號通過資料庫端 `sd_is_admin()` 驗證後，導覽列才會顯示「管理中心」。中心會讀取目前 `main`、開啟中的 PR、版本標籤及歷史提交，提供差異與自動檢查連結。此中心不會直接部署或修改玩家資料；正式發布仍須依 `docs/RELEASE_WORKFLOW_zh-TW.md` 的人工核准流程。私有預覽由 Supabase Edge Function 直接從公開 GitHub commit 匯入靜態檔案至 Private Storage，再簽發短效預覽連結；整個流程只允許資料庫驗證過的管理員操作，不需要 GitHub Actions secrets，也不會把候選版本放到公開 GitHub Pages。正式發布仍須另外經由 owner 手動核准。設定與使用方式見 `docs/ADMIN_PREVIEW_SETUP_zh-TW.md`。
+
+管理中心也提供獨立分頁全螢幕私有預覽、PR 審核入口、正式發布入口與錯誤回報表單。錯誤紀錄先保存在目前瀏覽器，可再開啟預填的 GitHub Issue 表單；登入則使用 Supabase localStorage session，重新整理後會先自動恢復登入狀態。公開前端目前不持有 GitHub 寫入憑證，因此 PR 核准、合併與正式發布仍會轉往 GitHub 受保護流程。
