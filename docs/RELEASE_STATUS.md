@@ -2,7 +2,7 @@
 
 ## 2026-11-22 主線與公開版狀態校正、園區美術升級候選
 
-- PR #21 已合併至 main，merge commit：\`309fe992f52a67a544b07ce22200f9d94a4bb5fc\`。
+- PR #21 已合併至 main，merge commit：\`309fe992f52a67a544b07ce22200f9d94a8c758c\`。
 - PR #22（AGENT.md 維護規範）已合併；目前 main HEAD：\`a590bef43caad3c1ed07903f13a66ce8d06d9ab9\`。
 - Actions run #177（run ID \`45011044075\`）只完成語法／測試檢查；正式發布 job 為 skipped，不能視為公開部署成功。
 - 最近可確認成功部署仍是 Actions #167（run ID \`45004106298\`），部署來源為 main @ \`991088dd987617de0937a79ea2178a138a4bb5fc\`。因此 PR #21、PR #22 及本次美術候選均不能宣稱已經出現在公開網站。
