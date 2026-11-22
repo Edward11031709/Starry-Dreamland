@@ -107,7 +107,7 @@ function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
         color.strokeStyle="rgba(255,255,255,0.11)";color.lineWidth=1;
         color.beginPath();color.moveTo(x+8,y+6);color.lineTo(x+colW-10,y+6);color.stroke();
         heightCtx.fillStyle="rgb(145,145,145)";heightCtx.fillRect(x+3,y+3,colW-6,rowH-6);
-        heightCtx.strokeStyle="rgb( seventy, seventy, seventy)".replace(/seventy/g,"76");
+        heightCtx.strokeStyle="rgb(76,76,76)";
         heightCtx.lineWidth=kind==="paving"?4:3;heightCtx.strokeRect(x+2,y+2,colW-4,rowH-4);
         heightCtx.strokeStyle="rgb(174,174,174)";heightCtx.lineWidth=1;
         heightCtx.beginPath();heightCtx.moveTo(x+7,y+7);heightCtx.lineTo(x+colW-9,y+7);heightCtx.stroke();
@@ -197,6 +197,7 @@ function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
   normalMap.magFilter=THREE.LinearFilter;
   normalMap.minFilter=THREE.LinearMipmapLinearFilter;
   normalMap.generateMipmaps=true;
+  normalMap.flipY=true;
   normalMap.needsUpdate=true;
   normalMap.colorSpace=THREE.NoColorSpace;
   const roughnessMap=new THREE.DataTexture(roughData,size,size,THREE.RGBAFormat);
@@ -205,6 +206,7 @@ function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
   roughnessMap.magFilter=THREE.LinearFilter;
   roughnessMap.minFilter=THREE.LinearMipmapLinearFilter;
   roughnessMap.generateMipmaps=true;
+  roughnessMap.flipY=true;
   roughnessMap.needsUpdate=true;
   roughnessMap.colorSpace=THREE.NoColorSpace;
   return {map:makeCanvasTexture(albedo),normalMap,roughnessMap};
@@ -1746,9 +1748,15 @@ function buildEnvironment(scene) {
     material.clearcoatRoughness=0.2;
     material.needsUpdate=true;
   });
-  materials.wall.roughness=0.64;
-  materials.wall.metalness=0.12;
-  materials.wall.clearcoat=0.32;
+  materials.wall.roughness=0.72;
+  materials.wall.metalness=0.08;
+  materials.wall.clearcoat=0.38;
+  [materials.trim,materials.gold,materials.silver,materials.silverMetal].forEach((material,index)=>{
+    material.envMapIntensity=[0.72,0.86,0.78,1.0][index];
+    material.needsUpdate=true;
+  });
+  materials.crystal.envMapIntensity=0.68;
+  materials.water.envMapIntensity=0.82;
 
   // A large connected floating island gives the park room for real exploration.
   const island = new THREE.Group();
@@ -1758,6 +1766,34 @@ function buildEnvironment(scene) {
   const walkSegments = [];
   const terrainZones = [];
   const addCollider = (x,z,radius,label)=>colliders.push({x,z,radius,label});
+  // Large, feathered contact shadows give hero buildings visual weight without extra lights.
+  const shadowCanvas=document.createElement("canvas");shadowCanvas.width=shadowCanvas.height=256;
+  const shadowContext=shadowCanvas.getContext("2d");
+  const shadowGradient=shadowContext?.createRadialGradient(128,128,8,128,128,126);
+  if(shadowContext&&shadowGradient){
+    shadowGradient.addColorStop(0,"rgba(2,5,18,0.52)");
+    shadowGradient.addColorStop(0.34,"rgba(3,6,21,0.34)");
+    shadowGradient.addColorStop(0.68,"rgba(5,8,26,0.12)");
+    shadowGradient.addColorStop(1,"rgba(5,8,26,0)");
+    shadowContext.fillStyle=shadowGradient;shadowContext.fillRect(0,0,256,256);
+  }
+  const shadowTexture=shadowContext?new THREE.CanvasTexture(shadowCanvas):null;
+  if(shadowTexture){shadowTexture.colorSpace=THREE.SRGBColorSpace;shadowTexture.anisotropy=4;}
+  const contactShadowMaterial=shadowTexture?new THREE.MeshBasicMaterial({
+    map:shadowTexture,color:0x111528,transparent:true,opacity:0.78,
+    depthWrite:false,side:THREE.DoubleSide,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-2
+  }):null;
+  function addContactShadow(x,z,width,depth,y=0.79){
+    if(!contactShadowMaterial)return null;
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),contactShadowMaterial);
+    mesh.name="SoftContactShadow";
+    mesh.position.set(x,y,z);
+    mesh.scale.set(width,depth,1);
+    mesh.rotation.x=-Math.PI/2;
+    mesh.renderOrder=1;
+    island.add(mesh);
+    return mesh;
+  }
   const cliff = addMesh(island,new THREE.CylinderGeometry(44.2,34.5,4.2,64,3),materials.rock,[0,-1.42,0]);
   cliff.rotation.y=0.12;
   // The island underside tapers DOWN. A tall rock dome here used to pierce the
@@ -2222,6 +2258,13 @@ function buildEnvironment(scene) {
   const portals=[];
   [-7.2,0,7.2].forEach((x,i)=>{portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials));addCollider(x,8.2,1.62,gameMeta[i].title)});
 
+  // Wide soft grounding shadows sit beneath the park's largest silhouettes.
+  addContactShadow(0,-18.2,13.2,12.4,0.79);
+  addContactShadow(-30,-16.5,9.2,8.5,0.895);
+  addContactShadow(-4.8,30.5,6.2,5.4,0.79);
+  addContactShadow(-24.5,-19.0,13.5,11.8,0.79);
+  addContactShadow(18,9,10.4,9.4,0.79);
+  addContactShadow(-19,-8,10.5,9.4,0.79);
   const rides=[];
   const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);addCollider(-21.5,0.7,4.1,"星光旋轉木馬");
   const teacups=buildTeacupRide(scene,materials,-13,-11.5);rides.push(teacups);addCollider(-13,-11.5,3.55,"星月茶杯");
