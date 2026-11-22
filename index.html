@@ -410,12 +410,14 @@ body:before{opacity:.72;background-size:560px 500px}
 .admin-note{padding:13px 15px;border:1px solid #e2ca8c66;border-radius:14px;background:#8b6b3020;color:#e7d6ac;font-size:12px;line-height:1.8}
 .admin-loading{padding:24px;text-align:center;color:#d0c6e8}
 
-.admin-preview-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,auto);gap:10px;align-items:end}
+.admin-preview-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,auto);gap:12px;align-items:end}
 .admin-preview-controls label{display:grid;gap:7px;color:#d9d0ec;font-size:11px;letter-spacing:.06em}
 .admin-preview-controls input{width:100%;min-width:0;padding:12px 13px;border:1px solid #cdb9eb88;border-radius:12px;background:#0c1430;color:#f4e9ce;outline:none;font:12px ui-monospace,SFMono-Regular,Consolas,monospace}
 .admin-preview-controls input:focus{border-color:#efd49a;box-shadow:0 0 0 3px #efd49a20}
-.admin-preview-controls button{min-height:42px}
+.admin-preview-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.admin-preview-actions button{min-height:42px}
 .admin-preview-frame{display:block;width:100%;height:min(76vh,760px);min-height:440px;margin-top:14px;border:1px solid #e2cd9c88;border-radius:16px;background:#080b22;box-shadow:0 18px 42px #02061588}
+@media(max-width:680px){.admin-preview-controls{grid-template-columns:minmax(0,1fr)}.admin-preview-actions{display:grid;grid-template-columns:1fr 1fr}.admin-preview-actions button{width:100%}}
 .admin-preview-status{min-height:22px;margin-top:10px;color:#d6c8f1;font-size:12px;line-height:1.7}
 @media(max-width:680px){.admin-preview-controls{grid-template-columns:1fr}.admin-preview-frame{height:68vh;min-height:420px}}
 
@@ -1275,18 +1277,48 @@ async function rank(){nav("leaderboard");const labels={moon:"月相共鳴",ciphe
 function history(){nav("history");let rs=state.records.filter(r=>r.uid===me().id).slice().reverse(),labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};shell('<section class="hero"><div class="eyebrow">MY STAR JOURNEY</div><h1>我的遊玩紀錄</h1><p>一般遊戲及星芽探索各自記錄，不會混在一起。</p></section><div class="stats"><div class="stat"><small>星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div></div><div class="panel"><table class="table"><thead><tr><th>分區</th><th>遊戲</th><th>分數</th><th>狀態</th><th>星塵</th></tr></thead><tbody>'+(rs.map(r=>'<tr><td>'+(KIDS_GAME_IDS.includes(r.game)?"星芽遊戲":"一般")+'</td><td>'+(labels[r.game]||r.game)+'</td><td>'+r.score+'</td><td>'+({completed:"完成",timed_out:"時間到",abandoned:"提前退出",failed:"尚未破解"}[r.status]||r.status)+'</td><td>+'+r.reward+' ✦</td></tr>').join("")||'<tr><td colspan="5">目前還沒有遊玩紀錄。</td></tr>')+'</tbody></table></div>')}
 
 
-async function openAdminPrivatePreview(){
- const shaInput=document.getElementById("adminPreviewSha"),status=document.getElementById("adminPreviewStatus"),frame=document.getElementById("adminPreviewFrame"),button=document.getElementById("adminPreviewOpen");
+function prepareAdminPreviewTab(tab,sha){
+ const doc=tab.document;
+ doc.open();
+ doc.write("<!doctype html><html lang='zh-Hant'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><meta name='theme-color' content='#090d2b'><title>星夢樂園｜管理員測試預覽</title></head><body><header id='previewTabHeader'><strong>✦ 星夢樂園 · 管理員私有測試</strong><span id='previewTabStatus'>正在準備隔離預覽…</span><button id='previewTabClose' type='button'>關閉分頁</button></header><main id='previewTabStage'><div id='previewTabLoading'>正在安全匯入候選版本，請稍候…</div></main></body></html>");
+ doc.close();
+ const style=doc.createElement("style");
+ style.textContent=":root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Microsoft JhengHei',sans-serif;background:#080b22;color:#f2efff}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}#previewTabHeader{height:48px;display:flex;align-items:center;gap:14px;padding:0 16px;background:linear-gradient(100deg,#111735,#29234e,#111735);border-bottom:1px solid #c5a66d88;box-shadow:0 4px 22px #0007}#previewTabHeader strong{font-size:13px;color:#f2d9a0;white-space:nowrap}#previewTabStatus{flex:1;min-width:0;font-size:11px;color:#c7bfdc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#previewTabClose{border:1px solid #b49bdd77;border-radius:99px;background:#292750;color:#eee5ff;padding:7px 13px;font:inherit;font-size:11px;cursor:pointer}#previewTabClose:hover{border-color:#efd49a;color:#efd49a}#previewTabStage{height:calc(100% - 48px);width:100%;overflow:hidden}#previewTabStage iframe{display:block;width:100%;height:100%;border:0;background:#080b22}#previewTabLoading{height:100%;display:grid;place-items:center;padding:24px;text-align:center;color:#d9c99f;font-size:14px}#previewTabLoading.error{color:#f1aaaa}";
+ doc.head.append(style);
+ doc.getElementById("previewTabClose").addEventListener("click",()=>tab.close());
+ tab.opener=null;
+}
+function setAdminPreviewTabStatus(tab,message,isError=false){
+ if(!tab||tab.closed)return;
+ const status=tab.document.getElementById("previewTabStatus");
+ if(status)status.textContent=message;
+ const loading=tab.document.getElementById("previewTabLoading");
+ if(loading&&isError){loading.textContent=message;loading.classList.add("error")}
+}
+async function openAdminPrivatePreview(target="tab"){
+ const shaInput=document.getElementById("adminPreviewSha"),status=document.getElementById("adminPreviewStatus"),frame=document.getElementById("adminPreviewFrame"),button=document.getElementById("adminPreviewOpen"),inlineButton=document.getElementById("adminPreviewInline");
  if(!me()?.isAdmin||!sb){if(status)status.textContent="此功能僅限已驗證的管理員使用。";return}
  const sha=(shaInput?.value||"").trim().toLowerCase();
  if(!/^[a-f0-9]{40}$/.test(sha)){if(status)status.textContent="請輸入完整的 40 字元 commit SHA。";shaInput?.focus();return}
- if(button){button.disabled=true;button.textContent="正在建立隔離預覽…"}
- if(status)status.textContent="正在由 Supabase 伺服器安全匯入 GitHub 候選版本…";
+ const openInTab=target!=="inline";
+ let previewTab=null;
+ if(openInTab){
+  previewTab=window.open("about:blank","_blank");
+  if(!previewTab){if(status)status.textContent="瀏覽器阻擋了新分頁。請允許此網站開啟彈出式視窗後，再重新點擊「另開全螢幕測試分頁」。";return}
+  prepareAdminPreviewTab(previewTab,sha);
+ }
+ if(button){button.disabled=true;button.textContent=openInTab?"正在開啟測試分頁…":"正在建立預覽…"}
+ if(inlineButton)inlineButton.disabled=true;
+ const updateStatus=message=>{
+  if(status)status.textContent=message;
+  setAdminPreviewTabStatus(previewTab,message);
+ };
+ updateStatus("正在由 Supabase 伺服器安全匯入 GitHub 候選版本…");
  try{
   const {data:importData,error:importError}=await sb.functions.invoke("sd-admin-preview",{body:{action:"import",commit_sha:sha}});
   if(importError)throw new Error(importError.message||"候選版本匯入失敗。");
   if(!importData?.ok)throw new Error(importData?.error||"候選版本匯入失敗。");
-  if(status)status.textContent="已匯入 "+importData.filesUploaded+" 個檔案，正在建立隔離預覽…";
+  updateStatus("已匯入 "+importData.filesUploaded+" 個檔案，正在建立隔離預覽…");
   const signFile=async path=>{
    const {data,error}=await sb.functions.invoke("sd-admin-preview",{body:{commit_sha:sha,path}});
    if(error)throw new Error(error.message||"私有預覽服務尚未完成設定。");
@@ -1314,20 +1346,38 @@ async function openAdminPrivatePreview(){
   banner.textContent="✦ 管理員私有預覽 · 未發布候選版本 · 不影響正式玩家 ✦";
   banner.style.cssText="position:sticky;top:0;z-index:99999;padding:8px 12px;text-align:center;background:linear-gradient(100deg,#242047,#5c477e,#242047);border-bottom:1px solid #efd49a;color:#ffe8b5;font:600 12px system-ui;letter-spacing:.08em";
   doc.body.prepend(banner);
-  frame.srcdoc="<!doctype html>\n"+doc.documentElement.outerHTML;
-  frame.classList.remove("hidden");
-  if(status)status.textContent="私有預覽已開啟（"+sha.slice(0,7)+"）。此畫面使用訪客模式；短效檔案連結約 5 分鐘後失效，重新預覽即可更新。";
+  const previewHtml="<!doctype html>\n"+doc.documentElement.outerHTML;
+  if(openInTab){
+   if(previewTab.closed)throw new Error("測試分頁已被關閉，請重新開啟預覽。");
+   const stage=previewTab.document.getElementById("previewTabStage");
+   const previewFrame=previewTab.document.createElement("iframe");
+   previewFrame.title="星夢樂園管理員私有開發預覽";
+   previewFrame.setAttribute("sandbox","allow-scripts allow-forms allow-pointer-lock");
+   previewFrame.setAttribute("allow","fullscreen; gamepad");
+   previewFrame.setAttribute("referrerpolicy","no-referrer");
+   previewFrame.srcdoc=previewHtml;
+   stage.replaceChildren(previewFrame);
+   updateStatus("已開啟全螢幕測試分頁（"+sha.slice(0,7)+"）。此畫面為訪客隔離模式，不會影響正式玩家。");
+   setAdminPreviewTabStatus(previewTab,"測試版本 "+sha.slice(0,7)+" · 隔離預覽已就緒");
+  }else{
+   frame.srcdoc=previewHtml;
+   frame.classList.remove("hidden");
+   if(status)status.textContent="頁內預覽已開啟（"+sha.slice(0,7)+"）。此畫面使用訪客模式；短效檔案連結約 5 分鐘後失效，重新開啟預覽即可更新。";
+  }
  }catch(error){
-  if(status)status.textContent="無法開啟私有預覽："+(error?.message||String(error))+"。請確認管理員權限、私有 bucket、Edge Function 與 GitHub commit 存在。";
+  const message="無法開啟私有預覽："+(error?.message||String(error))+"。請確認管理員權限、私有 bucket、Edge Function 與 GitHub commit 存在。";
+  if(status)status.textContent=message;
+  setAdminPreviewTabStatus(previewTab,message,true);
  }finally{
-  if(button){button.disabled=false;button.textContent="重新開啟私有預覽"}
+  if(button){button.disabled=false;button.textContent="另開全螢幕測試分頁"}
+  if(inlineButton){inlineButton.disabled=false;inlineButton.textContent="頁內快速預覽"}
  }
 }
 
 async function adminCenter(){
  if(!me()?.isAdmin||!cloudUser||!sb){say("此區僅限已驗證的管理員帳號。");home();return}
  stop();nav("admin");header();
- shell('<section class="admin-shell"><div class="admin-hero"><div class="admin-kicker">STARRY DREAMLAND · PRIVATE CONTROL ROOM</div><h1>星夢管理中心</h1><p>正式園區與開發候選版本分開管理。這裡只讀取版本資訊與審核狀態，不會直接修改玩家資料或發布網站。</p></div><div class="admin-metrics"><div class="admin-metric"><small>目前公開版本</small><strong id="adminLiveSha">讀取中…</strong></div><div class="admin-metric"><small>main 最新候選</small><strong id="adminMainSha">讀取中…</strong></div><div class="admin-metric"><small>待審核開發版本</small><strong id="adminPrCount">讀取中…</strong></div></div><section class="admin-section"><h2>候選開發版本</h2><p>每個候選版本都先在 GitHub 分支檢查；只有核准後才可進入正式發布流程。</p><div id="adminCandidates" class="admin-version-list"><div class="admin-loading">正在讀取開發候選版本…</div></div></section><section class="admin-section"><h2>星塵與玩家資料安全</h2><p>管理員專用的唯讀檢查摘要。安全修正完成前，不開放直接調整真實星塵。</p><div class="admin-note"><strong>需要優先修正：獎勵紀錄尚未完全由伺服器驗證。</strong><br>目前資料庫允許玩家為自己的帳號新增遊戲紀錄，reward 欄位雖限制 0–15，但餘額計算會加總這些紀錄。必須先完成伺服器權威回合驗證與不可任意修改的星塵帳本，才會開放管理員調整功能。</div><div class="admin-version-list" style="margin-top:12px"><article class="admin-version"><div><h3>資料庫 migration 版本落差</h3><p>生產資料庫回報 11 筆已套用 migration；GitHub main 目前只追蹤 1 個 SQL migration 檔。需先補齊版本盤點，不可直接重跑 schema.sql。</p></div><div class="admin-actions"><a href="https://github.com/Edward11031709/Starry-Dreamland/blob/main/docs/SECURITY_REVIEW_zh-TW.md" target="_blank" rel="noopener">查看安全檢查報告 ↗</a></div></article></div></section><section class="admin-section"><h2>私有開發預覽</h2><p>輸入公開 GitHub commit SHA 後，Supabase 會在伺服器端驗證管理員身分，並直接匯入該版本的靜態檔案至 Private Storage，再開啟隔離預覽。無須設定 GitHub Secrets。預覽不會使用正式帳號工作階段，也不會寫入正式玩家資料。</p><div class="admin-preview-controls"><label>候選版本完整 SHA<input id="adminPreviewSha" inputmode="text" autocomplete="off" spellcheck="false" maxlength="40" placeholder="貼上 40 字元 commit SHA"></label><button id="adminPreviewOpen" class="btn sm" type="button">開啟私有預覽</button></div><div id="adminPreviewStatus" class="admin-preview-status" role="status" aria-live="polite">尚未建立預覽。輸入完整 commit SHA 後，系統會透過 Supabase 安全匯入候選版本。</div><iframe id="adminPreviewFrame" class="admin-preview-frame hidden" title="星夢樂園管理員私有開發預覽" sandbox="allow-scripts allow-forms allow-pointer-lock" allow="fullscreen; gamepad" referrerpolicy="no-referrer"></iframe><div class="admin-note" style="margin-top:12px">隔離預覽不共享正式網站的 Cookie、localStorage 或登入 session；請以訪客模式檢查場景與操作。完整設定步驟請見 <a href="https://github.com/Edward11031709/Starry-Dreamland/blob/main/docs/ADMIN_PREVIEW_SETUP_zh-TW.md" target="_blank" rel="noopener" style="color:#f2d9a0">私有預覽設定說明 ↗</a></div></section><section class="admin-section"><h2>已保留的歷史版本</h2><p>可查看舊版程式碼與提交紀錄。回復程式版本不會回退玩家的星塵、服裝或遊戲紀錄。</p><div id="adminHistory" class="admin-version-list"><div class="admin-loading">正在讀取版本紀錄…</div></div></section><section class="admin-section"><h2>正式發布控制</h2><p>發布必須先核准 PR，再由 main 分支手動啟動 GitHub Actions，並通過 production 環境審核。</p><div class="admin-actions" style="justify-content:flex-start"><a href="https://github.com/Edward11031709/Starry-Dreamland/actions" target="_blank" rel="noopener">開啟發布工作流程 ↗</a><a href="https://github.com/Edward11031709/Starry-Dreamland/settings/environments" target="_blank" rel="noopener">檢查 production 保護設定 ↗</a></div><div class="admin-note" style="margin-top:14px">正式發布與私有預覽彼此獨立：管理員可透過 Supabase 將公開 GitHub commit 匯入 Private Storage，隔離預覽不會更新公開網站。只有另行由 main 啟動正式發布並通過 production 環境審核，才會更新玩家使用的版本。</div></section></section>');
+ shell('<section class="admin-shell"><div class="admin-hero"><div class="admin-kicker">STARRY DREAMLAND · PRIVATE CONTROL ROOM</div><h1>星夢管理中心</h1><p>正式園區與開發候選版本分開管理。這裡只讀取版本資訊與審核狀態，不會直接修改玩家資料或發布網站。</p></div><div class="admin-metrics"><div class="admin-metric"><small>目前公開版本</small><strong id="adminLiveSha">讀取中…</strong></div><div class="admin-metric"><small>main 最新候選</small><strong id="adminMainSha">讀取中…</strong></div><div class="admin-metric"><small>待審核開發版本</small><strong id="adminPrCount">讀取中…</strong></div></div><section class="admin-section"><h2>候選開發版本</h2><p>每個候選版本都先在 GitHub 分支檢查；只有核准後才可進入正式發布流程。</p><div id="adminCandidates" class="admin-version-list"><div class="admin-loading">正在讀取開發候選版本…</div></div></section><section class="admin-section"><h2>星塵與玩家資料安全</h2><p>管理員專用的唯讀檢查摘要。安全修正完成前，不開放直接調整真實星塵。</p><div class="admin-note"><strong>需要優先修正：獎勵紀錄尚未完全由伺服器驗證。</strong><br>目前資料庫允許玩家為自己的帳號新增遊戲紀錄，reward 欄位雖限制 0–15，但餘額計算會加總這些紀錄。必須先完成伺服器權威回合驗證與不可任意修改的星塵帳本，才會開放管理員調整功能。</div><div class="admin-version-list" style="margin-top:12px"><article class="admin-version"><div><h3>資料庫 migration 版本落差</h3><p>生產資料庫回報 11 筆已套用 migration；GitHub main 目前只追蹤 1 個 SQL migration 檔。需先補齊版本盤點，不可直接重跑 schema.sql。</p></div><div class="admin-actions"><a href="https://github.com/Edward11031709/Starry-Dreamland/blob/main/docs/SECURITY_REVIEW_zh-TW.md" target="_blank" rel="noopener">查看安全檢查報告 ↗</a></div></article></div></section><section class="admin-section"><h2>私有開發預覽</h2><p>輸入公開 GitHub commit SHA 後，Supabase 會在伺服器端驗證管理員身分，並直接匯入該版本的靜態檔案至 Private Storage，再開啟隔離預覽。無須設定 GitHub Secrets。預覽不會使用正式帳號工作階段，也不會寫入正式玩家資料。</p><div class="admin-preview-controls"><label>候選版本完整 SHA<input id="adminPreviewSha" inputmode="text" autocomplete="off" spellcheck="false" maxlength="40" placeholder="貼上 40 字元 commit SHA"></label><div class="admin-preview-actions"><button id="adminPreviewOpen" class="btn sm" type="button">另開全螢幕測試分頁</button><button id="adminPreviewInline" class="btn alt sm" type="button">頁內快速預覽</button></div></div><div id="adminPreviewStatus" class="admin-preview-status" role="status" aria-live="polite">輸入完整 SHA 後，建議使用「另開全螢幕測試分頁」檢查整個園區；頁內快速預覽則保留在管理中心內。</div><iframe id="adminPreviewFrame" class="admin-preview-frame hidden" title="星夢樂園管理員私有開發預覽" sandbox="allow-scripts allow-forms allow-pointer-lock" allow="fullscreen; gamepad" referrerpolicy="no-referrer"></iframe><div class="admin-note" style="margin-top:12px">隔離預覽不共享正式網站的 Cookie、localStorage 或登入 session；請以訪客模式檢查場景與操作。完整設定步驟請見 <a href="https://github.com/Edward11031709/Starry-Dreamland/blob/main/docs/ADMIN_PREVIEW_SETUP_zh-TW.md" target="_blank" rel="noopener" style="color:#f2d9a0">私有預覽設定說明 ↗</a></div></section><section class="admin-section"><h2>已保留的歷史版本</h2><p>可查看舊版程式碼與提交紀錄。回復程式版本不會回退玩家的星塵、服裝或遊戲紀錄。</p><div id="adminHistory" class="admin-version-list"><div class="admin-loading">正在讀取版本紀錄…</div></div></section><section class="admin-section"><h2>正式發布控制</h2><p>發布必須先核准 PR，再由 main 分支手動啟動 GitHub Actions，並通過 production 環境審核。</p><div class="admin-actions" style="justify-content:flex-start"><a href="https://github.com/Edward11031709/Starry-Dreamland/actions" target="_blank" rel="noopener">開啟發布工作流程 ↗</a><a href="https://github.com/Edward11031709/Starry-Dreamland/settings/environments" target="_blank" rel="noopener">檢查 production 保護設定 ↗</a></div><div class="admin-note" style="margin-top:14px">正式發布與私有預覽彼此獨立：管理員可透過 Supabase 將公開 GitHub commit 匯入 Private Storage，隔離預覽不會更新公開網站。只有另行由 main 啟動正式發布並通過 production 環境審核，才會更新玩家使用的版本。</div></section></section>');
  const base="https://api.github.com/repos/Edward11031709/Starry-Dreamland";
  const api=async path=>{const response=await fetch(base+path,{headers:{Accept:"application/vnd.github+json"}});if(!response.ok)throw new Error("GitHub API "+response.status);return response.json()};
  const fmt=value=>{if(!value)return "時間未提供";const d=new Date(value);return Number.isNaN(d.getTime())?"時間未提供":new Intl.DateTimeFormat("zh-TW",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Taipei"}).format(d)};
@@ -1349,7 +1399,7 @@ async function adminCenter(){
 
 function render(){if(!me()){login();return}home()}
 document.addEventListener("submit",e=>{if(e.target&&e.target.id==="parkChatForm"){e.preventDefault();sendParkChat()}});
-document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.parkReaction){sendParkReaction(b.dataset.parkReaction);return}if(b.dataset.parkFullscreen!==undefined){toggleParkFullscreen();return}if(b.dataset.cameraToggle!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-camera-toggle"));return}if(b.dataset.parkInteract!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-touch-interact"));return}if(b.dataset.enterLandscape!==undefined){enterLandscapeMode();return}if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="adminPreviewOpen"){openAdminPrivatePreview();return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.mapExpand!==undefined){openParkMap();return}if(b.dataset.mapClose!==undefined){document.getElementById("parkMapModal")?.remove();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();if(b.dataset.page==="admin")adminCenter();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarPreview){atelierPreviewOutfit=b.dataset.avatarPreview;updateAvatarAtelierPreview();document.getElementById("avatarPreviewName").textContent=AVATARS.find(a=>a.id===atelierPreviewOutfit)?.name||"旅人";return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarSave!==undefined){saveAvatarCustomization();return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.parkReaction){sendParkReaction(b.dataset.parkReaction);return}if(b.dataset.parkFullscreen!==undefined){toggleParkFullscreen();return}if(b.dataset.cameraToggle!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-camera-toggle"));return}if(b.dataset.parkInteract!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-touch-interact"));return}if(b.dataset.enterLandscape!==undefined){enterLandscapeMode();return}if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="adminPreviewOpen"){openAdminPrivatePreview("tab");return}if(b.id==="adminPreviewInline"){openAdminPrivatePreview("inline");return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.mapExpand!==undefined){openParkMap();return}if(b.dataset.mapClose!==undefined){document.getElementById("parkMapModal")?.remove();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();if(b.dataset.page==="admin")adminCenter();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarPreview){atelierPreviewOutfit=b.dataset.avatarPreview;updateAvatarAtelierPreview();document.getElementById("avatarPreviewName").textContent=AVATARS.find(a=>a.id===atelierPreviewOutfit)?.name||"旅人";return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarSave!==undefined){saveAvatarCustomization();return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
 document.getElementById("logout").onclick=async()=>{stop();await stopParkSocial();if(cloudMode&&sb){const {error}=await sb.auth.signOut();if(error)say("登出時發生問題："+friendlyAuthError(error))}cloudUser=null;state.player=null;state.players=[];state.records=[];save();render()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&active)result(0,"abandoned",active.id)});
 window.addEventListener("starry-supabase-ready",bootCloud);
