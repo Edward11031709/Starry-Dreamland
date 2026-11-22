@@ -72,13 +72,197 @@ function makePatternTexture(kind, base, seam, accent) {
   texture.anisotropy=8;
   return texture;
 }
-function applyPattern(material,kind,base,seam,accent,repeatX=3,repeatY=3){
-  const texture=makePatternTexture(kind,base,seam,accent);
-  texture.repeat.set(repeatX,repeatY);
-  material.map=texture;material.bumpMap=texture;
-  material.bumpScale=kind==="paving"?0.022:0.035;
-  material.needsUpdate=true;return material;
+function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
+  const size=512;
+  const albedo=document.createElement("canvas");albedo.width=albedo.height=size;
+  const height=document.createElement("canvas");height.width=height.height=size;
+  const rough=document.createElement("canvas");rough.width=rough.height=size;
+  const color=albedo.getContext("2d"),heightCtx=height.getContext("2d"),roughCtx=rough.getContext("2d");
+  if(!color||!heightCtx||!roughCtx)return null;
+  const seed=(x,y)=>Math.abs(Math.sin(x*127.1+y*311.7)*43758.5453)%1;
+  const baseColor=new THREE.Color("#"+base.replace("#",""));
+  const tint=(amount)=>{
+    const value=baseColor.clone().multiplyScalar(amount);
+    return "#"+value.getHexString();
+  };
+  color.fillStyle=base;color.fillRect(0,0,size,size);
+  heightCtx.fillStyle="rgb(128,128,128)";heightCtx.fillRect(0,0,size,size);
+  roughCtx.fillStyle="rgb(224,224,224)";roughCtx.fillRect(0,0,size,size);
+
+  if(kind==="stone"||kind==="paving"){
+    const rowH=kind==="paving"?64:96,colW=kind==="paving"?96:128;
+    for(let row=-1;row<10;row++){
+      const offset=row%2?colW/2:0;
+      for(let col=-1;col<7;col++){
+        const x=col*colW+offset,y=row*rowH;
+        const variation=0.86+seed(col,row)*0.23;
+        color.fillStyle=tint(variation);color.fillRect(x+3,y+3,colW-6,rowH-6);
+        const block=color.createLinearGradient(x,y,x+colW,y+rowH);
+        block.addColorStop(0,"rgba(255,255,255,0.075)");
+        block.addColorStop(0.48,"rgba(255,255,255,0.008)");
+        block.addColorStop(1,"rgba(4,5,18,0.16)");
+        color.fillStyle=block;color.fillRect(x+3,y+3,colW-6,rowH-6);
+        color.strokeStyle=seam;color.lineWidth=kind==="paving"?3:2;
+        color.strokeRect(x+2,y+2,colW-4,rowH-4);
+        color.strokeStyle="rgba(255,255,255,0.11)";color.lineWidth=1;
+        color.beginPath();color.moveTo(x+8,y+6);color.lineTo(x+colW-10,y+6);color.stroke();
+        heightCtx.fillStyle="rgb(145,145,145)";heightCtx.fillRect(x+3,y+3,colW-6,rowH-6);
+        heightCtx.strokeStyle="rgb( seventy, seventy, seventy)".replace(/seventy/g,"76");
+        heightCtx.lineWidth=kind==="paving"?4:3;heightCtx.strokeRect(x+2,y+2,colW-4,rowH-4);
+        heightCtx.strokeStyle="rgb(174,174,174)";heightCtx.lineWidth=1;
+        heightCtx.beginPath();heightCtx.moveTo(x+7,y+7);heightCtx.lineTo(x+colW-9,y+7);heightCtx.stroke();
+        for(let fleck=0;fleck<22;fleck++){
+          const fx=x+8+seed(col+fleck,row+3)*(colW-16);
+          const fy=y+8+seed(row+fleck,col+4)*(rowH-16);
+          const alpha=0.025+seed(fleck,col)*0.07;
+          color.fillStyle=accent;color.globalAlpha=alpha;color.fillRect(fx,fy,1+seed(fleck,row)*2,1+seed(row,col)*2);
+          heightCtx.fillStyle=seed(fleck,row)>0.5?"rgb(164,164,164)":"rgb(111,111,111)";
+          heightCtx.fillRect(fx,fy,1.5,1.5);
+        }
+      }
+    }
+  }else if(kind==="roof"){
+    const rowH=54,shingleW=92;
+    for(let row=-1;row<12;row++)for(let col=-1;col<7;col++){
+      const x=col*shingleW+(row%2?shingleW/2:0),y=row*rowH;
+      const light=seed(row,col),variation=0.83+light*0.28;
+      color.fillStyle=tint(variation);color.beginPath();color.roundRect(x+3,y+3,shingleW-6,rowH-7,8);color.fill();
+      const glaze=color.createLinearGradient(0,y,0,y+rowH);
+      glaze.addColorStop(0,"rgba(255,255,255,0.13)");glaze.addColorStop(0.54,"rgba(255,255,255,0.015)");glaze.addColorStop(1,"rgba(0,0,0,0.18)");
+      color.fillStyle=glaze;color.beginPath();color.roundRect(x+3,y+3,shingleW-6,rowH-7,8);color.fill();
+      color.strokeStyle=seam;color.lineWidth=2;color.beginPath();color.roundRect(x+3,y+3,shingleW-6,rowH-7,8);color.stroke();
+      color.strokeStyle=accent;color.globalAlpha=0.2;color.lineWidth=2;
+      color.beginPath();color.moveTo(x+12,y+9);color.lineTo(x+shingleW-12,y+9);color.stroke();color.globalAlpha=1;
+      heightCtx.fillStyle="rgb(155,155,155)";heightCtx.beginPath();heightCtx.roundRect(x+3,y+3,shingleW-6,rowH-7,8);heightCtx.fill();
+      heightCtx.strokeStyle="rgb(80,80,80)";heightCtx.lineWidth=3;heightCtx.beginPath();heightCtx.roundRect(x+3,y+3,shingleW-6,rowH-7,8);heightCtx.stroke();
+      heightCtx.strokeStyle="rgb(184,184,184)";heightCtx.lineWidth=1;heightCtx.beginPath();heightCtx.moveTo(x+10,y+8);heightCtx.lineTo(x+shingleW-12,y+8);heightCtx.stroke();
+    }
+  }else if(kind==="wood"){
+    const grain=color.createLinearGradient(0,0,size,0);
+    grain.addColorStop(0,tint(0.78));grain.addColorStop(0.5,tint(1.02));grain.addColorStop(1,tint(0.82));
+    color.fillStyle=grain;color.fillRect(0,0,size,size);
+    for(let line=0;line<90;line++){
+      const y=line/90*size,phase=seed(line,7)*Math.PI*2;
+      color.strokeStyle=seam;color.globalAlpha=0.12+seed(line,9)*0.14;color.lineWidth=1+seed(line,11)*2;
+      color.beginPath();color.moveTo(0,y);
+      for(let x=0;x<=size;x+=32)color.lineTo(x,y+Math.sin(x/38+phase)*1.8);
+      color.stroke();
+      heightCtx.strokeStyle=line%4===0?"rgb(165,165,165)":"rgb(112,112,112)";
+      heightCtx.lineWidth=line%4===0?3:1;heightCtx.beginPath();heightCtx.moveTo(0,y);heightCtx.lineTo(size,y);heightCtx.stroke();
+    }
+    color.globalAlpha=1;
+  }else{
+    for(let i=0;i<2200;i++){
+      const x=seed(i,5)*size,y=seed(i,11)*size;
+      const alpha=0.02+seed(i,13)*0.07;
+      color.fillStyle=accent;color.globalAlpha=alpha;color.fillRect(x,y,1+seed(i,17)*2,1+seed(i,19)*2);
+      heightCtx.fillStyle=seed(i,23)>0.5?"rgb(166,166,166)":"rgb(98,98,98)";
+      heightCtx.fillRect(x,y,2,2);
+    }
+    color.globalAlpha=1;
+  }
+
+  const heightPixels=heightCtx.getImageData(0,0,size,size).data;
+  const normalData=new Uint8Array(size*size*4);
+  const roughData=new Uint8Array(size*size*4);
+  const roughBase=kind==="roof"?0.58:kind==="paving"?0.83:0.88;
+  const strength=kind==="roof"?3.2:kind==="paving"?2.6:2.1;
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const i=(y*size+x)*4;
+    const left=heightPixels[(y*size+((x+size-1)%size))*4]/255;
+    const right=heightPixels[(y*size+((x+1)%size))*4]/255;
+    const up=heightPixels[(((y+size-1)%size)*size+x)*4]/255;
+    const down=heightPixels[(((y+1)%size)*size+x)*4]/255;
+    let nx=(left-right)*strength,ny=(up-down)*strength,nz=1;
+    const inv=1/Math.sqrt(nx*nx+ny*ny+nz*nz);nx*=inv;ny*=inv;nz*=inv;
+    normalData[i]=Math.round((nx*0.5+0.5)*255);
+    normalData[i+1]=Math.round((ny*0.5+0.5)*255);
+    normalData[i+2]=Math.round((nz*0.5+0.5)*255);
+    normalData[i+3]=255;
+    const noise=(seed(x,y)-0.5)*0.12;
+    const roughness=THREE.MathUtils.clamp(roughBase+noise+(heightPixels[i]/255-0.5)*0.08,0.32,0.99);
+    const value=Math.round(roughness*255);
+    roughData[i]=roughData[i+1]=roughData[i+2]=value;roughData[i+3]=255;
+  }
+  const makeCanvasTexture=(canvas)=>{
+    const texture=new THREE.CanvasTexture(canvas);
+    texture.colorSpace=THREE.SRGBColorSpace;
+    texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+    texture.repeat.set(repeatX,repeatY);
+    return texture;
+  };
+  const normalMap=new THREE.DataTexture(normalData,size,size,THREE.RGBAFormat);
+  normalMap.wrapS=normalMap.wrapT=THREE.RepeatWrapping;
+  normalMap.repeat.set(repeatX,repeatY);
+  normalMap.magFilter=THREE.LinearFilter;
+  normalMap.minFilter=THREE.LinearMipmapLinearFilter;
+  normalMap.generateMipmaps=true;
+  normalMap.needsUpdate=true;
+  normalMap.colorSpace=THREE.NoColorSpace;
+  const roughnessMap=new THREE.DataTexture(roughData,size,size,THREE.RGBAFormat);
+  roughnessMap.wrapS=roughnessMap.wrapT=THREE.RepeatWrapping;
+  roughnessMap.repeat.set(repeatX,repeatY);
+  roughnessMap.magFilter=THREE.LinearFilter;
+  roughnessMap.minFilter=THREE.LinearMipmapLinearFilter;
+  roughnessMap.generateMipmaps=true;
+  roughnessMap.needsUpdate=true;
+  roughnessMap.colorSpace=THREE.NoColorSpace;
+  return {map:makeCanvasTexture(albedo),normalMap,roughnessMap};
 }
+
+function applyPattern(material,kind,base,seam,accent,repeatX=3,repeatY=3){
+  const maps=createPbrSurfaceMaps(kind,base,seam,accent,repeatX,repeatY);
+  if(!maps)return material;
+  material.map=maps.map;
+  material.normalMap=maps.normalMap;
+  material.normalScale=new THREE.Vector2(kind==="roof"?0.72:0.54,kind==="roof"?0.72:0.54);
+  material.roughnessMap=maps.roughnessMap;
+  material.bumpMap=null;
+  material.needsUpdate=true;
+  return material;
+}
+
+function createReflectionEnvironment(renderer,scene){
+  const canvas=document.createElement("canvas");canvas.width=1024;canvas.height=512;
+  const ctx=canvas.getContext("2d");
+  if(!ctx)return null;
+  const sky=ctx.createLinearGradient(0,0,0,512);
+  sky.addColorStop(0,"#081026");sky.addColorStop(0.36,"#182443");sky.addColorStop(0.68,"#494467");sky.addColorStop(1,"#b0917d");
+  ctx.fillStyle=sky;ctx.fillRect(0,0,1024,512);
+  const addSoftBox=(x,y,w,h,color,blur)=>{
+    ctx.save();ctx.shadowColor=color;ctx.shadowBlur=blur;ctx.fillStyle=color;ctx.globalAlpha=0.88;
+    ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w,h)*0.22);ctx.fill();ctx.restore();
+  };
+  addSoftBox(86,72,108,20,"#a7c7ff",36);
+  addSoftBox(366,44,152,25,"#f7d7a0",46);
+  addSoftBox(686,84,118,22,"#c5a8ff",40);
+  addSoftBox(888,58,70,18,"#f4cda1",32);
+  const horizon=ctx.createRadialGradient(512,422,6,512,422,460);
+  horizon.addColorStop(0,"rgba(255,210,164,0.38)");
+  horizon.addColorStop(0.3,"rgba(193,164,220,0.14)");
+  horizon.addColorStop(1,"rgba(15,22,52,0)");
+  ctx.fillStyle=horizon;ctx.fillRect(0,0,1024,512);
+  const source=new THREE.CanvasTexture(canvas);
+  source.colorSpace=THREE.SRGBColorSpace;
+  source.mapping=THREE.EquirectangularReflectionMapping;
+  let target=null,generator=null;
+  try{
+    generator=new THREE.PMREMGenerator(renderer);
+    generator.compileEquirectangularShader();
+    target=generator.fromEquirectangular(source);
+    scene.environment=target.texture;
+    scene.environmentIntensity=0.72;
+  }catch(error){
+    console.warn("Starry Dreamland: reflection environment unavailable",error);
+    target?.dispose();target=null;
+  }finally{
+    source.dispose();
+    generator?.dispose();
+  }
+  return target;
+}
+
+
 
 function makeMaterial(color, roughness = 0.72, metalness = 0.12, extra = {}) {
   return new THREE.MeshStandardMaterial({ color, roughness, metalness, ...extra });
