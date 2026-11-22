@@ -1836,6 +1836,42 @@ function createParkMotes(scene,count=56){
  const points=new THREE.Points(geometry,material);points.userData.basePositions=positions.slice();points.userData.phases=phases;scene.add(points);return points;
 }
 
+function createSkyDome(scene){
+ const canvas=document.createElement("canvas");canvas.width=1024;canvas.height=512;
+ const ctx=canvas.getContext("2d");
+ if(!ctx)return null;
+ const gradient=ctx.createLinearGradient(0,0,0,512);
+ gradient.addColorStop(0,"#050716");
+ gradient.addColorStop(0.28,"#0a1230");
+ gradient.addColorStop(0.56,"#18244a");
+ gradient.addColorStop(0.78,"#30335f");
+ gradient.addColorStop(1,"#5c4a75");
+ ctx.fillStyle=gradient;ctx.fillRect(0,0,1024,512);
+ const horizon=ctx.createRadialGradient(512,430,20,512,430,470);
+ horizon.addColorStop(0,"rgba(168,132,194,0.34)");
+ horizon.addColorStop(0.45,"rgba(104,111,179,0.16)");
+ horizon.addColorStop(1,"rgba(24,29,66,0)");
+ ctx.fillStyle=horizon;ctx.fillRect(0,0,1024,512);
+ for(let band=0;band<5;band++){
+  const y=270+band*30;
+  const veil=ctx.createLinearGradient(0,y-35,0,y+35);
+  veil.addColorStop(0,"rgba(133,128,207,0)");
+  veil.addColorStop(0.5,band%2?"rgba(157,138,207,0.055)":"rgba(115,158,213,0.06)");
+  veil.addColorStop(1,"rgba(133,128,207,0)");
+  ctx.fillStyle=veil;ctx.fillRect(0,y-35,1024,70);
+ }
+ const texture=new THREE.CanvasTexture(canvas);
+ texture.colorSpace=THREE.SRGBColorSpace;
+ const dome=new THREE.Mesh(new THREE.SphereGeometry(210,64,32),new THREE.MeshBasicMaterial({
+  map:texture,side:THREE.BackSide,depthWrite:false,fog:false
+ }));
+ dome.name="LayeredIndigoTwilightSky";
+ dome.renderOrder=-100;
+ dome.frustumCulled=false;
+ scene.add(dome);
+ return dome;
+}
+
 function createStarfield(scene, count = 620) {
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
@@ -2361,7 +2397,8 @@ function mount(host) {
   scene.add(blueLight);
 
   window.STARRY_3D_BOOT_STAGE = "sky and park environment";
-  const starfield = createStarfield(scene, isSmall ? 420 : 760);
+  const skyDome = createSkyDome(scene);
+  const starfield = createStarfield(scene, isSmall ? 460 : 820);
   const parkMotes = createParkMotes(scene,isSmall?28:56);
   const environment = buildEnvironment(scene);
   let initialCustomization={};
@@ -2382,7 +2419,7 @@ function mount(host) {
   let savedDiscoveryIds=[];
   try{savedDiscoveryIds=JSON.parse(host.dataset.parkDiscoveries||"[]")}catch(error){}
   const world = {
-    host, scene, renderer, camera, starfield, parkMotes, environment,
+    host, scene, renderer, camera, skyDome, starfield, parkMotes, environment,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
     cameraState, cameraMode: host.dataset.cameraMode || "first", keys: new Set(),
     touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, mountedRideData:null, minimapLast: 0, nearbyHintLast:0,
