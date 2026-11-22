@@ -1008,10 +1008,10 @@ function buildRollerCoaster(scene,materials){
   addMesh(root,new THREE.BoxGeometry(2.55,0.16,1.56),materials.roof,[-2.3,2.76,1.17]);
   addMesh(root,new THREE.BoxGeometry(2.7,0.075,0.16),materials.gold,[-2.3,2.66,1.97]);
   const stationArch=addMesh(root,new THREE.TubeGeometry(
-    makeLancetArchCurve(-2.3,0.92,2.03,2.5,1.52),64,0.065,8,false),
+    makeLancetArchCurve(-2.3,0.92,2.34,2.5,1.52),64,0.065,8,false),
     materials.gold,null,null,false,false);
   const stationArchInner=addMesh(root,new THREE.TubeGeometry(
-    makeLancetArchCurve(-2.3,0.98,1.99,2.25,1.35),56,0.022,6,false),
+    makeLancetArchCurve(-2.3,0.98,2.3,2.25,1.35),56,0.022,6,false),
     materials.crystal,null,null,false,false);
   for(let rail=0;rail<2;rail++){
     const z=0.74+rail*0.32;
@@ -1045,7 +1045,7 @@ function buildRollerCoaster(scene,materials){
   addMesh(cart,new THREE.BoxGeometry(0.55,0.06,0.08),materials.gold,[0,0.78,0]);
   const rideSeat=new THREE.Group();rideSeat.position.set(0,0.45,0.04);cart.add(rideSeat);
   const sign=makeLabelSprite({title:"星際雲霄飛車",subtitle:"COSMIC COASTER · RIDE"});
-  if(sign){sign.position.set(-2.3,3.75,2.16);sign.scale.set(4.0,1.02,1);root.add(sign)}
+  if(sign){sign.position.set(-2.3,3.75,2.44);sign.scale.set(4.0,1.02,1);root.add(sign)}
   return {id:"coaster",name:"星際雲霄飛車",action:"ride-coaster",root,object:cart,rideSeat,curve,axis:"track",progress:0,direction:1,speed:0.105,interactionRadius:7.4,dismountRadius:8.0};
 }
 
