@@ -265,7 +265,7 @@ function createReflectionEnvironment(renderer,scene){
 
 
 function createCinematicPostFX(renderer,width,height,isSmall){
-  let target=null,quadGeometry=null,quadMaterial=null;
+  let target=null,quadGeometry=null,quadMaterial=null,postScene=null,disabled=false;
   try{
     const scale=isSmall?0.78:1;
     target=new THREE.WebGLRenderTarget(
@@ -279,7 +279,7 @@ function createCinematicPostFX(renderer,width,height,isSmall){
     target.texture.generateMipmaps=false;
     target.texture.colorSpace=THREE.NoColorSpace;
 
-    const postScene=new THREE.Scene();
+    postScene=new THREE.Scene();
     const postCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
     quadGeometry=new THREE.PlaneGeometry(2,2);
     quadMaterial=new THREE.ShaderMaterial({
@@ -332,24 +332,33 @@ function createCinematicPostFX(renderer,width,height,isSmall){
         "  #include <colorspace_fragment>",
         "}"
       ].join("\n"),
-      depthTest:false,
-      depthWrite:false,
-      toneMapped:true
+      depthTest:false,depthWrite:false,toneMapped:true
     });
     postScene.add(new THREE.Mesh(quadGeometry,quadMaterial));
 
     return {
       target,scene:postScene,camera:postCamera,geometry:quadGeometry,material:quadMaterial,
       render(scene,camera){
+        if(disabled){renderer.render(scene,camera);return false}
         const previousToneMapping=renderer.toneMapping;
-        renderer.toneMapping=THREE.NoToneMapping;
-        renderer.setRenderTarget(target);
-        renderer.clear();
-        renderer.render(scene,camera);
-        renderer.setRenderTarget(null);
-        renderer.toneMapping=previousToneMapping;
-        renderer.clear();
-        renderer.render(postScene,postCamera);
+        try{
+          renderer.toneMapping=THREE.NoToneMapping;
+          renderer.setRenderTarget(target);
+          renderer.clear();
+          renderer.render(scene,camera);
+          renderer.setRenderTarget(null);
+          renderer.toneMapping=previousToneMapping;
+          renderer.clear();
+          renderer.render(postScene,postCamera);
+          return true;
+        }catch(error){
+          renderer.setRenderTarget(null);
+          renderer.toneMapping=previousToneMapping;
+          disabled=true;
+          console.warn("Starry Dreamland: post-processing failed; using standard renderer",error);
+          renderer.render(scene,camera);
+          return false;
+        }
       },
       setSize(w,h,pixelRatio=renderer.getPixelRatio()){
         const targetWidth=Math.max(1,Math.floor(w*pixelRatio*scale));
@@ -2231,7 +2240,7 @@ function buildEnvironment(scene) {
   // Each attraction carries its own sign directly on the matching model.
 
   // Ornate lanterns and crystal groves add life to the walkways; no placeholder visitors are spawned.
-  function addParkLamp(x,z,scale=1){
+  function addParkLamp(x,z,scale=1,hasLocalLight=false){
     const lamp=new THREE.Group();lamp.position.set(x,0.72,z);lamp.scale.setScalar(scale);island.add(lamp);
     addMesh(lamp,new THREE.CylinderGeometry(0.25,0.32,0.2,12),materials.darkStone,[0,0.1,0]);
     addMesh(lamp,new THREE.TorusGeometry(0.27,0.045,8,32),materials.gold,[0,0.19,0]).rotation.x=Math.PI/2;
@@ -2254,13 +2263,13 @@ function buildEnvironment(scene) {
     const halo=addMesh(lamp,new THREE.TorusGeometry(0.34,0.032,8,40),materials.gold,[0,2.84,0]);halo.rotation.x=Math.PI/2;
     addMesh(lamp,new THREE.ConeGeometry(0.28,0.34,8),materials.trim,[0,3.28,0]);
     addMesh(lamp,new THREE.OctahedronGeometry(0.15,1),materials.crystal,[0,3.56,0],[0.68,1.42,0.68],null,false,false);
-    const glow=new THREE.PointLight(0xffd48d,0.48,5.5,2);glow.position.set(0,2.82,0);lamp.add(glow);
+    if(hasLocalLight){const glow=new THREE.PointLight(0xffd48d,0.48,5.5,2);glow.position.set(0,2.82,0);lamp.add(glow);}
   }
   [
     [-4,25],[4,25],[-5,14],[5,14],[-10,2],[10,2],[-17,8],[-26,8],
     [-17,-9],[-29,-17],[17,8],[27,2],[18,-10],[31,-12],[-9,-20],[9,-20],
     [-4,-28],[4,-28],[-34,15],[35,10],[-34,-5],[36,-3]
-  ].forEach((p,i)=>addParkLamp(p[0],p[1],i%4===0?1.12:1));
+  ].forEach((p,i)=>addParkLamp(p[0],p[1],i%4===0?1.12:1,i%5===0));
 
   [
     [-35,23],[-32,27],[-27,25],[-20,23],[-14,28],[14,27],[20,24],[27,26],
