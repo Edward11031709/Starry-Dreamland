@@ -264,6 +264,110 @@ function createReflectionEnvironment(renderer,scene){
 
 
 
+function createCinematicPostFX(renderer,width,height,isSmall){
+  let target=null,quadGeometry=null,quadMaterial=null;
+  try{
+    const scale=isSmall?0.78:1;
+    target=new THREE.WebGLRenderTarget(
+      Math.max(1,Math.floor(width*renderer.getPixelRatio()*scale)),
+      Math.max(1,Math.floor(height*renderer.getPixelRatio()*scale)),
+      {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false}
+    );
+    target.texture.name="StarryDreamlandLinearScene";
+    target.texture.minFilter=THREE.LinearFilter;
+    target.texture.magFilter=THREE.LinearFilter;
+    target.texture.generateMipmaps=false;
+    target.texture.colorSpace=THREE.NoColorSpace;
+
+    const postScene=new THREE.Scene();
+    const postCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    quadGeometry=new THREE.PlaneGeometry(2,2);
+    quadMaterial=new THREE.ShaderMaterial({
+      uniforms:{
+        tDiffuse:{value:target.texture},
+        texelSize:{value:new THREE.Vector2(1/target.width,1/target.height)},
+        bloomStrength:{value:isSmall?0.28:0.38},
+        vignetteStrength:{value:isSmall?0.12:0.16}
+      },
+      vertexShader:[
+        "varying vec2 vUv;",
+        "void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}"
+      ].join("\n"),
+      fragmentShader:[
+        "uniform sampler2D tDiffuse;",
+        "uniform vec2 texelSize;",
+        "uniform float bloomStrength;",
+        "uniform float vignetteStrength;",
+        "varying vec2 vUv;",
+        "vec3 brightSample(vec2 uv){",
+        "  vec3 c=texture2D(tDiffuse,clamp(uv,vec2(0.0),vec2(1.0))).rgb;",
+        "  float l=dot(c,vec3(0.2126,0.7152,0.0722));",
+        "  float mask=smoothstep(0.68,0.94,l);",
+        "  return c*mask;",
+        "}",
+        "void main(){",
+        "  vec3 base=texture2D(tDiffuse,vUv).rgb;",
+        "  vec2 r=texelSize;",
+        "  vec3 glow=vec3(0.0);",
+        "  glow+=brightSample(vUv+vec2( 2.0, 0.0)*r)*0.105;",
+        "  glow+=brightSample(vUv+vec2(-2.0, 0.0)*r)*0.105;",
+        "  glow+=brightSample(vUv+vec2( 0.0, 2.0)*r)*0.105;",
+        "  glow+=brightSample(vUv+vec2( 0.0,-2.0)*r)*0.105;",
+        "  glow+=brightSample(vUv+vec2( 5.0, 2.0)*r)*0.075;",
+        "  glow+=brightSample(vUv+vec2(-5.0, 2.0)*r)*0.075;",
+        "  glow+=brightSample(vUv+vec2( 5.0,-2.0)*r)*0.075;",
+        "  glow+=brightSample(vUv+vec2(-5.0,-2.0)*r)*0.075;",
+        "  glow+=brightSample(vUv+vec2( 9.0, 0.0)*r)*0.045;",
+        "  glow+=brightSample(vUv+vec2(-9.0, 0.0)*r)*0.045;",
+        "  glow+=brightSample(vUv+vec2( 0.0, 9.0)*r)*0.045;",
+        "  glow+=brightSample(vUv+vec2( 0.0,-9.0)*r)*0.045;",
+        "  vec3 color=base+glow*bloomStrength;",
+        "  float vignette=smoothstep(0.24,0.88,distance(vUv,vec2(0.5)));",
+        "  color*=1.0-vignette*vignetteStrength;",
+        "  float luma=dot(color,vec3(0.2126,0.7152,0.0722));",
+        "  color=mix(vec3(luma),color,1.055);",
+        "  color=(color-0.5)*1.035+0.5;",
+        "  gl_FragColor=vec4(color,1.0);",
+        "  #include <tonemapping_fragment>",
+        "  #include <colorspace_fragment>",
+        "}"
+      ].join("\n"),
+      depthTest:false,
+      depthWrite:false,
+      toneMapped:true
+    });
+    postScene.add(new THREE.Mesh(quadGeometry,quadMaterial));
+
+    return {
+      target,scene:postScene,camera:postCamera,geometry:quadGeometry,material:quadMaterial,
+      render(scene,camera){
+        const previousToneMapping=renderer.toneMapping;
+        renderer.toneMapping=THREE.NoToneMapping;
+        renderer.setRenderTarget(target);
+        renderer.clear();
+        renderer.render(scene,camera);
+        renderer.setRenderTarget(null);
+        renderer.toneMapping=previousToneMapping;
+        renderer.clear();
+        renderer.render(postScene,postCamera);
+      },
+      setSize(w,h,pixelRatio=renderer.getPixelRatio()){
+        const targetWidth=Math.max(1,Math.floor(w*pixelRatio*scale));
+        const targetHeight=Math.max(1,Math.floor(h*pixelRatio*scale));
+        target.setSize(targetWidth,targetHeight);
+        quadMaterial.uniforms.texelSize.value.set(1/targetWidth,1/targetHeight);
+      },
+      dispose(){
+        target.dispose();quadGeometry.dispose();quadMaterial.dispose();
+      }
+    };
+  }catch(error){
+    target?.dispose();quadGeometry?.dispose();quadMaterial?.dispose();
+    console.warn("Starry Dreamland: cinematic post-processing disabled",error);
+    return null;
+  }
+}
+
 function makeMaterial(color, roughness = 0.72, metalness = 0.12, extra = {}) {
   return new THREE.MeshStandardMaterial({ color, roughness, metalness, ...extra });
 }
@@ -2301,6 +2405,8 @@ function disposeWorld(world) {
   if (world.onKeyUp) window.removeEventListener("keyup", world.onKeyUp);
   if (world.onBlur) window.removeEventListener("blur", world.onBlur);
   if (world.visibilityHandler) document.removeEventListener("visibilitychange", world.visibilityHandler);
+  world.postFX?.dispose();
+  world.reflectionTarget?.dispose();
   if (world.renderer) {
     world.renderer.setAnimationLoop(null);
     world.renderer.dispose();
@@ -2737,6 +2843,9 @@ function mount(host) {
   renderer.domElement.setAttribute("aria-label", "可自由探索星夢夜遊園、漫遊各主題園區並點擊挑戰星門");
   host.appendChild(renderer.domElement);
 
+  const reflectionTarget=createReflectionEnvironment(renderer,scene);
+  const postFX=createCinematicPostFX(renderer,width,height,isSmall);
+
   const hemisphere = new THREE.HemisphereLight(0xe4e7ff, 0x211832, 1.18);
   scene.add(hemisphere);
 
@@ -2796,7 +2905,7 @@ function mount(host) {
   let savedDiscoveryIds=[];
   try{savedDiscoveryIds=JSON.parse(host.dataset.parkDiscoveries||"[]")}catch(error){}
   const world = {
-    host, scene, renderer, camera, skyDome, starfield, parkMotes, environment,
+    host, scene, renderer, camera, skyDome, starfield, parkMotes, environment, reflectionTarget, postFX,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
     cameraState, cameraMode: host.dataset.cameraMode || "first", keys: new Set(),
     touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, mountedRideData:null, minimapLast: 0, nearbyHintLast:0,
@@ -3220,7 +3329,8 @@ function mount(host) {
       world.minimapLast=t;
       window.dispatchEvent(new CustomEvent("starry-3d-map",{detail:{x:player.position.x,z:player.position.z,yaw:cameraState.yaw}}));
     }
-    renderer.render(scene, camera);
+    if(postFX)postFX.render(scene,camera);
+    else renderer.render(scene,camera);
   };
   window.STARRY_3D_BOOT_STAGE = "animation loop";
   renderer.setAnimationLoop(world.renderFrame);
@@ -3237,6 +3347,7 @@ function mount(host) {
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.0 : 1.25));
     renderer.setSize(w, h, false);
+    postFX?.setSize(w,h,renderer.getPixelRatio());
   });
   world.resizeObserver.observe(host);
 
