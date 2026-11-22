@@ -797,7 +797,7 @@ function buildTicketBooth(scene,materials,x,z){
 }
 
 function buildCarousel(scene,materials,x,z){
-  const root=new THREE.Group();root.position.set(x,0.78,z);root.userData.action="ride-carousel";scene.add(root);
+  const root=new THREE.Group();root.position.set(x,0.78,z);root.scale.setScalar(1.12);root.userData.action="ride-carousel";scene.add(root);
   addMesh(root,new THREE.CylinderGeometry(2.45,2.62,0.34,64),materials.darkStone,[0,0.18,0]);
   addMesh(root,new THREE.TorusGeometry(2.48,0.13,12,80),materials.gold,[0,0.39,0]).rotation.x=Math.PI/2;
   addMesh(root,new THREE.CylinderGeometry(2.28,2.34,0.12,64),materials.paving,[0,0.42,0]);
@@ -910,11 +910,11 @@ function buildCarousel(scene,materials,x,z){
   const rideSeat=new THREE.Group();rideSeat.position.set(1.48,1.34,0);rideSeat.rotation.y=-Math.PI/2;ride.add(rideSeat);
   const sign=makeLabelSprite({title:"星光旋轉木馬",subtitle:"STARLIGHT CAROUSEL · RIDE"});
   if(sign){sign.position.set(0,5.12,0);sign.scale.set(4.4,1.16,1);root.add(sign)}
-  return {id:"carousel",name:"星光旋轉木馬",action:"ride-carousel",root,object:ride,rideSeat,axis:"y",speed:0.24,interactionRadius:4.75,dismountRadius:4.9};
+  return {id:"carousel",name:"星光旋轉木馬",action:"ride-carousel",root,object:ride,rideSeat,axis:"y",speed:0.24,interactionRadius:5.25,dismountRadius:5.55};
 }
 
 function buildFerrisWheel(scene,materials,x,y,z){
-  const root=new THREE.Group();root.position.set(x,y,z);root.scale.setScalar(1.22);root.userData.action="ride-ferris";scene.add(root);
+  const root=new THREE.Group();root.position.set(x,y,z);root.scale.setScalar(1.4);root.userData.action="ride-ferris";scene.add(root);
   [-0.82,0.82].forEach((sx,i)=>{
     addMesh(root,new THREE.CylinderGeometry(0.34,0.4,0.26,12),materials.darkStone,[sx,0.16,0]);
     addMesh(root,new THREE.TorusGeometry(0.31,0.045,8,28),materials.gold,[sx,0.31,0]).rotation.x=Math.PI/2;
@@ -970,11 +970,11 @@ function buildFerrisWheel(scene,materials,x,y,z){
   const hubGem=addMesh(wheel,new THREE.OctahedronGeometry(0.28,1),materials.crystal,[0,0,0.32],[0.8,1.15,0.8],null,false,false);hubGem.rotation.z=Math.PI/4;
   const sign=makeLabelSprite({title:"星河摩天輪",subtitle:"GALAXY FERRIS WHEEL · RIDE"});
   if(sign){sign.position.set(0,6.6,0.22);sign.scale.set(4.1,1.1,1);root.add(sign)}
-  return {id:"ferris",name:"星河摩天輪",action:"ride-ferris",root,object:wheel,rideSeat,gondolas,axis:"z",speed:-0.105,interactionRadius:5.55,dismountRadius:6.2};
+  return {id:"ferris",name:"星河摩天輪",action:"ride-ferris",root,object:wheel,rideSeat,gondolas,axis:"z",speed:-0.105,interactionRadius:6.1,dismountRadius:6.8};
 }
 
 function buildRollerCoaster(scene,materials){
-  const root=new THREE.Group();root.position.set(-24.5,0.72,-19.0);root.scale.setScalar(1.2);root.userData.action="ride-coaster";scene.add(root);
+  const root=new THREE.Group();root.position.set(-24.5,0.72,-19.0);root.scale.setScalar(1.55);root.userData.action="ride-coaster";scene.add(root);
   const points=[[-2.8,0.65,1.8],[-2.3,1.7,0.8],[-1.55,3.7,0.2],[-0.45,4.0,0.1],[0.65,2.0,0.3],[1.55,0.9,1.0],[2.55,2.0,1.8],[3.05,2.55,2.2]];
   const pathPoints=points.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
   const curve=new THREE.CatmullRomCurve3(pathPoints,false,"centripetal");
@@ -1004,7 +1004,7 @@ function buildRollerCoaster(scene,materials){
   const rideSeat=new THREE.Group();rideSeat.position.set(0,0.45,0.04);cart.add(rideSeat);
   const sign=makeLabelSprite({title:"星際雲霄飛車",subtitle:"COSMIC COASTER · RIDE"});
   if(sign){sign.position.set(0,4.9,2.05);sign.scale.set(4.3,1.05,1);root.add(sign)}
-  return {id:"coaster",name:"星際雲霄飛車",action:"ride-coaster",root,object:cart,rideSeat,curve,axis:"track",progress:0,direction:1,speed:0.105,interactionRadius:6.2,dismountRadius:6.7};
+  return {id:"coaster",name:"星際雲霄飛車",action:"ride-coaster",root,object:cart,rideSeat,curve,axis:"track",progress:0,direction:1,speed:0.105,interactionRadius:7.4,dismountRadius:8.0};
 }
 
 function buildTeacupRide(scene,materials,x,z){
@@ -1831,11 +1831,11 @@ function buildEnvironment(scene) {
   [-7.2,0,7.2].forEach((x,i)=>{portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials));addCollider(x,8.2,1.62,gameMeta[i].title)});
 
   const rides=[];
-  const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);addCollider(-21.5,0.7,3.65,"星光旋轉木馬");
+  const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);addCollider(-21.5,0.7,4.1,"星光旋轉木馬");
   const teacups=buildTeacupRide(scene,materials,-13,-11.5);rides.push(teacups);addCollider(-13,-11.5,3.55,"星月茶杯");
   const drop=buildDropTower(scene,materials,13,-10);rides.push(drop);addCollider(13,-10,2.7,"星際自由落體");
-  const ferris=buildFerrisWheel(scene,materials,25,0.78,-17);rides.push(ferris);addCollider(25,-17,4.55,"星河摩天輪");
-  const coaster=buildRollerCoaster(scene,materials);rides.push(coaster);addCollider(-24.5,-19.0,5.4,"星際雲霄飛車");
+  const ferris=buildFerrisWheel(scene,materials,25,0.78,-17);rides.push(ferris);addCollider(25,-17,5.0,"星河摩天輪");
+  const coaster=buildRollerCoaster(scene,materials);rides.push(coaster);addCollider(-24.5,-19.0,6.6,"星際雲霄飛車");
   const rideStations=[carousel,teacups,drop,ferris,coaster];
   const ticketBooth=buildTicketBooth(scene,materials,-4.8,30.5);addCollider(-4.8,30.5,2.55,"星夢入園票亭");
   buildEntranceGate(scene,materials);
