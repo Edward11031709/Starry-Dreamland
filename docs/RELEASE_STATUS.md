@@ -4,12 +4,12 @@
 
 - `main` 已包含 PR #20；合併 commit：`991088dd987617de0937a79ea2178a138a4bb5fc`。
 - PR #17、#18 已關閉，原因是內容已由整合 PR #20 取代；兩份舊 PR 保留於 Closed 歷史，不再列於 Open PR 清單。
-- PR #20 候選內容已合併，但合併本身不代表 GitHub Pages 已更新；本次尚未執行正式發布，也未重新驗證公開網站 `release.json`。
+- PR #20 合併後，owner 於 2026-11-22 手動執行 Actions #167（run ID `45004106298`）；`管理員確認後發布正式版` job 與 `發布正式網站` 步驟均成功，部署目標為 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc`。此為目前可確認的公開版來源；尚未直接讀回公開網站的 `release.json` 作外部比對。
 - 目前續作分支：`feature/castle-gothic-architecture-20261122`，從 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc` 建立。
 - 續作內容：城堡主入口雙層尖拱、晶石拱心石、階梯金銀雙層欄杆與細柱；新增尖拱曲線與結構測試。
 - 已重新檢查 `AGENT.md`、繁中 README、3D 路線與發布流程；本批次遵守既有分支／人工發布規則，`AGENT.md` 無需修訂。
 - 不修改 Supabase schema、RLS、RPC、migration 或正式玩家資料；不調整星塵、服裝所有權、帳號、遊戲紀錄、聊天或探索資料。
-- Actions run #168（run ID `45004340672`）成功：Node tests **29 passed／0 failed**；Three.js 與 Supabase Edge Function 語法、首頁 inline JavaScript parse 均通過。PR 事件中的正式部署 job 為 skipped。
+- Actions run #169（run ID `45004424008`）對目前最新 head `1fc677f167d486daa2e0afade5467d84e0133ca4` 成功：Node tests **29 passed／0 failed**；Three.js 與 Supabase Edge Function 語法、首頁 inline JavaScript parse 均通過。PR 事件中的正式部署 job 為 skipped。
 - 私有預覽與真實瀏覽器 WebGL、桌機／手機畫質、碰撞與 FPS 尚未完成實際人工驗收；不可將自動化測試當作視覺驗收。
 
 
@@ -27,8 +27,8 @@
 
 - PR #19 已合併至 main，合併 SHA：`8f4873fddad924bd00d949eae60d8c41bcb2aac2`。
 - 對應正式發布 workflow run #163（run ID `45000721665`，2026-11-22）檢查 job 成功，檔案打包與 artifact 上傳成功；Pages 部署步驟失敗，原因為部署步驟找不到同一次 workflow run 的 `github-pages` artifact。
-- 因部署 job 失敗，不可宣稱公開網站已更新至 PR #19；須另外重新檢查／執行正式 Pages 部署。
-- 前次狀態紀錄可確認的最近一次成功 Pages 發布為 Actions #138（2026-11-18）；本批次沒有重新驗證公開 `release.json`。
+- 後續 owner 於 2026-11-22 執行 Actions #167（run ID `45004106298`），正式部署 job 與 `發布正式網站` 步驟成功，部署 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc`；此版本包含 PR #20。
+- 因此 #163 的部署失敗已由 #167 的成功發布取代；本次新開的 PR #21 不在該公開版本內。
 
 ## 安全與發布邊界
 
@@ -44,5 +44,5 @@
 - Merge commit：`991088dd987617de0937a79ea2178a138a4bb5fc`；整合候選 head：`fd6a693d35a1911650d78d7e0588e8f116547198`。
 - Actions run #166 成功：Node tests **27 passed／0 failed**；JavaScript、Supabase Edge Function 與首頁 inline JavaScript parse 均通過。
 - PR #17、#18 已關閉為由 #20 取代，不再是 Open PR。
-- 合併後仍未因此觸發正式 Pages 部署；公開版應以實際 production workflow 與 `release.json` SHA 核對。
+- PR 合併本身不會自動部署；owner 隨後透過 Actions #167 手動發布 `main`，正式部署 job 成功。PR #21 尚未合併，不在此公開版內。
 
