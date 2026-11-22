@@ -26,6 +26,8 @@ test("moonlit trees use curved limbs and broad clustered canopies, not stacked c
   assert.match(tree, /for\(let branch=0;branch<5;branch\+\+\)/);
   assert.match(tree, /new THREE\.DodecahedronGeometry\(0\.72,1\)/);
   assert.match(tree, /const canopyClusters=/);
+  assert.match(tree, /new THREE\.InstancedMesh\(branchGeometry,silver,5\)/);
+  assert.match(tree, /new THREE\.InstancedMesh\(canopyGeometry,foliageA,6\)/);
   assert.doesNotMatch(tree, /new THREE\.ConeGeometry/);
 });
 
@@ -113,14 +115,46 @@ test("signature rides are enlarged with matching boarding and collision boundari
   const coaster = section("function buildRollerCoaster(", "function buildTeacupRide(");
   const teacups = section("function buildTeacupRide(", "function buildDropTower(");
   const environment = section("function buildEnvironment(", "function createParkMotes(");
-  assert.match(ferris, /root\.scale\.setScalar\(1\.22\)/);
+  assert.match(ferris, /root\.scale\.setScalar\(1\.4\)/);
   assert.match(ferris, /for\(let i=0;i<12;i\+\+\)/);
-  assert.match(ferris, /interactionRadius:5\.55,dismountRadius:6\.2/);
-  assert.match(coaster, /root\.scale\.setScalar\(1\.2\)/);
-  assert.match(coaster, /interactionRadius:6\.2,dismountRadius:6\.7/);
+  assert.match(ferris, /interactionRadius:6\.1,dismountRadius:6\.8/);
+  assert.match(coaster, /root\.scale\.setScalar\(1\.55\)/);
+  assert.match(coaster, /interactionRadius:7\.4,dismountRadius:8\.0/);
   assert.match(teacups, /new THREE\.LatheGeometry\(cupProfile,32\)/);
   assert.match(teacups, /handle\.scale\.set\(1,1\.25,0\.82\)/);
-  assert.match(environment, /addCollider\(25,-17,4\.55,"星河摩天輪"\)/);
-  assert.match(environment, /addCollider\(-24\.5,-19\.0,5\.4,"星際雲霄飛車"\)/);
+  assert.match(environment, /addCollider\(25,-17,5\.0,"星河摩天輪"\)/);
+  assert.match(environment, /addCollider\(-24\.5,-19\.0,6\.6,"星際雲霄飛車"\)/);
   assert.match(environment, /addCollider\(-13,-11\.5,3\.55,"星月茶杯"\)/);
+});
+
+
+test("shooting gallery has a sculpted gable facade and pointed entrance portal", () => {
+  const gallery = section("function buildShootingGallery(", "function buildMirrorHouse(");
+  assert.match(gallery, /new THREE\.ExtrudeGeometry\(gableShape/);
+  assert.match(gallery, /makeLancetArchCurve\(0,0\.58,0\.74,5\.4,2\.72\)/);
+  assert.match(gallery, /NEON SHOOTING GALLERY/);
+});
+
+test("mirror house uses a pointed crystal portal and matching cathedral gable", () => {
+  const mirror = section("function buildMirrorHouse(", "function buildArcadeStalls(");
+  assert.match(mirror, /const portalMaterial=new THREE\.MeshPhysicalMaterial/);
+  assert.match(mirror, /makeLancetGeometry\(2\.22,2\.6\)/);
+  assert.match(mirror, /makeLancetArchCurve\(0,0\.63,0\.24,2\.78,2\.86\)/);
+  assert.match(mirror, /new THREE\.ExtrudeGeometry\(gableShape/);
+});
+
+test("cosmic coaster includes a departure pavilion clear of its moving rails", () => {
+  const coaster = section("function buildRollerCoaster(", "function buildTeacupRide(");
+  assert.match(coaster, /departure pavilion/i);
+  assert.match(coaster, /new THREE\.BoxGeometry\(2\.72,0\.16,1\.3\)/);
+  assert.match(coaster, /makeLancetArchCurve\(-2\.3,0\.92,2\.34,2\.5,1\.52\)/);
+  assert.match(coaster, /sign\.position\.set\(-2\.3,3\.75,2\.44\)/);
+});
+
+test("carousel and Ferris wheel bases have layered structural plinths", () => {
+  const carousel = section("function buildCarousel(", "function buildFerrisWheel(");
+  const ferris = section("function buildFerrisWheel(", "function buildRollerCoaster(");
+  assert.match(carousel, /root\.scale\.setScalar\(1\.12\)/);
+  assert.match(ferris, /new THREE\.CylinderGeometry\(1\.88,2\.08,0\.28,48\)/);
+  assert.match(ferris, /for\(let mark=0;mark<12;mark\+\+\)/);
 });
