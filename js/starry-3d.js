@@ -1116,17 +1116,17 @@ function buildMirrorHouse(scene,materials,x,z){
 
 function buildArcadeStalls(scene,materials){
   const market=new THREE.Group();
-  market.name="StardreamMarketStalls";
+  market.name="CelestialServicePavilions";
   scene.add(market);
   const stalls=[];
   const glass=new THREE.MeshPhysicalMaterial({
-    color:0xb9dff1,roughness:0.12,metalness:0.08,transparent:true,
-    opacity:0.34,clearcoat:1,clearcoatRoughness:0.04
+    color:0xc4d9f2,roughness:0.18,metalness:0.08,transparent:true,
+    opacity:0.52,clearcoat:1,clearcoatRoughness:0.08,side:THREE.DoubleSide
   });
   const gemMaterials=[
-    makeMaterial(0x8edcf0,0.2,0.48,{emissive:0x245b83,emissiveIntensity:0.35,clearcoat:1}),
-    makeMaterial(0xc9a7f3,0.18,0.42,{emissive:0x67449b,emissiveIntensity:0.32,clearcoat:1}),
-    makeMaterial(0xf0d38e,0.2,0.5,{emissive:0x9b6b2e,emissiveIntensity:0.28,clearcoat:1})
+    makeMaterial(0x8edcf0,0.24,0.28,{emissive:0x245b83,emissiveIntensity:0.22,clearcoat:0.85}),
+    makeMaterial(0xc9a7f3,0.22,0.26,{emissive:0x67449b,emissiveIntensity:0.2,clearcoat:0.85}),
+    makeMaterial(0xf0d38e,0.24,0.3,{emissive:0x9b6b2e,emissiveIntensity:0.18,clearcoat:0.85})
   ];
 
   function makeStall(config){
@@ -1136,78 +1136,95 @@ function buildArcadeStalls(scene,materials){
     root.userData.kind=config.kind;
     market.add(root);
 
-    // Raised stone plinth and gold inlay establish a clear footprint.
-    addMesh(root,new THREE.BoxGeometry(2.05,0.16,1.72),materials.darkStone,[0,0.08,0]);
-    addMesh(root,new THREE.BoxGeometry(1.94,0.055,1.62),materials.gold,[0,0.18,0]);
-    addMesh(root,new THREE.BoxGeometry(1.82,0.045,1.48),materials.paving,[0,0.225,0]);
+    // The former striped market awning is replaced by a small permanent stone-and-metal pavilion.
+    addMesh(root,new THREE.CylinderGeometry(1.16,1.28,0.28,10),materials.darkStone,[0,0.14,0]);
+    const plinthRing=addMesh(root,new THREE.TorusGeometry(1.13,0.06,8,64),materials.gold,[0,0.29,0]);
+    plinthRing.rotation.x=Math.PI/2;
+    addMesh(root,new THREE.CylinderGeometry(1.02,1.04,0.075,10),materials.top,[0,0.31,0]);
 
-    // Back wall, side pilasters and the open service counter.
-    addMesh(root,new THREE.BoxGeometry(1.76,1.18,0.14),materials.wall,[0,0.91,-0.59]);
-    addMesh(root,new THREE.BoxGeometry(1.78,0.075,0.19),materials.trim,[0,1.53,-0.56]);
-    [-0.86,0.86].forEach((x,index)=>{
-      addMesh(root,new THREE.CylinderGeometry(0.075,0.095,1.82,12),materials.silverMetal,[x,1.08,0.34]);
-      addMesh(root,new THREE.CylinderGeometry(0.13,0.13,0.11,12),materials.gold,[x,1.92,0.34]);
-      addMesh(root,new THREE.OctahedronGeometry(0.105,1),index?materials.crystal:materials.trim,[x,2.06,0.34],[0.75,1.3,0.75],null,false,false);
+    // Recessed rear wall and pointed front display aperture.
+    addMesh(root,new THREE.BoxGeometry(1.72,1.78,0.2),materials.wall,[0,1.34,-0.52]);
+    addMesh(root,makeLancetGeometry(1.43,1.35),materials.darkStone,[0,1.58,-0.395],null,false,false);
+    addMesh(root,makeLancetGeometry(1.22,1.14),glass,[0,1.58,-0.36],null,false,false);
+    const aperture=addMesh(root,new THREE.TubeGeometry(
+      makeLancetArchCurve(0,0.88,0.02,1.78,1.58),56,0.062,8,false),
+      materials.gold,null,null,false,false);
+    const apertureInset=addMesh(root,new THREE.TubeGeometry(
+      makeLancetArchCurve(0,0.93,-0.045,1.56,1.45),52,0.022,6,false),
+      materials.silverMetal,null,null,false,false);
+
+    // Four narrow supports, bevelled capitals and restrained crystal finials.
+    [-1,1].forEach(side=>{
+      [-0.22,0.22].forEach(depth=>{
+        addMesh(root,new THREE.CylinderGeometry(0.082,0.13,2.12,10),materials.silverMetal,
+          [side*0.91,1.25,depth],null,true,false);
+        addMesh(root,new THREE.CylinderGeometry(0.16,0.16,0.12,10),materials.gold,
+          [side*0.91,2.35,depth],null,false,false);
+        const capital=addMesh(root,new THREE.OctahedronGeometry(0.11,1),materials.crystal,
+          [side*0.91,2.51,depth],[0.72,1.35,0.72],null,false,false);
+        capital.rotation.z=side*Math.PI/4;
+      });
     });
-    addMesh(root,new THREE.BoxGeometry(1.78,0.76,0.54),materials.wood,[0,0.68,0.28]);
-    addMesh(root,new THREE.BoxGeometry(1.82,0.12,0.64),materials.gold,[0,1.08,0.3]);
-    addMesh(root,new THREE.BoxGeometry(1.68,0.48,0.035),materials.darkStone,[0,0.69,0.56]);
-    addMesh(root,new THREE.BoxGeometry(1.52,0.31,0.025),config.panel,[0,0.69,0.585],null,false,false);
-    addMesh(root,new THREE.BoxGeometry(1.86,0.065,0.08),materials.trim,[0,1.17,0.59]);
 
-    // A layered canopy with alternating fabric panels and a scalloped front edge.
-    addMesh(root,new THREE.BoxGeometry(2.02,0.13,1.42),materials.roof,[0,2.13,-0.02]);
-    addMesh(root,new THREE.BoxGeometry(2.08,0.09,0.18),materials.gold,[0,2.04,0.67]);
-    for(let i=0;i<8;i++){
-      const x=-0.875+i*0.25;
-      addMesh(root,new THREE.BoxGeometry(0.245,0.025,1.27),i%2?materials.trim:config.panel,[x,2.207,-0.025],null,false,false);
-      addMesh(root,new THREE.SphereGeometry(0.12,12,8),i%2?materials.trim:config.panel,[x,2.015,0.69],[1,0.43,0.72],null,false,false);
-    }
-    addMesh(root,new THREE.BoxGeometry(1.9,0.07,0.12),materials.gold,[0,2.25,-0.04]);
+    // A compact service counter sits within the pavilion footprint.
+    addMesh(root,new THREE.BoxGeometry(1.52,0.56,0.48),materials.darkStone,[0,0.73,0.44]);
+    addMesh(root,new THREE.BoxGeometry(1.62,0.09,0.56),materials.gold,[0,1.055,0.46]);
+    addMesh(root,new THREE.BoxGeometry(1.44,0.035,0.42),materials.wood,[0,1.11,0.46],null,false,false);
+    addMesh(root,new THREE.BoxGeometry(1.34,0.045,0.05),materials.trim,[0,0.55,0.7],null,false,false);
 
-    // A framed sign is kept above the awning so it remains readable at walking height.
+    // A compact octagonal roof and crystal crown complete the silhouette without an awning.
+    addMesh(root,new THREE.CylinderGeometry(1.18,1.31,0.16,10),materials.trim,[0,2.63,-0.02]);
+    const roof=addMesh(root,new THREE.ConeGeometry(1.32,0.82,8),materials.roof,[0,3.08,-0.02]);
+    roof.rotation.y=Math.PI/8;
+    const roofBand=addMesh(root,new THREE.TorusGeometry(1.12,0.035,7,48),materials.gold,[0,2.72,-0.02]);
+    roofBand.rotation.x=Math.PI/2;
+    addMesh(root,new THREE.CylinderGeometry(0.13,0.19,0.22,10),materials.gold,[0,3.55,-0.02]);
+    const crown=addMesh(root,new THREE.OctahedronGeometry(0.22,1),materials.crystal,
+      [0,3.78,-0.02],[0.72,1.45,0.72],null,false,false);
+    crown.rotation.z=Math.PI/4;
+
     const sign=makeLabelSprite({title:config.title,subtitle:config.subtitle});
-    if(sign){sign.position.set(0,2.91,0.28);sign.scale.set(2.45,0.67,1);root.add(sign)}
+    if(sign){sign.position.set(0,3.05,0.72);sign.scale.set(3.25,0.87,1);root.add(sign)}
 
     if(config.kind==="exchange"){
-      // The exchange counter displays three illuminated star-stone specimens.
-      [-0.48,0,0.48].forEach((x,i)=>{
-        const jar=new THREE.Group();jar.position.set(x,1.22,0.24);root.add(jar);
-        addMesh(jar,new THREE.CylinderGeometry(0.105,0.12,0.28,16),glass,[0,0.14,0],null,false,false);
-        addMesh(jar,new THREE.TorusGeometry(0.11,0.018,6,20),materials.gold,[0,0.285,0]);
-        const gem=addMesh(jar,new THREE.OctahedronGeometry(0.095+i*0.012,1),gemMaterials[i],[0,0.17,0.01],[0.76,1.35,0.76],null,false,false);
-        gem.rotation.y=i*0.7;
+      // Three crystal samples are displayed in individual glass housings.
+      [-0.42,0,0.42].forEach((x,index)=>{
+        const caseGroup=new THREE.Group();caseGroup.position.set(x,1.24,0.48);root.add(caseGroup);
+        addMesh(caseGroup,new THREE.CylinderGeometry(0.12,0.14,0.28,20),glass,[0,0.14,0],null,false,false);
+        addMesh(caseGroup,new THREE.TorusGeometry(0.13,0.018,6,24),materials.gold,[0,0.29,0],null,false,false);
+        const gem=addMesh(caseGroup,new THREE.OctahedronGeometry(0.105+index*0.018,1),
+          gemMaterials[index],[0,0.18,0.01],[0.72,1.4,0.72],null,false,false);
+        gem.rotation.y=index*0.7;
       });
-      addMesh(root,new THREE.OctahedronGeometry(0.18,1),materials.crystal,[0.68,1.37,0.31],[0.72,1.5,0.72],null,false,false);
+      addMesh(root,new THREE.OctahedronGeometry(0.13,1),materials.crystal,
+        [0.68,1.44,0.43],[0.72,1.45,0.72],null,false,false);
     }else{
-      // The supply counter uses small crates and colored travel elixirs.
-      [-0.58,0.48].forEach((x,i)=>{
-        const crate=addMesh(root,new THREE.BoxGeometry(0.34,0.25,0.28),materials.wood,[x,1.27,0.27]);
-        crate.rotation.y=i?0.12:-0.12;
-        addMesh(root,new THREE.BoxGeometry(0.36,0.035,0.3),materials.gold,[x,1.41,0.27],null,false,false);
-        const bottle=addMesh(root,new THREE.CylinderGeometry(0.075,0.09,0.27,12),glass,[x,1.58,0.26],null,false,false);
-        addMesh(root,new THREE.SphereGeometry(0.082,12,10),gemMaterials[i],[x,1.75,0.26],[0.9,1.05,0.9],null,false,false);
-        addMesh(root,new THREE.CylinderGeometry(0.045,0.05,0.08,10),materials.gold,[x,1.77,0.26],null,false,false);
+      // The supply pavilion displays travel elixirs on a clean built-in shelf.
+      [-0.48,0.48].forEach((x,index)=>{
+        const bottle=new THREE.Group();bottle.position.set(x,1.17,0.49);root.add(bottle);
+        addMesh(bottle,new THREE.CylinderGeometry(0.09,0.12,0.31,16),glass,[0,0.16,0],null,false,false);
+        addMesh(bottle,new THREE.SphereGeometry(0.095,14,12),gemMaterials[index],[0,0.36,0],[0.9,1.1,0.9],null,false,false);
+        addMesh(bottle,new THREE.CylinderGeometry(0.045,0.05,0.09,10),materials.gold,[0,0.44,0],null,false,false);
+        addMesh(bottle,new THREE.TorusGeometry(0.12,0.018,6,24),materials.silverMetal,[0,0.045,0],null,false,false);
       });
-      addMesh(root,new THREE.TorusGeometry(0.15,0.025,6,24),materials.gold,[0,1.31,0.28]);
+      addMesh(root,new THREE.OctahedronGeometry(0.14,1),materials.crystal,[0,1.38,0.49],[0.72,1.4,0.72],null,false,false);
     }
 
-    const lamp=new THREE.PointLight(config.light,2.6,4.2,2);
-    lamp.position.set(0,1.88,0.48);root.add(lamp);
-    addMesh(root,new THREE.OctahedronGeometry(0.12,1),config.panel,[0,2.45,0.0],[0.75,1.25,0.75],null,false,false);
+    const lamp=new THREE.PointLight(config.light,1.65,3.8,2);
+    lamp.position.set(0,1.92,0.7);root.add(lamp);
     return root;
   }
 
   stalls.push(makeStall({
-    name:"StardustExchangeStall",kind:"exchange",x:5.1,z:6.9,
+    name:"StardustExchangePavilion",kind:"exchange",x:5.1,z:6.9,
     title:"星塵兌換所",subtitle:"STARDUST EXCHANGE",
-    panel:makeMaterial(0x574879,0.34,0.38,{emissive:0x21143b,emissiveIntensity:0.18}),
+    panel:makeMaterial(0x574879,0.4,0.28,{emissive:0x21143b,emissiveIntensity:0.12}),
     light:0xe6bdff
   }));
   stalls.push(makeStall({
-    name:"TravelerSupplyStall",kind:"supplies",x:8.25,z:5.45,
+    name:"TravelerSupplyPavilion",kind:"supplies",x:8.25,z:5.45,
     title:"旅人補給站",subtitle:"TRAVELER SUPPLIES",
-    panel:makeMaterial(0x42617a,0.38,0.28,{emissive:0x102f49,emissiveIntensity:0.16}),
+    panel:makeMaterial(0x42617a,0.42,0.24,{emissive:0x102f49,emissiveIntensity:0.1}),
     light:0x9edcf4
   }));
 
