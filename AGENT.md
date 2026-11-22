@@ -1,37 +1,201 @@
-# Starry Dreamland Agent Guide
+# Starry Dreamland｜星夢樂園 AI Agent 維護規範
 
-## Non-negotiable release policy
-- Work on a dedicated `dev/*` or `feature/*` branch. Never commit directly to `main`.
-- `main` is the reviewed candidate source; the public GitHub Pages site must remain on the last owner-approved release.
-- Never publish automatically on push, pull request merge, or a scheduled development run.
-- Production publication is an explicit, owner-approved GitHub Actions workflow dispatch from `main`, protected by the GitHub Environment named `production` with required reviewers.
-- Do not merge a PR or trigger production deployment unless the owner explicitly asks. A passing CI check is not release approval.
-- Keep previous approved releases identifiable by immutable commit SHA/tag. Rollback means selecting a previous approved code release; never roll back player data or database state.
+本文件是所有 AI Agent、協作開發者及自動化工具維護本專案時必須遵守的工作規範。開始任何工作前先讀完本文件；若使用者提出新要求，先比對本文件及目前程式／文件，再依最新明確要求調整。不得只憑過往摘要或舊 PR 描述推定目前狀態。
 
-## Data and economy safety
-- Preserve existing Supabase project, accounts, profiles, appearance JSON, owned cosmetics, Stardust balances, game records, chat, and exploration data.
-- Do not run migrations, alter schema/RLS/RPC, or write production Supabase data without explicit approval for that specific change.
-- Client input must never be trusted for Stardust, score rewards, cosmetic ownership, admin privileges, or other economy/security decisions. Validate privileged actions server-side.
-- Never expose service-role/secret keys in browser code, repository files, logs, or build artifacts.
-- Previewing locked cosmetics must never spend Stardust. Only a validated server-side unlock action may spend it.
-- Admin-only actions require server-side authorization, not merely hidden UI.
-- Private previews must use a private Storage bucket and an admin-verified Edge Function that issues short-lived signed URLs; never publish preview files to public Pages.
-- Private preview import must be initiated from the authenticated admin center and authorized server-side with `sd_is_admin()`; fetch only static files from the fixed public repository and never execute candidate-commit scripts. Keep all server secrets inside Supabase; do not require GitHub Actions secrets for preview. Use an isolated sandbox iframe without `allow-same-origin`.
+## 1. 專案定位與文件依據
 
-## Development workflow
-1. Read this guide, README_zh-TW.md, the relevant docs, the existing implementation, and current tests before changing code.
-2. Prefer small, reviewable changes with backward-compatible defaults.
-3. Keep all user-facing UI in Traditional Chinese (Taiwan); preserve the established deep-blue, violet/lavender, silver-white, and champagne-gold fantasy style.
-4. Prioritize polished character models/customization, safe wardrobe preview/unlock, park rides/buildings, multiplayer appearance sync, and desktop/mobile performance.
-5. Do not add fake bystander NPCs.
-6. Run JavaScript syntax checks and relevant automated tests. Record what was and was not verified; do not claim browser/device testing without doing it.
-7. Open a PR with screenshots or clear test evidence when applicable. Do not merge or deploy.
-8. At the end of each development batch, review whether this guide needs a substantive update; do not edit it for trivial changes.
+- 專案：Starry Dreamland／星夢樂園。
+- Repository：Edward11031709/Starry-Dreamland。
+- 正式網站：https://edward11031709.github.io/Starry-Dreamland/
+- 首頁入口維持 Repository 根目錄的 index.html；目前是免安裝、以瀏覽器直接遊玩的 3D 奇幻遊樂園。
+- 使用者介面與所有面向玩家的文案一律使用繁體中文（台灣）；小遊戲名稱可附英文小字副標，不得任意混用簡體中文。
+- 目前主要技術包含原生 HTML／CSS／JavaScript、Three.js、Supabase、GitHub Actions／Pages。修改前必須查閱當前程式及 workflow，不可假設依賴、檔案結構或部署方式仍與舊版本相同。
 
-## Release checklist
-- PR reviewed and explicitly approved by the owner.
-- Automated checks pass.
-- Preview tested by the owner; desktop and mobile checks recorded.
-- Supabase compatibility and RLS/RPC impact reviewed; no production database mutation without separate approval.
-- Production deploy is started manually from `main` with explicit confirmation and the protected `production` environment approval.
-- Record the deployed commit SHA and retain the previous approved SHA for rollback.
+### 必讀文件
+
+每次開始一個新的開發批次，至少檢查：
+
+1. 本文件 AGENT.md。
+2. README_zh-TW.md 與 README.md。
+3. docs/3D_ROADMAP_CINEMATIC_FREE_ROAM_zh-TW.md。
+4. docs/RELEASE_STATUS.md、docs/RELEASE_WORKFLOW_zh-TW.md、docs/RELEASE_CHECKLIST_zh-TW.md、docs/GITHUB_PAGES_DEPLOYMENT_zh-TW.md。
+5. 若涉及管理中心／預覽，閱讀 docs/ADMIN_PREVIEW_SETUP_zh-TW.md。
+6. 若涉及帳號、資料、遊戲成績、星塵、權限或 Realtime，閱讀 docs/SUPABASE_SETUP_zh-TW.md 及 docs/SECURITY_REVIEW_zh-TW.md。
+7. 再檢查本次要修改的實際程式、相關測試、GitHub Actions workflow 及最新分支／PR 狀態。
+
+若文件和實際程式不一致，以目前程式、最新 GitHub 狀態及安全規範交叉核對；不得默默沿用錯誤描述。功能狀態有變動時，更新對應 README／Roadmap／Release Status，避免文件過期。
+
+## 2. 不可違反的工作與發布規則
+
+### 分支及 PR
+
+- 所有開發工作必須建立在獨立的 dev/* 或 feature/* 分支上；絕不可直接提交到 main。
+- 新分支應從最新 main 建立，開始前先確認 main 最新 commit SHA，避免以過期分支開發。
+- 一個 PR 優先處理一個可清楚審查的主題；避免把互不相關的大型功能混在一起。
+- **建立 PR 時預設必須是 Ready for review（draft=false），不得習慣性建立 Draft。** 建立後立即重新讀取 PR metadata，確認 state=open、draft=false、base=main、head 正確、mergeable 狀態及 CI；若意外成為 Draft，先修正為 Ready for review 再告知使用者。
+- PR 標題、內容、測試結果及尚未驗收項目要用繁體中文清楚記錄。涉及 3D 外觀時，提供前後截圖或可重現的預覽驗收步驟。
+- 開發者不可自行合併 PR、關閉使用者正在處理的 PR、刪除分支或觸發正式部署，除非使用者針對該動作明確下達指示。使用者說「繼續開發／幫我修」不等於授權合併或發布。
+- 舊 PR 若已被新整合 PR 取代，先比較差異並確認不會遺失唯一修改，再依使用者指示整理；已合併或關閉的 PR 保留歷史，不把它們當成仍待開發的工作。
+
+### 正式發布與公開網站
+
+- **PR 合併、main 更新、CI 成功、私有預覽成功，都不代表公開網站已更新。**
+- 日常開發與 PR CI 不可自動部署 GitHub Pages；不可用 push、PR merge 或排程工作觸發未經核准的正式發布。
+- 正式發布必須由專案擁有者明確核准，從 GitHub Actions 的正式 Pages workflow 手動 dispatch，選擇 main，並明確設定確認欄位（目前流程使用 confirm_release=true）；再通過 production Environment 審核後才可更新公開網站。
+- 不可只看 workflow YAML 或文件就宣稱 production Environment 已受保護。每次需要描述保護狀態時，應實際檢查 GitHub Settings → Environments 的 Required reviewers、允許部署分支，以及 main branch protection／rulesets；未查證就明確標示「尚未確認」。
+- 若使用者只要求開發，工作最多做到功能分支與 PR，不得代替使用者合併或發布。
+- 每次正式發布應在 docs/RELEASE_STATUS.md 記錄部署日期、workflow run、實際部署 commit SHA、結果及上一個可回復版本 SHA。程式回復只回復程式碼，不得回滾或重設玩家資料。
+- 正式網站與候選版本的差異，應以實際部署的 commit SHA／release.json 為準，不可把 main 最新 SHA 當成公開版 SHA。
+
+### 預覽與管理中心
+
+- PR 候選版本應優先使用管理中心的 Supabase 私有預覽，而不是推送到公開 Pages。
+- 私有預覽必須由登入管理員在管理中心發起，後端再次以使用者 JWT 及資料庫 sd_is_admin() 驗證權限。
+- 候選版本匯入只讀取固定 Repository 指定 commit 的靜態網站檔案；不得執行候選 commit 的 scripts、套件安裝或建置命令。
+- 預覽檔存於 Private Storage，透過短效 signed URL 讀取；sandbox iframe 不得加入 allow-same-origin，不與正式網站共用登入 session／Cookie／localStorage。
+- 不得把候選版或私有預覽檔放到公開 GitHub Pages；不得把 GitHub 寫入 Token、Supabase service-role／secret key 放進前端、Repository 或公開 build。
+- 私有預覽以訪客隔離模式運行，不能用它證明正式登入、雲端寫入、多人同步等功能已通過驗收。
+
+## 3. 美術方向與品質標準
+
+### 核心視覺
+
+- 整體必須是精緻、神秘、夢幻、具有空間感的星際奇幻夜間遊樂園。
+- 主色為深藍／靛藍、紫羅蘭／薰衣草紫、銀白、香檳金，少量柔和粉紫作輔色；燈光可帶暖金色魔法光暈。
+- 以專案已核准的初始概念圖作為主要美術方向，維持神秘玄幻、優雅、有質感的氣氛。
+- **不要做成幼稚可愛、卡通玩具、夜市攤販或廉價霓虹風格。** 不可只靠增加發光顏色、粒子或零碎裝飾來假裝精緻。
+- 建築、道路、設施與園區家具須有一致的材質、比例、造型語彙和空間規劃；城堡、入口、拱門、窗、塔樓、橋樑與主要設施應彼此呼應。
+- 優先把大型輪廓、建築量體、比例、材質層次、光影及整體構圖做好，再增加小型細節。避免把大量小物件隨意堆在場景。
+- 中央廣場要保持平整、可行走且視覺乾淨；不可擅自加入阻擋玩家的中央凸起或不自然隆起。
+- 不能把整個遊戲改成俯視／上帝視角。預設保持玩家眼睛高度的第一人稱探索，可保留第三人稱切換供查看角色。
+
+### 模型、材質及資產
+
+- 優先使用品質高、授權清楚且可在本專案合法使用的既有模型／資產；不因追求速度任意使用來源不明、無授權或需付費而未經批准的素材。
+- 若以程序化 Three.js 幾何體補足場景，必須維持完整造型、正確比例、自然銜接與統一材質，不以單純增加 primitives 數量當作精緻化。
+- 外部模型／貼圖必須記錄作者、來源網址、授權、下載日期、用途及必要的檔案雜湊；保留授權及來源說明。
+- 先改善城堡、入口、主要遊樂設施、觀測站、中央廣場及主要景觀的大型輪廓，再擴充次要區域。
+- 3D 模型需檢查正面、側面、背面、近景及遠景；角色衣物與建築不能只從單一角度看起來完成。
+- 材質應有石材、金屬、玻璃、晶石、布料、木材等合理差異；避免全部使用同一種亮面塑膠感材質。
+- 光源、陰影、粒子及後處理要克制且考慮效能；不要為每個小裝飾新增即時 PointLight。提供低效能降級策略。
+- 不可為了美術任意更動碰撞範圍、行走高度、互動位置或玩家可行走路徑；如確需調整，必須一起驗證。
+
+## 4. 園區、視角及操作規格
+
+- 園區是可自由探索的 3D 遊樂園，不是靜態展示圖。玩家應能從第一人稱自然環顧、行走、接近建築與搭乘設施。
+- 桌面保留 WASD／方向鍵移動、Shift 奔跑、滑鼠拖曳環顧及 E 互動；滑鼠滾輪依目前設計控制視角縮放。
+- 手機以橫向遊玩為優先，提供全螢幕／橫向提示、左側觸控搖桿、奔跑及情境互動按鈕；核心流程不得要求手機玩家使用鍵盤。
+- 手機安全區、瀏海、瀏覽器工具列及橫向窄螢幕都要納入排版驗收。不能讓主要按鈕、遊戲說明或操作提示被裁切。
+- 左上角保留 2D 園區導覽地圖，顯示入口、城堡、設施、遊戲、服務點及目前位置；多人功能啟用時顯示真正在線玩家。
+- 角色不可穿過建築、地形、設施或主要家具。碰撞至少要涵蓋主要建築、樹木、設施和不可進入區域；不可因修改模型而造成玩家穿模或卡死。
+- 搭乘設施時必須有合理上車點、乘坐跟隨、離座流程及安全下車點；下車不得把玩家放進碰撞體或場景外。
+- 3D／WebGL／CDN 載入失敗時，保留 HTML 遊戲卡片與可用的基本導覽，不得讓首頁完全空白或永久停在準備中。
+- 若世界停在「準備中」、無法移動、互動失效、地圖未載入或畫面空白，優先排查載入順序、JavaScript exception、CDN、WebGL 初始化、canvas 尺寸及初始化 Promise；不可只改文字掩蓋錯誤。
+
+## 5. 旅人角色與服裝
+
+- 預設旅人外觀必須看起來完整、好看且有設計感，不可使用醜陋的臨時剪影、單純球體或未完成佔位角色當作正式外觀。
+- 保留旅人類型、髮型、髮色、膚色、星紋／眼睛光色及服裝的外觀客製化方向；實際可選項需以目前程式和雲端資料為準。
+- 角色工坊應提供即時 3D 預覽，可旋轉檢查；預覽、隨機造型及套用預設不可自動保存。
+- 允許先預覽未解鎖服裝；**預覽鎖定服裝絕不能扣除星塵或變更所有權。** 只有明確解鎖操作且通過伺服器端驗證，才可扣點及記錄所有權。
+- 角色外觀更新不得破壞舊帳號的 appearance JSON、既有服裝所有權或其他玩家同步資料。新增欄位前須先確認 backward compatibility；未經明確批准不可更動資料 schema。
+- 多人同步只顯示真正登入且在線的玩家；不得生成假玩家、假路人或假人氣來填滿場景。
+
+## 6. 遊樂設施與小遊戲設計
+
+### 遊樂園感
+
+- 設施名稱、建築外觀、入口、候乘區、互動提示與實際玩法必須一致。玩家要能從視覺上判斷哪裡可以搭乘、排隊、遊玩或取得服務。
+- 目前既有設施包含星光旋轉木馬、星月茶杯、星河摩天輪、星際自由落體與星際雲霄飛車；修改時要保留既有功能，除非使用者明確要求重設。
+- 星夢入園票亭是園區資訊／服務點，不是小遊戲入口。
+- 射擊、鏡像記憶等遊戲需有自己的專屬建築外觀及清楚入口；不要讓遊戲入口和旁邊設施混淆。
+- 後續可逐步加入排隊區、候乘位置、入座／離座動畫、符合各設施特色的鏡頭、音效與環境聲；音效必須提供音量或關閉選項。
+- 先完成實際可玩的流程（進入、操作、成功／失敗、計分、返回園區），再增加裝飾動畫。
+
+### 遊戲名稱、難度與文案
+
+- 一般主要遊戲區使用「星夢遊戲」等自然名稱；**一般遊戲介面不要使用「成人」、「成人區」、「成人挑戰」等年齡標籤或文案。**
+- 輕鬆／兒童向遊戲只以「星芽遊戲」或「星芽式簡單的遊戲」辨識；星芽遊戲有自己的分類、累積點數與排行榜。
+- 使用者可見的「成人」字樣只保留給未來恐怖模式的明確切換入口，且必須標示「成人限定 18+」。不得把這項例外擴大到普通遊戲、排行榜、星塵或一般設定畫面。
+- 目前遊戲資料內部可能仍有既有分類或欄位名稱；不可只為了更改 UI 文案擅自改資料表、RPC 或成績資料。介面用詞與資料相容性分開處理。
+- 一般主要遊戲的難度不能全部過於簡單；應逐步加入關卡變化、隨機生成、難度曲線及不同挑戰條件。相同遊戲每次進入不應永遠完全相同，但隨機化必須公平、可理解、可測試。
+- 遊戲開始前要有清楚操作說明、目標及完成條件；遊戲結束時要有結果、得分及回到園區的明確出口。
+- 星芽遊戲維持簡單易懂、友善操作；不可把星芽簡單遊戲的難度規則套用到主要遊戲區。
+- 成人星塵與星芽星塵在資料層維持分開計算、分開排行；使用者可見文案不得因此重新引入「成人」標籤。
+- 修復遊戲問題時特別留意霓虹神射手的命中／目標流程、軌道接線的起點和出口辨識，以及遊戲入口和實際場景模型是否一致。
+- 新增遊戲一次以一款為原則；先完成可玩循環、操作、計分、安全、返回園區及測試，再加入大型視覺效果。
+
+## 7. 帳號、管理員及多人互動
+
+- Supabase 是既有帳號、玩家個人資料、服裝外觀、遊戲紀錄、排行榜、探索資料與多人互動的雲端來源；不可另建一套互相衝突的帳號系統。
+- 登入、註冊、登出、密碼重設、個人紀錄與外觀同步，修改時都要測試舊使用者的相容性。
+- 管理中心必須只在通過資料庫端 sd_is_admin() 驗證後顯示及提供功能。不得以 email、暱稱、user_metadata、localStorage 或單純隱藏按鈕判定管理員。
+- 管理員帳號不得出現在一般玩家的公開排行榜、在線名單、公開移動同步或公共聊天流程；管理員登入後仍可查看自己的個人資料及歷史紀錄。
+- 管理員權限與星塵調整等高風險動作必須由後端重新授權；前端隱藏介面不是安全措施。
+- 多人在線列表及 3D 角色只能反映真實登入、目前在線且符合公開顯示條件的玩家；不可建立假訪客、假聊天泡泡或 scripted crowd。
+- 公共聊天室需維持資料庫驗證、暱稱來源、訊息長度限制、頻率限制及管理員排除規則；不可直接信任瀏覽器輸入的 sender 或 nickname。
+- 若要測試多人同步，必須使用兩個真實登入的瀏覽器／裝置 session；單一瀏覽器的 UI 模擬不能當成多人驗收。
+- NPC 目前暫緩。只有在每個 NPC 都有明確身分、外觀、個性、活動時段、路線、對話及互動設計後，才可提出新階段；不得先放入無設計的路人模型。
+
+## 8. Supabase、資料與資訊安全
+
+### 資料保護
+
+- **絕不可重建、清空、重設或替換既有 Supabase 專案。** 必須保留現有帳號、個人資料、appearance JSON、服裝所有權、一般／星芽星塵、遊戲紀錄、聊天室及探索紀錄。
+- 未經使用者對該項變更的明確批准，不得執行 migration、DDL、DROP、TRUNCATE、schema／RLS／RPC 修改、正式資料 UPDATE／DELETE／INSERT 或其他生產資料寫入。
+- 開始任何資料庫工作前，先讀取最新 schema、migrations、RLS policies、RPC／Edge Functions 及資料字典；不要把舊版 supabase/schema.sql 假設為目前生產資料庫的完整真實狀態。
+- 已存在的 migration 版本追蹤可能不完整；建立 migration 前先盤點生產資料庫已套用 migration、Repository SQL 檔及現存物件差異，不可盲目重跑。
+- 執行唯讀檢查時也不得輸出使用者個資、登入憑證、Token 或敏感紀錄到 PR／log。
+
+### 權限、點數與金鑰
+
+- 瀏覽器只允許使用公開 Publishable key；禁止提交 Supabase secret key、service_role、資料庫密碼、JWT 私鑰、管理員憑證或 GitHub 寫入 Token。
+- RLS 是必要防線，但前端仍可被修改。不能信任使用者自行傳入的分數、reward、星塵餘額、服裝所有權或管理員身分。
+- 目前遊戲分數／部分 reward 仍由客戶端計算，競技排行及星塵獎勵尚不能視為完全防偽。不要宣稱目前已完成伺服器權威計分。
+- 未來要強化獎勵可信度，應先設計伺服器權威遊戲回合／一次性 session、結果驗證及不可任意修改的星塵帳本，再在隔離測試環境測試重複請求、競態、偽造、超額及非管理員存取；提出正式 migration 前仍須取得使用者批准。
+- 管理員調整星塵必須有伺服器端授權、原子操作、操作者、目標玩家、delta、原因、餘額及時間紀錄；不得直接更新玩家餘額或信任前端傳入數值。
+- 不得因為功能開發而更動正式使用者的星塵、服裝、帳號、遊戲記錄、聊天、探索或其他既有資料。
+
+## 9. 每日檢查與維護節奏
+
+使用者要求以每日檢查方式持續維護。每次每日檢查／維護批次應至少核對以下項目；**這段規範本身不代表已建立自動排程，也不授權自動寫入或發布。**
+
+1. **GitHub 狀態：** 檢查 main 最新 SHA、開啟中的 PR、每個 PR 的 draft／mergeable／CI 狀態、最近失敗的 Actions、是否有重複或已被取代的候選分支。
+2. **公開版本：** 查實際 Pages workflow 最近成功部署的 commit SHA／release.json；分清 main 候選版、PR 私有預覽版與玩家目前看得到的正式版。
+3. **首頁與世界：** 檢查 index.html、主要 JS、CDN／WebGL 初始化與 fallback；注意永久停在準備中、空白頁、無法移動、碰撞失效及主要操作被遮擋等回報。
+4. **3D 品質：** 檢查城堡與入口輪廓、主要設施模型、角色外觀、第一人稱鏡頭、地圖、光影、材質、碰撞、桌機及手機橫向版；只在實際看過畫面後才下美術驗收結論。
+5. **遊戲流程：** 確認遊戲入口、開始、操作、成功／失敗、計分及返回園區流程；關注主要遊戲難度和隨機變化，以及星芽遊戲分類。
+6. **帳號與多人：** 以唯讀方式檢查 Auth、RLS／Realtime 相關狀態；如需驗證登入與多人功能，使用測試帳號及兩個獨立 session，不碰正式玩家資料。
+7. **安全與資料：** 檢查是否意外新增秘密、公開私人預覽、把候選程式碼當正式版，或引入未經批准的 schema／資料庫變更。
+8. **文件與待辦：** 對照 Roadmap、Release Status、README 及使用者最新回報更新進度；將未驗收、已完成、待擁有者操作事項分開記錄。
+
+每日檢查只做有授權的讀取、測試及功能分支修正；不得因每日檢查自行合併 PR、清除資料、部署 Edge Function、執行 migration 或發布正式網站。
+
+## 10. 測試與完成定義
+
+- 修改前先檢查既有測試；新增功能要加入與行為相符的測試，修 bug 要加入可重現該問題的回歸測試。
+- 依 Repository 現有設定執行 Node tests、JavaScript 語法檢查、首頁 inline JavaScript parse、Supabase Edge Function 語法檢查及相關靜態檢查；不得自行假造測試數字。
+- 測試紀錄必須寫明實際執行的命令／workflow、成功與失敗數、驗證的 commit SHA，以及未涵蓋項目。
+- **結構測試、語法檢查、CI 通過不等於真實瀏覽器視覺驗收。** 它們不能證明 WebGL 畫面漂亮、鏡頭合理、手機操作順暢、碰撞正確、FPS 足夠或多人同步成功。
+- 涉及 3D／UI 時，應使用管理員私有預覽並由使用者在真實瀏覽器檢查桌機及手機橫向畫面；必要時要求使用者提供錯誤截圖或 Console 訊息。
+- 視覺驗收需檢查遠景、近景、斜角、正側背面、字體對齊、按鈕裁切、碰撞通行及效能；不能只看單一截圖。
+- 無法在工具環境實際操作瀏覽器／手機／第二位玩家時，要明確標示「尚未實測」，不可用「已確認正常」取代。
+- PR 說明應列出：變更摘要、檔案、測試結果、預覽方法、人工待驗收項目、Supabase／資料安全影響，以及是否會部署（一般開發 PR 的答案應為否）。
+
+## 11. 未來恐怖模式的特殊限制
+
+- 恐怖／異常世界是未來獨立模式構想，**不是目前已完成或可用的功能**。
+- 必須先讓一般星夢樂園的主世界、設施、角色、操作、帳號與多人功能達到完整且穩定，再由專案擁有者明確批准啟動規劃。
+- 未經可靠成年驗證及管理員明確核准，不得顯示或開啟恐怖模式入口；未來入口才可明確標示「成人限定 18+」。
+- 一般遊戲和星芽遊戲不可因恐怖模式規劃而加上成人標籤或改變現有入口。
+- 恐怖世界應為自成一體的原創世界與規則，避免複製既有小說、遊戲或影視作品的角色、文字及受保護設定。
+- 恐怖模式的內容、資料及進度應與星芽區隔離，並有清楚的進出提示及管理員控制；沒有明確核准不得開始實作。
+
+## 12. 每個開發批次結束前
+
+- 核對工作是否仍在獨立 feature／dev 分支；main、公開網站及正式資料均未被擅自變更。
+- 確認 PR 為 Ready for review、非 Draft，並檢查最新 head SHA、CI 及 mergeable 狀態。
+- 更新受影響的 README、Roadmap、Release Status、測試說明或安全文件；不要只更新 PR 描述而讓 Repository 文件過期。
+- 重新檢查本 AGENT.md 是否需要實質更新。只有出現新的長期規則、使用者偏好、安全界線或反覆出錯的流程時才更新，不為每個小功能製造無意義的規則。
+- 回覆使用者時，以繁體中文說明已完成、尚待人工驗收、是否需要使用者操作，以及 PR／分支連結；不得把尚未合併或尚未部署的候選版說成正式上線。
+- 不可承諾背景執行或稍後交付；當下能完成多少就如實報告多少。
