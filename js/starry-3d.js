@@ -1234,17 +1234,44 @@ function buildMirrorHouse(scene,materials,x,z){
     addMesh(hall,new THREE.CylinderGeometry(0.2,0.26,3.9,16),materials.silverMetal,[xp,1.98,0.1]);
     addMesh(hall,new THREE.TorusGeometry(0.24,0.05,8,24),materials.gold,[xp,3.72,0.1]);
   });
-  const arch=addMesh(hall,new THREE.TorusGeometry(1.25,0.19,16,64),materials.crystal,[0,2.08,0.1]);arch.scale.set(1,1.35,1);
-  addMesh(hall,new THREE.CircleGeometry(1.12,48),new THREE.MeshPhysicalMaterial({
-    color:0x7b7be1,emissive:0x3f348f,emissiveIntensity:0.55,metalness:0.35,roughness:0.12,
-    transparent:true,opacity:0.58,side:THREE.DoubleSide,clearcoat:1
-  }),[0,2.08,0.16],null,false,false);
+  // The mirror portal is a pointed crystal threshold, matching the castle's Gothic architecture.
+  const portalMaterial=new THREE.MeshPhysicalMaterial({
+    color:0x7b8de1,emissive:0x303c8a,emissiveIntensity:0.42,metalness:0.18,roughness:0.2,
+    transparent:true,opacity:0.62,side:THREE.DoubleSide,clearcoat:1,clearcoatRoughness:0.08
+  });
+  addMesh(hall,makeLancetGeometry(2.22,2.6),portalMaterial,[0,0.72,0.16],null,false,false);
+  addMesh(hall,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,0.63,0.24,2.78,2.86),72,0.16,12,false),materials.gold,null,null,false,false);
+  addMesh(hall,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,0.72,0.19,2.48,2.62),64,0.045,8,false),materials.crystal,null,null,false,false);
+  const portalCrest=addMesh(hall,new THREE.OctahedronGeometry(0.18,1),materials.crystal,
+    [0,3.42,0.2],[0.72,1.35,0.72],null,false,false);
+  portalCrest.rotation.z=Math.PI/4;
+  const gableShape=new THREE.Shape();
+  gableShape.moveTo(-3.18,4.0);gableShape.lineTo(-3.08,4.29);
+  gableShape.lineTo(0,5.72);gableShape.lineTo(3.08,4.29);
+  gableShape.lineTo(3.18,4.0);gableShape.closePath();
+  const gableGeometry=new THREE.ExtrudeGeometry(gableShape,{
+    depth:0.16,steps:1,bevelEnabled:true,bevelSegments:2,bevelSize:0.035,bevelThickness:0.025
+  });
+  addMesh(hall,gableGeometry,materials.wall,[0,0,-0.73],null,true,true);
+  const gableRib=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-3.1,4.12,-0.51),new THREE.Vector3(-1.9,4.66,-0.51),
+    new THREE.Vector3(0,5.72,-0.51),new THREE.Vector3(1.9,4.66,-0.51),
+    new THREE.Vector3(3.1,4.12,-0.51)
+  ]);
+  addMesh(hall,new THREE.TubeGeometry(gableRib,64,0.06,8,false),materials.gold,null,null,false,false);
+  [-1,1].forEach(side=>{
+    makeWindow(hall,side*1.55,4.42,-0.5,0.34,0.62,materials.lampGlow);
+    addMesh(hall,new THREE.OctahedronGeometry(0.07,1),materials.crystal,
+      [side*1.55,4.83,-0.48],[0.72,1.3,0.72],null,false,false);
+  });
   for(let i=0;i<5;i++){
     const shard=addMesh(hall,new THREE.BoxGeometry(0.12,2.3,0.14),materials.silverMetal,[-2.0+i,1.92,-0.68]);
     shard.rotation.z=(i-2)*0.11;
   }
   const sign=makeLabelSprite({title:"幻影鏡屋",subtitle:"MIRROR MAZE · MEMORY TRIAL"});
-  if(sign){sign.position.set(0,5.05,0.2);sign.scale.set(4.4,1.18,1);hall.add(sign)}
+  if(sign){sign.position.set(0,5.9,0.2);sign.scale.set(4.4,1.08,1);hall.add(sign)}
   return hall;
 }
 
