@@ -49,3 +49,13 @@ test("castle entrance uses nested lancet trim and stair balustrades", () => {
   assert.match(castle, /Fine twin balustrades finish the grand stair/);
   assert.match(castle, /new THREE\.CylinderGeometry\(0\.032,0\.046,postHeight,10\)/);
 });
+
+test("park threshold repeats the castle lancet motif at three nested depths", () => {
+  const gateStart = source.indexOf("function buildEntranceGate(");
+  const gateEnd = source.indexOf("\\nfunction buildTicketBooth(", gateStart);
+  const gate = source.slice(gateStart, gateEnd);
+  assert.match(gate, /makeLancetArchCurve\\(0,3\\.72,0,6\\.24,3\\.05\\)/);
+  assert.match(gate, /makeLancetArchCurve\\(0,3\\.72,-0\\.04,5\\.72,2\\.78\\)/);
+  assert.match(gate, /makeLancetArchCurve\\(0,3\\.72,-0\\.08,5\\.28,2\\.55\\)/);
+  assert.match(gate, /Repeat the castle's pointed lancet profile/);
+});
