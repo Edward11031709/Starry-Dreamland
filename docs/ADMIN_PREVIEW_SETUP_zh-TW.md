@@ -14,6 +14,7 @@
 - Storage 物件由 Supabase server-side secret 寫入；secret 不會提供給瀏覽器、GitHub Actions 或 repository。
 - Edge Function 只會簽發 5 分鐘短效 URL；Storage bucket 沒有提供一般訪客讀取／列出物件的政策。
 - 管理員預覽 iframe 不使用 `allow-same-origin`，不共享正式頁面的 Cookie／localStorage／Supabase session；預覽以訪客模式運行。
+- 管理員可選擇「另開全螢幕測試分頁」或「頁內快速預覽」。獨立分頁使用整個瀏覽器可視區域（扣除上方版本提示列），適合檢查 3D 園區與手機橫向操作；兩種模式都維持相同 sandbox 隔離，不加入 `allow-same-origin`。
 - 預覽檔案保留在獨立 SHA 前綴下；不會刪除舊版本或覆蓋正式網站。
 
 ## 已完成的 Supabase 設定
@@ -25,11 +26,11 @@
 1. 將候選程式碼推送到公開 repository 的分支或 commit。
 2. 複製候選版本的完整 40 字元 commit SHA。
 3. 以已在資料庫管理員名單中的帳號登入目前已發布的星夢樂園。
-4. 開啟「管理中心」→「私有開發預覽」，貼上完整 SHA，按下「開啟私有預覽」。
-5. Edge Function 會先重新驗證登入 session 與 `sd_is_admin()`，再從 GitHub 匯入該 SHA 的靜態檔案至 Private Storage；完成後才簽發必要檔案的短效 URL。
-6. 預覽在隔離 iframe 中以訪客模式執行。它不會使用正式玩家 session，也不應測試需要雲端寫入的功能。
+4. 開啟「管理中心」→「私有開發預覽」，貼上完整 SHA，優先按下「另開全螢幕測試分頁」。只需快速確認時，也可選擇「頁內快速預覽」。
+5. 新分頁會立即開啟載入畫面，再由 Edge Function 重新驗證登入 session 與 `sd_is_admin()`，從 GitHub 匯入該 SHA 的靜態檔案至 Private Storage，最後簽發必要檔案的短效 URL。
+6. 獨立測試分頁使用整個瀏覽器可視區域；內容仍在 sandbox iframe 中執行，不共享正式 Cookie、localStorage 或登入 session，也不應測試需要正式雲端寫入的功能。
+7. 預覽 URL 約 5 分鐘到期；失效後回管理中心重新開啟該 SHA，即可取得新的短效 URL。
 
-不需要設定 GitHub Repository Secrets，也不需要手動啟動私有上傳 workflow。
 
 ## 正式發布仍然分開
 
