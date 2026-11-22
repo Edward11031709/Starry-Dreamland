@@ -1,6 +1,19 @@
 # 星夢樂園版本與發布狀態
 
-## 2026-11-22 整合開發批次
+## 2026-11-22 最新狀態：整合版已合併，城堡精修續作中
+
+- `main` 已包含 PR #20；合併 commit：`991088dd987617de0937a79ea2178a138a4bb5fc`。
+- PR #17、#18 已關閉，原因是內容已由整合 PR #20 取代；兩份舊 PR 保留於 Closed 歷史，不再列於 Open PR 清單。
+- PR #20 合併後，owner 於 2026-11-22 手動執行 Actions #167（run ID `45004106298`）；`管理員確認後發布正式版` job 與 `發布正式網站` 步驟均成功，部署目標為 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc`。此為目前可確認的公開版來源；尚未直接讀回公開網站的 `release.json` 作外部比對。
+- 目前續作分支：`feature/castle-gothic-architecture-20261122`，從 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc` 建立。
+- 續作內容：城堡主入口與外圍入園門統一多層尖拱語彙，搭配晶石拱心石、階梯金銀雙層欄杆與細柱；新增曲線對稱、階梯及外圍拱門結構測試。
+- 已重新檢查 `AGENT.md`、繁中 README、3D 路線與發布流程；本批次遵守既有分支／人工發布規則，`AGENT.md` 無需修訂。
+- 不修改 Supabase schema、RLS、RPC、migration 或正式玩家資料；不調整星塵、服裝所有權、帳號、遊戲紀錄、聊天或探索資料。
+- Actions run #174（run ID `45004582110`）對程式與測試最新 head `ea749b7755e529952e46f8c59e81fcb15a4adb70` 成功：Node tests **30 passed／0 failed**；Three.js 與 Supabase Edge Function 語法、首頁 inline JavaScript parse 均通過。PR 事件中的正式部署 job 為 skipped。
+- 私有預覽與真實瀏覽器 WebGL、桌機／手機畫質、碰撞與 FPS 尚未完成實際人工驗收；不可將自動化測試當作視覺驗收。
+
+
+## 2026-11-22 整合開發批次（PR #20 合併前的歷史紀錄）
 
 - Repository：`Edward11031709/Starry-Dreamland`；預設分支：`main`。
 - 本批次基準：`main` @ `8f4873fddad924bd00d949eae60d8c41bcb2aac2`（已含 PR #19 的管理員預覽、審核入口與登入恢復變更）。
@@ -14,8 +27,8 @@
 
 - PR #19 已合併至 main，合併 SHA：`8f4873fddad924bd00d949eae60d8c41bcb2aac2`。
 - 對應正式發布 workflow run #163（run ID `45000721665`，2026-11-22）檢查 job 成功，檔案打包與 artifact 上傳成功；Pages 部署步驟失敗，原因為部署步驟找不到同一次 workflow run 的 `github-pages` artifact。
-- 因部署 job 失敗，不可宣稱公開網站已更新至 PR #19；須另外重新檢查／執行正式 Pages 部署。
-- 前次狀態紀錄可確認的最近一次成功 Pages 發布為 Actions #138（2026-11-18）；本批次沒有重新驗證公開 `release.json`。
+- 後續 owner 於 2026-11-22 執行 Actions #167（run ID `45004106298`），正式部署 job 與 `發布正式網站` 步驟成功，部署 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc`；此版本包含 PR #20。
+- 因此 #163 的部署失敗已由 #167 的成功發布取代；本次新開的 PR #21 不在該公開版本內。
 
 ## 安全與發布邊界
 
@@ -25,10 +38,11 @@
 - main branch protection 與 production Environment Required reviewers 必須在 GitHub Settings 另外核對，不可僅憑 workflow YAML 宣稱已完整保護。
 - 程式版本更新或回復不可回滾 Supabase 玩家資料。
 
-## PR #20 最新檢查（2026-11-22）
+## PR #20 合併紀錄（2026-11-22）
 
-- 整合 PR：[#20](https://github.com/Edward11031709/Starry-Dreamland/pull/20)，目前 Draft／Open，尚未合併。
-- 最新候選 SHA：`a784dae19b391edc2036ee9a2a28cf81472318fe`；基底 `main` @ `8f4873fddad924bd00d949eae60d8c41bcb2aac2`，相對 main ahead 12、behind 0，GitHub 回報 mergeable。
-- Actions run #165（run ID `45001921229`）成功：Node tests **27 passed／0 failed**；`js/starry-3d.js` 語法、Supabase Edge Function 語法及首頁 inline JavaScript parse 均通過。正式部署 job 為 skipped。
-- 尚未完成真實瀏覽器 WebGL、角色正／側／背面視覺、桌機／手機碰撞與 FPS 實機驗收；不得把自動測試當成美術驗收。
-- PR #17、#18 保留作為原始工作紀錄；PR #20 合併後再將 #17、#18 關閉為已由整合版取代，不要再各自合併。
+- 整合 PR：[#20](https://github.com/Edward11031709/Starry-Dreamland/pull/20)，已於 2026-11-22 合併至 `main`。
+- Merge commit：`991088dd987617de0937a79ea2178a138a4bb5fc`；整合候選 head：`fd6a693d35a1911650d78d7e0588e8f116547198`。
+- Actions run #166 成功：Node tests **27 passed／0 failed**；JavaScript、Supabase Edge Function 與首頁 inline JavaScript parse 均通過。
+- PR #17、#18 已關閉為由 #20 取代，不再是 Open PR。
+- PR 合併本身不會自動部署；owner 隨後透過 Actions #167 手動發布 `main`，正式部署 job 成功。PR #21 尚未合併，不在此公開版內。
+
