@@ -18,7 +18,7 @@ test("architectural materials use independent albedo, normal and roughness maps"
   assert.match(maps, /new THREE\.DataTexture\(normalData,size,size,THREE\.RGBAFormat\)/);
   assert.match(maps, /new THREE\.DataTexture\(roughData,size,size,THREE\.RGBAFormat\)/);
   assert.match(maps, /normalData\[i\+2\]/);
-  assert.match(maps, /roughBase=kind==="roof"\?0\.58:kind==="paving"\?0\.83:0\.88/);
+  assert.match(maps, /roughBase=kind==="roof"\?0\.58:kind==="paving"\?0\.83:kind==="wood"\?0\.72:0\.88/);
   assert.match(apply, /material\.normalMap=maps\.normalMap/);
   assert.match(apply, /material\.roughnessMap=maps\.roughnessMap/);
   assert.match(apply, /material\.bumpMap=null/);
