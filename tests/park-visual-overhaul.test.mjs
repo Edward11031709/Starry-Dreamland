@@ -54,6 +54,8 @@ test("park entrance is framed by side chapels and a stepped approach", () => {
   assert.match(gate, /Sculpted side chapels/);
   assert.match(gate, /addTower\(wing,0,0,1\.42,2\.25,0\.34,materials,true\)/);
   assert.match(gate, /for\(let step=0;step<4;step\+\+\)/);
+  assert.match(gate, /0\.48\+step\*0\.49/);
+  assert.match(gate, /2\.78/);
   assert.match(gate, /thresholdSeal|TorusGeometry\(0\.82,0\.035/);
 });
 
