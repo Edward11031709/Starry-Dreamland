@@ -6,8 +6,11 @@
       throw new Error("Supabase 專案設定尚未完成。");
     }
     const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm");
+    // Keep Supabase's existing default storage key so current sessions remain valid.
+    // Explicit localStorage persistence keeps the login across page refreshes.
+    const authStorage = window.localStorage;
     window.SD_SUPABASE = createClient(cfg.supabaseUrl, cfg.supabasePublishableKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      auth: { storage: authStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
     window.dispatchEvent(new Event("starry-supabase-ready"));
   } catch (error) {
