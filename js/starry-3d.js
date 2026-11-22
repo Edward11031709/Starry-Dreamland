@@ -518,6 +518,55 @@ function buildCastle(scene,materials){
   pennant.rotation.z=Math.PI/2;
   addMesh(pole,new THREE.OctahedronGeometry(0.065,1),materials.gold,[0,0.86,0],[0.75,1.35,0.75],null,false,false);
  });
+ // Cathedral gable: a clear, high silhouette with carved ribs and jewel-set lancet glazing.
+ const gableShape=new THREE.Shape();
+ gableShape.moveTo(-3.38,4.02);
+ gableShape.lineTo(-3.28,4.3);
+ gableShape.lineTo(0,6.12);
+ gableShape.lineTo(3.28,4.3);
+ gableShape.lineTo(3.38,4.02);
+ gableShape.closePath();
+ const gableGeometry=new THREE.ExtrudeGeometry(gableShape,{
+  depth:0.17,steps:1,bevelEnabled:true,bevelSegments:3,bevelSize:0.045,bevelThickness:0.035,curveSegments:18
+ });
+ addMesh(castle,gableGeometry,materials.wall,[0,0,2.12],null,true,true);
+ const gableEdge=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-3.37,4.08,2.34),new THREE.Vector3(-2.4,4.62,2.34),
+  new THREE.Vector3(-1.25,5.28,2.34),new THREE.Vector3(0,6.12,2.34),
+  new THREE.Vector3(1.25,5.28,2.34),new THREE.Vector3(2.4,4.62,2.34),
+  new THREE.Vector3(3.37,4.08,2.34)
+ ]);
+ addMesh(castle,new THREE.TubeGeometry(gableEdge,72,0.075,10,false),materials.gold,null,null,false,false);
+ const gableInner=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-2.55,4.28,2.36),new THREE.Vector3(-1.55,4.86,2.36),
+  new THREE.Vector3(0,5.65,2.36),new THREE.Vector3(1.55,4.86,2.36),
+  new THREE.Vector3(2.55,4.28,2.36)
+ ]);
+ addMesh(castle,new THREE.TubeGeometry(gableInner,56,0.028,8,false),materials.silverMetal,null,null,false,false);
+ const gableWindowMat=new THREE.MeshStandardMaterial({color:0xc9c6f2,emissive:0x54458f,emissiveIntensity:0.52,roughness:0.24,metalness:0.18});
+ [-1.25,1.25].forEach(x=>{
+  makeWindow(castle,x,4.78,2.31,0.46,0.76,gableWindowMat);
+  addMesh(castle,new THREE.BoxGeometry(0.035,0.68,0.045),materials.gold,[x,4.78,2.42],null,false,false);
+  addMesh(castle,new THREE.OctahedronGeometry(0.065,1),materials.crystal,[x,5.22,2.42],[0.72,1.3,0.72],null,false,false);
+ });
+ const gableCrest=addMesh(castle,new THREE.OctahedronGeometry(0.25,1),materials.crystal,[0,5.87,2.39],[0.76,1.42,0.76],null,false,false);
+ gableCrest.rotation.z=Math.PI/4;
+ // Tapered facade buttresses, stone plinths and door leaves add depth at player eye level.
+ [-1,1].forEach(side=>{
+  const buttress=addMesh(castle,new THREE.CylinderGeometry(0.18,0.34,3.5,6),materials.darkStone,[side*3.16,2.14,2.24]);
+  buttress.rotation.y=Math.PI/6;
+  addMesh(castle,new THREE.CylinderGeometry(0.39,0.42,0.18,8),materials.gold,[side*3.16,0.43,2.24]);
+  addMesh(castle,new THREE.CylinderGeometry(0.27,0.3,0.14,8),materials.trim,[side*3.16,3.91,2.24]);
+  const shoulder=addMesh(castle,new THREE.OctahedronGeometry(0.2,1),materials.crystal,[side*3.16,4.12,2.24],[0.72,1.55,0.72],null,false,false);
+  shoulder.rotation.z=side*0.12;
+ });
+ [-0.34,0.34].forEach(x=>{
+  addMesh(castle,new THREE.BoxGeometry(0.61,1.24,0.065),materials.wood,[x,1.53,2.31]);
+  addMesh(castle,new THREE.BoxGeometry(0.48,1.03,0.035),materials.darkStone,[x,1.54,2.36]);
+  addMesh(castle,new THREE.BoxGeometry(0.035,0.92,0.022),materials.gold,[x,1.54,2.39],null,false,false);
+  addMesh(castle,new THREE.SphereGeometry(0.055,12,10),materials.gold,[x+(x<0?0.19:-0.19),1.54,2.42],null,false,false);
+ });
+ addMesh(castle,new THREE.BoxGeometry(1.54,0.13,0.24),materials.trim,[0,0.77,2.34],null,false,false);
  const light=new THREE.PointLight(0xb9a5ff,18,20,2);light.position.set(0,5.8,1.5);castle.add(light);
  const warm=new THREE.PointLight(0xffd58e,13,14,2);warm.position.set(0,3.2,3.4);castle.add(warm);
  // A low circular garden rail gives the keep a finished base without blocking the path.
