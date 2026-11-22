@@ -1,5 +1,17 @@
 # 星夢樂園版本與發布狀態
 
+## 2026-11-22 最新狀態：整合版已合併，城堡精修續作中
+
+- `main` 已包含 PR #20；合併 commit：`991088dd987617de0937a79ea2178a138a4bb5fc`。
+- PR #17、#18 已關閉，原因是內容已由整合 PR #20 取代；兩份舊 PR 保留於 Closed 歷史，不再列於 Open PR 清單。
+- PR #20 候選內容已合併，但合併本身不代表 GitHub Pages 已更新；本次尚未執行正式發布，也未重新驗證公開網站 `release.json`。
+- 目前續作分支：`feature/castle-gothic-architecture-20261122`，從 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc` 建立。
+- 續作內容：城堡主入口雙層尖拱、晶石拱心石、階梯金銀雙層欄杆與細柱；新增尖拱曲線與結構測試。
+- 已重新檢查 `AGENT.md`、繁中 README、3D 路線與發布流程；本批次遵守既有分支／人工發布規則，`AGENT.md` 無需修訂。
+- 不修改 Supabase schema、RLS、RPC、migration 或正式玩家資料；不調整星塵、服裝所有權、帳號、遊戲紀錄、聊天或探索資料。
+- 目前這輪尚待 CI 與私有預覽驗收；沒有做真實瀏覽器 WebGL、桌機／手機畫質或 FPS 實測。
+
+
 ## 2026-11-22 整合開發批次
 
 - Repository：`Edward11031709/Starry-Dreamland`；預設分支：`main`。
@@ -25,10 +37,11 @@
 - main branch protection 與 production Environment Required reviewers 必須在 GitHub Settings 另外核對，不可僅憑 workflow YAML 宣稱已完整保護。
 - 程式版本更新或回復不可回滾 Supabase 玩家資料。
 
-## PR #20 最新檢查（2026-11-22）
+## PR #20 合併紀錄（2026-11-22）
 
-- 整合 PR：[#20](https://github.com/Edward11031709/Starry-Dreamland/pull/20)，目前 Draft／Open，尚未合併。
-- 最新候選 SHA：`a784dae19b391edc2036ee9a2a28cf81472318fe`；基底 `main` @ `8f4873fddad924bd00d949eae60d8c41bcb2aac2`，相對 main ahead 12、behind 0，GitHub 回報 mergeable。
-- Actions run #165（run ID `45001921229`）成功：Node tests **27 passed／0 failed**；`js/starry-3d.js` 語法、Supabase Edge Function 語法及首頁 inline JavaScript parse 均通過。正式部署 job 為 skipped。
-- 尚未完成真實瀏覽器 WebGL、角色正／側／背面視覺、桌機／手機碰撞與 FPS 實機驗收；不得把自動測試當成美術驗收。
-- PR #17、#18 保留作為原始工作紀錄；PR #20 合併後再將 #17、#18 關閉為已由整合版取代，不要再各自合併。
+- 整合 PR：[#20](https://github.com/Edward11031709/Starry-Dreamland/pull/20)，已於 2026-11-22 合併至 `main`。
+- Merge commit：`991088dd987617de0937a79ea2178a138a4bb5fc`；整合候選 head：`fd6a693d35a1911650d78d7e0588e8f116547198`。
+- Actions run #166 成功：Node tests **27 passed／0 failed**；JavaScript、Supabase Edge Function 與首頁 inline JavaScript parse 均通過。
+- PR #17、#18 已關閉為由 #20 取代，不再是 Open PR。
+- 合併後仍未因此觸發正式 Pages 部署；公開版應以實際 production workflow 與 `release.json` SHA 核對。
+
