@@ -211,9 +211,7 @@ function addCrystal(parent, x, y, z, size, color) {
 function createTree(parent,x,z,scale,materials){
  const tree=new THREE.Group();tree.position.set(x,0.62,z);tree.scale.setScalar(scale);parent.add(tree);
  const wood=materials.wood||makeMaterial(0x3b2e4c,0.84,0.12);
- const foliageA=materials.foliageA||makeMaterial(0x344b67,0.92,0.04);
- const foliageB=materials.foliageB||makeMaterial(0x526184,0.92,0.04);
- const foliageC=materials.foliageC||makeMaterial(0x756b98,0.9,0.05);
+ const foliageA=materials.foliageA||makeMaterial(0x405775,0.95,0.02);
  const silver=materials.silverMetal||makeMaterial(0xb8c9e2,0.3,0.52);
  const gold=materials.gold||makeMaterial(0xe9d09a,0.28,0.52);
  addMesh(tree,new THREE.CylinderGeometry(0.42,0.5,0.14,24),materials.darkStone,[0,0.07,0]);
@@ -224,40 +222,52 @@ function createTree(parent,x,z,scale,materials){
   new THREE.Vector2(0.1,2.08),new THREE.Vector2(0.045,2.34),new THREE.Vector2(0,2.42)
  ];
  addMesh(tree,new THREE.LatheGeometry(trunkProfile,16),wood,[0,0.14,0]);
- // Five curved limbs open the canopy into a wide moonlit silhouette instead of stacked pointed cones.
+
+ // Five sculpted structural limbs share one instanced draw call.
+ const branchGeometry=new THREE.CylinderGeometry(0.035,0.065,1.25,7);
+ const branches=new THREE.InstancedMesh(branchGeometry,silver,5);
+ const branchDummy=new THREE.Object3D();
  for(let branch=0;branch<5;branch++){
   const angle=branch/5*Math.PI*2+0.24;
-  const points=[
-   new THREE.Vector3(Math.cos(angle)*0.08,0.94,Math.sin(angle)*0.08),
-   new THREE.Vector3(Math.cos(angle)*0.32,1.23,Math.sin(angle)*0.32),
-   new THREE.Vector3(Math.cos(angle)*0.62,1.58,Math.sin(angle)*0.62),
-   new THREE.Vector3(Math.cos(angle)*0.9,1.78,Math.sin(angle)*0.9)
-  ];
-  addMesh(tree,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),24,0.055,8,false),silver,null,null,false,false);
+  const from=new THREE.Vector3(0,1.15,0);
+  const to=new THREE.Vector3(Math.cos(angle)*0.92,1.94,Math.sin(angle)*0.92);
+  const direction=to.clone().sub(from);
+  branchDummy.position.copy(from).add(to).multiplyScalar(0.5);
+  branchDummy.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.clone().normalize());
+  branchDummy.scale.set(1,direction.length()/1.25,1);
+  branchDummy.updateMatrix();
+  branches.setMatrixAt(branch,branchDummy.matrix);
  }
+ branches.instanceMatrix.needsUpdate=true;
+ branches.castShadow=false;branches.receiveShadow=true;
+ tree.add(branches);
+
+ // Six overlapping foliage masses share one instanced batch, with per-instance colour variation.
  const canopyGeometry=new THREE.DodecahedronGeometry(0.72,1);
+ const canopyInstances=new THREE.InstancedMesh(canopyGeometry,foliageA,6);
  const canopyClusters=[
-  {position:[0,1.94,0],scale:[1.22,0.78,1.12],material:foliageA,rotation:0.12},
-  {position:[-0.58,1.65,0.04],scale:[0.76,0.72,0.83],material:foliageB,rotation:0.4},
-  {position:[0.56,1.67,-0.06],scale:[0.78,0.7,0.82],material:foliageC,rotation:-0.34},
-  {position:[0,1.54,0.58],scale:[0.82,0.68,0.72],material:foliageB,rotation:0.22},
-  {position:[0.08,1.62,-0.58],scale:[0.78,0.7,0.74],material:foliageA,rotation:-0.28},
-  {position:[0,2.36,0],scale:[0.68,0.7,0.68],material:foliageC,rotation:0.18}
+  {position:[0,1.94,0],scale:[1.22,0.78,1.12],rotation:0.12,color:0x405775},
+  {position:[-0.58,1.65,0.04],scale:[0.76,0.72,0.83],rotation:0.4,color:0x526184},
+  {position:[0.56,1.67,-0.06],scale:[0.78,0.7,0.82],rotation:-0.34,color:0x756b98},
+  {position:[0,1.54,0.58],scale:[0.82,0.68,0.72],rotation:0.22,color:0x56658a},
+  {position:[0.08,1.62,-0.58],scale:[0.78,0.7,0.74],rotation:-0.28,color:0x405775},
+  {position:[0,2.36,0],scale:[0.68,0.7,0.68],rotation:0.18,color:0x756b98}
  ];
+ const canopyDummy=new THREE.Object3D();
  canopyClusters.forEach((cluster,index)=>{
-  const canopy=addMesh(tree,canopyGeometry,cluster.material,cluster.position,cluster.scale,false,true);
-  canopy.rotation.y=cluster.rotation+index*0.13;
+  canopyDummy.position.set(...cluster.position);
+  canopyDummy.rotation.set(0,cluster.rotation,0);
+  canopyDummy.scale.set(...cluster.scale);
+  canopyDummy.updateMatrix();
+  canopyInstances.setMatrixAt(index,canopyDummy.matrix);
+  canopyInstances.setColorAt(index,new THREE.Color(cluster.color));
  });
- // Fine branchlets add depth at walking height without cluttering the paths.
- for(let spray=0;spray<10;spray++){
-  const angle=spray/10*Math.PI*2;
-  const branchlet=new THREE.CatmullRomCurve3([
-   new THREE.Vector3(Math.cos(angle)*0.42,1.55,Math.sin(angle)*0.42),
-   new THREE.Vector3(Math.cos(angle)*0.74,1.92,Math.sin(angle)*0.74),
-   new THREE.Vector3(Math.cos(angle)*1.02,1.98+Math.sin(spray*1.3)*0.12,Math.sin(angle)*1.02)
-  ]);
-  addMesh(tree,new THREE.TubeGeometry(branchlet,14,0.018,5,false),spray%2?gold:silver,null,null,false,false);
- }
+ canopyInstances.instanceMatrix.needsUpdate=true;
+ if(canopyInstances.instanceColor)canopyInstances.instanceColor.needsUpdate=true;
+ canopyInstances.castShadow=true;canopyInstances.receiveShadow=true;
+ tree.add(canopyInstances);
+
+ // A single orbital halo and crystal crown finish the recognisable moonlit tree silhouette.
  const halo=addMesh(tree,new THREE.TorusGeometry(0.62,0.022,6,56),gold,[0,2.18,0],[1.25,1,0.88],false,false);
  halo.rotation.x=Math.PI/2;halo.rotation.z=0.18;
  const crown=addMesh(tree,new THREE.OctahedronGeometry(0.17,1),materials.crystal||silver,[0,2.62,0],[0.68,1.45,0.68],null,false,false);
