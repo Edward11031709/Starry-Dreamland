@@ -165,7 +165,7 @@ function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
   const heightPixels=heightCtx.getImageData(0,0,size,size).data;
   const normalData=new Uint8Array(size*size*4);
   const roughData=new Uint8Array(size*size*4);
-  const roughBase=kind==="roof"?0.58:kind==="paving"?0.83:0.88;
+  const roughBase=kind==="roof"?0.58:kind==="paving"?0.83:kind==="wood"?0.72:0.88;
   const strength=kind==="roof"?3.2:kind==="paving"?2.6:2.1;
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const i=(y*size+x)*4;
@@ -189,6 +189,7 @@ function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
     texture.colorSpace=THREE.SRGBColorSpace;
     texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
     texture.repeat.set(repeatX,repeatY);
+    texture.anisotropy=8;
     return texture;
   };
   const normalMap=new THREE.DataTexture(normalData,size,size,THREE.RGBAFormat);
@@ -198,6 +199,7 @@ function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
   normalMap.minFilter=THREE.LinearMipmapLinearFilter;
   normalMap.generateMipmaps=true;
   normalMap.flipY=true;
+  normalMap.anisotropy=8;
   normalMap.needsUpdate=true;
   normalMap.colorSpace=THREE.NoColorSpace;
   const roughnessMap=new THREE.DataTexture(roughData,size,size,THREE.RGBAFormat);
@@ -207,6 +209,7 @@ function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
   roughnessMap.minFilter=THREE.LinearMipmapLinearFilter;
   roughnessMap.generateMipmaps=true;
   roughnessMap.flipY=true;
+  roughnessMap.anisotropy=8;
   roughnessMap.needsUpdate=true;
   roughnessMap.colorSpace=THREE.NoColorSpace;
   return {map:makeCanvasTexture(albedo),normalMap,roughnessMap};
