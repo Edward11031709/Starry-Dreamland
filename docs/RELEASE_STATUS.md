@@ -7,7 +7,10 @@
 - 本候選變更包含獨立 Albedo／Normal／Roughness 貼圖、PMREM 環境反射、選擇性高光光暈、柔邊接觸陰影、行動裝置後處理解析度分級，以及減少裝飾燈即時 PointLight 數量。
 - 本候選尚未完成真實 WebGL shader／視覺／FPS 驗收；尚未匯入外部 GLB 模型或外部貼圖，因此不能宣稱模型本身已達手遊資產品質。
 - 不修改 Supabase schema、RLS、RPC、migration、Auth 或任何正式玩家資料；不修改星塵、服裝所有權、遊戲紀錄、聊天或探索資料。
-- PR 尚待建立與 CI 驗證；不合併、不觸發正式發布。
+- PR #24「升級星夢樂園手遊級 PBR 材質與電影感渲染」已建立為 Ready for review（非 Draft），目前 open、尚未合併；基底為 main @ `549443d377c5db5e1ad9abb6f045bc90311eeec0`。
+- PR head：`4a20e57957b033d0a48abd1707a89af315e3d204`；變更 4 個檔案（Three.js 渲染、7 項新增結構測試、3D Roadmap、Release Status）。
+- Actions run #186（run ID `45030493500`）成功：Node tests **53 passed／0 failed**，Three.js／Supabase Edge Function 語法檢查及首頁 inline JavaScript parse 均通過。
+- PR #24 的 `管理員確認後發布正式版` job 為 skipped；本 PR 沒有合併或發布公開網站。仍待管理員私有預覽及真實 WebGL shader、材質反射、bloom、桌機／手機橫向與 FPS 人工驗收。
 
 
 ## 歷史紀錄：PR #23 合併前的候選狀態（2026-11-22）
