@@ -1176,6 +1176,32 @@ function buildShootingGallery(scene,materials,x,z){
   addMesh(hall,new THREE.TorusGeometry(3.92,0.1,8,72),materials.gold,[0,0.28,0]).rotation.x=Math.PI/2;
   addMesh(hall,new THREE.BoxGeometry(7.0,3.2,1.0),materials.wall,[0,2.0,-1.1]);
   addMesh(hall,new THREE.BoxGeometry(7.25,0.18,1.2),materials.trim,[0,3.65,-1.1]);
+  const gableShape=new THREE.Shape();
+  gableShape.moveTo(-3.58,3.62);gableShape.lineTo(-3.48,3.94);
+  gableShape.lineTo(0,5.62);gableShape.lineTo(3.48,3.94);
+  gableShape.lineTo(3.58,3.62);gableShape.closePath();
+  const gableGeometry=new THREE.ExtrudeGeometry(gableShape,{
+    depth:0.16,steps:1,bevelEnabled:true,bevelSegments:2,bevelSize:0.035,bevelThickness:0.025
+  });
+  addMesh(hall,gableGeometry,materials.wall,[0,0,-0.54],null,true,true);
+  const gableRidge=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-3.5,3.78,-0.34),new THREE.Vector3(-2.1,4.45,-0.34),
+    new THREE.Vector3(0,5.62,-0.34),new THREE.Vector3(2.1,4.45,-0.34),
+    new THREE.Vector3(3.5,3.78,-0.34)
+  ]);
+  addMesh(hall,new THREE.TubeGeometry(gableRidge,64,0.065,8,false),materials.gold,null,null,false,false);
+  [-1,1].forEach(side=>{
+    makeWindow(hall,side*1.55,4.34,-0.34,0.36,0.68,materials.lampGlow);
+    addMesh(hall,new THREE.OctahedronGeometry(0.075,1),materials.crystal,
+      [side*1.55,4.77,-0.31],[0.72,1.35,0.72],null,false,false);
+  });
+  const gableCrest=addMesh(hall,new THREE.OctahedronGeometry(0.22,1),materials.crystal,[0,5.35,-0.31],[0.72,1.4,0.72],null,false,false);
+  gableCrest.rotation.z=Math.PI/4;
+  // A broad pointed entry portal frames the open shooting gallery.
+  const galleryArch=addMesh(hall,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,0.58,0.74,5.4,2.72),72,0.095,8,false),materials.gold,null,null,false,false);
+  const galleryArchInner=addMesh(hall,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,0.66,0.68,5.12,2.48),64,0.028,6,false),materials.crystal,null,null,false,false);
   [-3.25,3.25].forEach(xp=>{
     addMesh(hall,new THREE.CylinderGeometry(0.18,0.22,3.75,16),materials.silverMetal,[xp,1.9,0.2]);
     addMesh(hall,new THREE.CylinderGeometry(0.26,0.26,0.14,16),materials.gold,[xp,3.78,0.2]);
@@ -1193,7 +1219,7 @@ function buildShootingGallery(scene,materials,x,z){
     addMesh(hall,new THREE.SphereGeometry(0.1,12,10),materials.lampGlow,[xp,3.0,-0.5],null,false,false);
   }
   const sign=makeLabelSprite({title:"霓虹神射手",subtitle:"NEON SHOOTING GALLERY · PLAY"});
-  if(sign){sign.position.set(0,5.15,0.15);sign.scale.set(4.8,1.28,1);hall.add(sign)}
+  if(sign){sign.position.set(0,5.85,0.1);sign.scale.set(4.8,1.12,1);hall.add(sign)}
   addMesh(hall,new THREE.TorusGeometry(0.2,0.035,8,28),materials.gold,[0,1.55,0.78]);
   return hall;
 }
