@@ -133,7 +133,7 @@ Supabase stores player profiles and game records. Email sign-up/sign-in, sign-ou
 
 ## Deployment
 
-The repository contains a GitHub Actions Pages workflow. Pushing to the main branch triggers deployment. Three.js is loaded from a pinned CDN version; if the CDN is unavailable, the game cards still provide access to the games.
+The repository contains a GitHub Actions Pages workflow. Updating main does not deploy automatically; an owner-approved GitHub Actions workflow dispatch is required to publish the public site. Three.js is loaded from a pinned CDN version; if the CDN is unavailable, the game cards still provide access to the games.
 
 ## Deferred idea: Anomaly / horror-world mode
 
