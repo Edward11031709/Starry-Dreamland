@@ -1,0 +1,77 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+
+function section(startMarker, endMarker) {
+  const start = source.indexOf(startMarker);
+  const end = source.indexOf(endMarker, start);
+  assert.notEqual(start, -1, "missing section start: " + startMarker);
+  assert.notEqual(end, -1, "missing section end: " + endMarker);
+  return source.slice(start, end);
+}
+
+test("architectural materials use independent albedo, normal and roughness maps", () => {
+  const maps = section("function createPbrSurfaceMaps(", "function applyPattern(");
+  const apply = section("function applyPattern(", "function createReflectionEnvironment(");
+  assert.match(maps, /new THREE\.DataTexture\(normalData,size,size,THREE\.RGBAFormat\)/);
+  assert.match(maps, /new THREE\.DataTexture\(roughData,size,size,THREE\.RGBAFormat\)/);
+  assert.match(maps, /normalData\[i\+2\]/);
+  assert.match(maps, /roughBase=kind==="roof"\?0\.58:kind==="paving"\?0\.83:0\.88/);
+  assert.match(apply, /material\.normalMap=maps\.normalMap/);
+  assert.match(apply, /material\.roughnessMap=maps\.roughnessMap/);
+  assert.match(apply, /material\.bumpMap=null/);
+});
+
+test("reflection lighting is baked through PMREM and stored on the scene", () => {
+  const environment = section("function createReflectionEnvironment(", "function createCinematicPostFX(");
+  assert.match(environment, /THREE\.EquirectangularReflectionMapping/);
+  assert.match(environment, /new THREE\.PMREMGenerator\(renderer\)/);
+  assert.match(environment, /generator\.fromEquirectangular\(source\)/);
+  assert.match(environment, /scene\.environment=target\.texture/);
+  assert.match(environment, /scene\.environmentIntensity=0\.72/);
+  assert.match(environment, /generator\?\.dispose\(\)/);
+});
+
+test("selective highlight glow has a mobile quality tier and standard-render fallback", () => {
+  const post = section("function createCinematicPostFX(", "function makeMaterial(");
+  assert.match(post, /const scale=isSmall\?0\.78:1/);
+  assert.match(post, /new THREE\.WebGLRenderTarget/);
+  assert.match(post, /brightSample/);
+  assert.match(post, /bloomStrength:\{value:isSmall\?0\.28:0\.38\}/);
+  assert.match(post, /renderer\.toneMapping=THREE\.NoToneMapping/);
+  assert.match(post, /post-processing failed; using standard renderer/);
+  assert.match(post, /renderer\.render\(scene,camera\);return false/);
+});
+
+test("world disposal releases post-processing and reflection render targets", () => {
+  const disposal = section("function disposeWorld(", "function buildPlayer(");
+  assert.match(disposal, /world\.postFX\?\.dispose\(\)/);
+  assert.match(disposal, /world\.reflectionTarget\?\.dispose\(\)/);
+});
+
+test("scene render and resize both use the mobile-aware post-processing target", () => {
+  const mount = section("function mount(host)", "const avatarPreviews=");
+  assert.match(mount, /createReflectionEnvironment\(renderer,scene\)/);
+  assert.match(mount, /createCinematicPostFX\(renderer,width,height,isSmall\)/);
+  assert.match(mount, /if\(postFX\)postFX\.render\(scene,camera\)/);
+  assert.match(mount, /postFX\?\.setSize\(w,h,renderer\.getPixelRatio\(\)\)/);
+});
+
+test("hero structures receive soft contact shadows instead of extra point lights", () => {
+  const environment = section("function buildEnvironment(", "function createParkMotes(");
+  assert.match(environment, /SoftContactShadow/);
+  assert.match(environment, /new THREE\.MeshBasicMaterial\(\{\s*map:shadowTexture/);
+  assert.match(environment, /addContactShadow\(0,-18\.2,13\.2,12\.4,0\.79\)/);
+  assert.match(environment, /addContactShadow\(-30,-16\.5,9\.2,8\.5,0\.895\)/);
+  assert.match(environment, /addContactShadow\(-4\.8,30\.5,6\.2,5\.4,0\.79\)/);
+});
+
+test("path lanterns keep emissive glow but cap local real-time lights to one in five", () => {
+  const environment = section("function buildEnvironment(", "function createParkMotes(");
+  const lamps = section("function addParkLamp(", "  [\n    [-4,25]");
+  assert.match(lamps, /function addParkLamp\(x,z,scale=1,hasLocalLight=false\)/);
+  assert.match(lamps, /if\(hasLocalLight\)\{const glow=new THREE\.PointLight/);
+  assert.match(environment, /addParkLamp\(p\[0\],p\[1\],i%4===0\?1\.12:1,i%5===0\)/);
+});
