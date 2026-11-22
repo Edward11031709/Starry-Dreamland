@@ -1309,17 +1309,17 @@ function buildEnvironment(scene) {
   // A continuous silver balustrade finishes the floating-island edge without entering the walkable radius.
   const edgeRail=new THREE.Group();edgeRail.name="FloatingIslandPerimeterBalustrade";island.add(edgeRail);
   [1.05,1.62].forEach((height,index)=>{
-    const rail=addMesh(edgeRail,new THREE.TorusGeometry(41.42,index===0?0.055:0.07,8,192),
+    const rail=addMesh(edgeRail,new THREE.TorusGeometry(42.7,index===0?0.055:0.07,8,192),
       index===0?materials.gold:materials.silverMetal,[0,height,0],null,false,false);
     rail.rotation.x=Math.PI/2;
   });
   const postGeometry=new THREE.CylinderGeometry(0.065,0.09,0.86,8);
-  const postInstances=new THREE.InstancedMesh(postGeometry,materials.silverMetal,64);
+  const postInstances=new THREE.InstancedMesh(postGeometry,materials.silverMetal,128);
   const capGeometry=new THREE.OctahedronGeometry(0.09,0);
-  const capInstances=new THREE.InstancedMesh(capGeometry,materials.crystal,64);
+  const capInstances=new THREE.InstancedMesh(capGeometry,materials.crystal,128);
   const railDummy=new THREE.Object3D();
-  for(let i=0;i<64;i++){
-    const angle=i/64*Math.PI*2, radius=41.42;
+  for(let i=0;i<128;i++){
+    const angle=i/128*Math.PI*2, radius=42.7;
     railDummy.position.set(Math.sin(angle)*radius,1.31,Math.cos(angle)*radius);
     railDummy.rotation.set(0,-angle,0);railDummy.updateMatrix();
     postInstances.setMatrixAt(i,railDummy.matrix);
