@@ -702,31 +702,87 @@ function buildEntranceGate(scene,materials){
 }
 
 function buildTicketBooth(scene,materials,x,z){
-  const booth=new THREE.Group();booth.position.set(x,0.72,z);booth.userData.action="ticket-booth";scene.add(booth);
-  addMesh(booth,new THREE.CylinderGeometry(2.25,2.4,0.24,40),materials.darkStone,[0,0.12,0]);
-  addMesh(booth,new THREE.TorusGeometry(2.2,0.085,8,64),materials.gold,[0,0.28,0]).rotation.x=Math.PI/2;
-  addMesh(booth,new THREE.BoxGeometry(3.25,1.78,2.2),materials.wall,[0,1.2,0]);
-  addMesh(booth,new THREE.BoxGeometry(3.42,0.14,2.36),materials.trim,[0,2.12,0]);
-  [-1.38,1.38].forEach(xp=>{
-    addMesh(booth,new THREE.CylinderGeometry(0.16,0.2,2.56,16),materials.silverMetal,[xp,1.4,1.0]);
-    addMesh(booth,new THREE.CylinderGeometry(0.25,0.25,0.13,16),materials.gold,[xp,2.63,1.0]);
-    addMesh(booth,new THREE.SphereGeometry(0.16,14,10),materials.crystal,[xp,2.79,1.0],null,false,false);
+  const booth=new THREE.Group();booth.name="StarDreamTicketPavilion";
+  booth.position.set(x,0.72,z);booth.userData.action="ticket-booth";scene.add(booth);
+  // A broad octagonal stone base and a sculpted lantern-like pavilion replace the small box kiosk.
+  addMesh(booth,new THREE.CylinderGeometry(1.78,1.95,0.28,10),materials.darkStone,[0,0.14,0]);
+  const baseRing=addMesh(booth,new THREE.TorusGeometry(1.76,0.08,9,72),materials.gold,[0,0.29,0]);
+  baseRing.rotation.x=Math.PI/2;
+  addMesh(booth,new THREE.CylinderGeometry(1.58,1.62,0.08,10),materials.top,[0,0.32,0]);
+  addMesh(booth,new THREE.CylinderGeometry(1.42,1.52,1.66,10),materials.wall,[0,1.19,0]);
+  addMesh(booth,new THREE.CylinderGeometry(1.48,1.52,0.13,10),materials.trim,[0,2.04,0]);
+  addMesh(booth,new THREE.CylinderGeometry(1.34,1.38,0.07,10),materials.darkStone,[0,2.14,0]);
+
+  // Eight slim pilasters and paired collars give the octagonal shell a crafted rhythm.
+  for(let i=0;i<8;i++){
+    const angle=i/8*Math.PI*2+Math.PI/8;
+    const px=Math.cos(angle)*1.43,pz=Math.sin(angle)*1.43;
+    addMesh(booth,new THREE.CylinderGeometry(0.06,0.09,1.68,8),materials.silverMetal,[px,1.18,pz],null,false,false);
+    [0.42,1.98].forEach(y=>{
+      addMesh(booth,new THREE.CylinderGeometry(0.12,0.12,0.085,10),materials.gold,[px,y,pz],null,false,false);
+    });
+    const stud=addMesh(booth,new THREE.OctahedronGeometry(0.075,1),materials.crystal,
+      [px,2.11,pz],[0.72,1.35,0.72],null,false,false);
+    stud.rotation.y=angle;
+  }
+
+  // A forward-facing lancet information window and a low service counter.
+  addMesh(booth,makeLancetGeometry(1.42,1.35),materials.darkStone,[0,1.24,1.29],null,false,false);
+  addMesh(booth,makeLancetGeometry(1.18,1.12),new THREE.MeshPhysicalMaterial({
+    color:0x9eb4e2,emissive:0x322c68,emissiveIntensity:0.22,
+    roughness:0.22,metalness:0.18,transparent:true,opacity:0.78,clearcoat:1,
+    side:THREE.DoubleSide
+  }),[0,1.24,1.32],null,false,false);
+  const windowArch=addMesh(booth,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,0.55,1.36,1.62,1.55),56,0.055,8,false),
+    materials.gold,null,null,false,false);
+  const innerArch=addMesh(booth,new THREE.TubeGeometry(
+    makeLancetArchCurve(0,0.62,1.39,1.37,1.39),52,0.022,6,false),
+    materials.silverMetal,null,null,false,false);
+  addMesh(booth,new THREE.BoxGeometry(1.62,0.13,0.52),materials.darkStone,[0,0.82,1.3]);
+  addMesh(booth,new THREE.BoxGeometry(1.72,0.085,0.6),materials.gold,[0,0.91,1.35]);
+  addMesh(booth,new THREE.BoxGeometry(1.48,0.055,0.38),materials.wood,[0,0.98,1.36],null,false,false);
+  addMesh(booth,new THREE.OctahedronGeometry(0.13,1),materials.crystal,[0,1.39,1.38],[0.7,1.35,0.7],null,false,false);
+
+  // A tapered multi-ring lantern roof echoes the castle spires without reading as a plain cone.
+  const roofProfile=[
+    new THREE.Vector2(0,0),new THREE.Vector2(1.55,0),new THREE.Vector2(1.48,0.12),
+    new THREE.Vector2(1.22,0.28),new THREE.Vector2(0.92,0.52),
+    new THREE.Vector2(0.62,0.78),new THREE.Vector2(0.34,1.02),
+    new THREE.Vector2(0.13,1.2),new THREE.Vector2(0,1.28)
+  ];
+  addMesh(booth,new THREE.LatheGeometry(roofProfile,40),materials.roof,[0,2.17,0]);
+  [0.16,0.48,0.78,1.05].forEach((height,index)=>{
+    const radius=[1.43,1.13,0.78,0.42][index];
+    const ring=addMesh(booth,new THREE.TorusGeometry(radius,0.026,6,56),
+      index%2?materials.gold:materials.silverMetal,[0,2.22+height,0],null,false,false);
+    ring.rotation.x=Math.PI/2;
   });
-  const roof=addMesh(booth,new THREE.ConeGeometry(2.28,1.28,6),materials.roof,[0,2.85,0]);roof.rotation.y=Math.PI/6;
-  addMesh(booth,new THREE.TorusGeometry(1.1,0.055,8,48),materials.gold,[0,3.45,0]);
-  addMesh(booth,new THREE.OctahedronGeometry(0.32,1),materials.crystal,[0,3.62,0],null,false,false);
-  addMesh(booth,new THREE.BoxGeometry(2.35,0.82,0.13),materials.darkStone,[0,1.24,1.13]);
-  addMesh(booth,new THREE.BoxGeometry(2.12,0.53,0.1),materials.lampGlow,[0,1.35,1.21],null,false,false);
-  addMesh(booth,new THREE.BoxGeometry(2.7,0.16,0.5),materials.gold,[0,0.92,1.32]);
-  addMesh(booth,new THREE.BoxGeometry(0.72,0.26,0.08),materials.crystal,[0,1.62,1.28],null,false,false);
+  for(let rib=0;rib<8;rib++){
+    const angle=rib/8*Math.PI*2;
+    const points=[
+      new THREE.Vector3(Math.cos(angle)*1.48,2.28,Math.sin(angle)*1.48),
+      new THREE.Vector3(Math.cos(angle)*1.12,2.64,Math.sin(angle)*1.12),
+      new THREE.Vector3(Math.cos(angle)*0.72,2.99,Math.sin(angle)*0.72),
+      new THREE.Vector3(Math.cos(angle)*0.32,3.32,Math.sin(angle)*0.32),
+      new THREE.Vector3(0,3.49,0)
+    ];
+    addMesh(booth,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),24,0.022,6,false),
+      rib%2?materials.gold:materials.silverMetal,null,null,false,false);
+  }
+  const roofCrown=addMesh(booth,new THREE.OctahedronGeometry(0.23,1),materials.crystal,
+    [0,3.56,0],[0.72,1.5,0.72],null,false,false);
+  roofCrown.rotation.z=Math.PI/4;
   const sign=makeLabelSprite({title:"星夢入園票亭",subtitle:"STARDREAM TICKETS · PARK GUIDE"});
-  if(sign){sign.position.set(0,4.45,0.34);sign.scale.set(4.6,1.22,1);booth.add(sign)}
-  [-1.85,-0.85,0.85,1.85].forEach((xp,i)=>{
-    const post=addMesh(booth,new THREE.CylinderGeometry(0.055,0.07,0.76,10),materials.gold,[xp,0.38,1.8]);
-    post.rotation.z=i%2?0.08:-0.08;
-    addMesh(booth,new THREE.SphereGeometry(0.09,10,8),materials.crystal,[xp,0.8,1.8],null,false,false);
+  if(sign){sign.position.set(0,4.05,0.44);sign.scale.set(4.25,1.12,1);booth.add(sign)}
+
+  // Four low queue posts preserve the original approach area without blocking the route.
+  [-1.62,-0.54,0.54,1.62].forEach((xp,index)=>{
+    const post=new THREE.Group();post.position.set(xp,0.1,2.05);booth.add(post);
+    addMesh(post,new THREE.CylinderGeometry(0.08,0.12,0.62,10),materials.silverMetal,[0,0.31,0]);
+    addMesh(post,new THREE.CylinderGeometry(0.17,0.17,0.09,10),materials.gold,[0,0.62,0]);
+    addMesh(post,new THREE.OctahedronGeometry(0.07,1),materials.crystal,[0,0.75,0],[0.72,1.25,0.72],null,false,false);
   });
-  addMesh(booth,new THREE.BoxGeometry(2.25,0.09,0.08),materials.gold,[0,0.54,1.8]);
   return booth;
 }
 
