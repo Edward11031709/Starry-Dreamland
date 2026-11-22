@@ -12,7 +12,7 @@
 - 真實瀏覽器 WebGL、私有預覽、桌機／手機橫向視覺、碰撞、設施乘坐與 FPS 尚未人工驗收；自動化結構測試不可代替人工視覺驗收。
 - PR #23 已建立為 Ready for review（非 Draft），目前 open、mergeable=true，尚未合併。
 - PR #23 的最新 HEAD 請以 GitHub PR metadata 為準；目前差異 4 個檔案（`js/starry-3d.js`、新增美術結構測試、3D Roadmap、Release Status）。
-- Actions run #179（run ID `45013333957`）及 run #180（run ID `45013398280`）均成功：JavaScript 語法檢查、Supabase Edge Function 語法檢查、首頁 inline script parse 全部通過；Node tests **46 passed／0 failed**。run #180 是 Release Status 文件同步後的最新一次檢查。
+- Actions run #179（run ID `45013333957`）、#180（run ID `45013398280`）及 #183（run ID `45013602602`）均成功：JavaScript／Supabase Edge Function 語法檢查、首頁 inline script parse 全部通過；Node tests **46 passed／0 failed**。#183 對應修正入口踏階朝向的最新程式與回歸測試 head `0e840df7bbfb0b20b40928a5f653050d19204599`。
 - PR #23 的 `管理員確認後發布正式版` job 為 skipped；本批次沒有部署公開網站。仍待管理員私有預覽及真實瀏覽器 WebGL、桌機／手機橫向、碰撞、設施搭乘與 FPS 人工驗收。
 
 
