@@ -135,6 +135,8 @@ Supabase stores player profiles and game records. Email sign-up/sign-in, sign-ou
 
 The repository contains a GitHub Actions Pages workflow. Updating main does not deploy automatically; an owner-approved GitHub Actions workflow dispatch is required to publish the public site. Three.js is loaded from a pinned CDN version; if the CDN is unavailable, the game cards still provide access to the games.
 
+**合併 Pull Request 或更新 `main` 不會自動更新公開網站。** 正式發布必須由管理員從 GitHub Actions 手動執行「星夢樂園檢查與正式發布」，選擇 `main` 並明確確認。
+
 ## Deferred idea: Anomaly / horror-world mode
 
 **This is a future concept only. It is not implemented or enabled in the current park.** The normal fantasy theme park must be polished and stable first.
