@@ -117,3 +117,69 @@ test("private preview import is admin-gated and does not require GitHub Actions 
   assert.ok(html.includes("隔離預覽不會更新公開網站"));
   assert.doesNotMatch(html, /sandbox="[^"]*allow-same-origin/);
 });
+
+
+test("central promenade rest gardens use carved seats, crystal planters, and walkable-height pads", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  const start = source.indexOf("function addPromenadeRestNook(");
+  const end = source.indexOf("function addOrnamentalArch(", start);
+  assert.notEqual(start, -1, "promenade rest nook builder exists");
+  assert.ok(end > start, "rest nook builder has a clear boundary");
+  const builder = source.slice(start, end);
+  assert.ok(builder.includes("new THREE.ExtrudeGeometry(backrestShape"));
+  assert.ok(builder.includes("new THREE.TubeGeometry(backCurve"));
+  assert.ok(builder.includes("new THREE.CatmullRomCurve3("));
+  assert.ok(builder.includes("addCrystal(bowl"));
+  assert.ok(builder.includes("terrainZones.push({x,z,radius:2.3,surfaceY:0.82})"));
+  assert.ok(builder.includes('addCollider(x,z,1.75,"星夢休憩長椅")'));
+  assert.equal(builder.includes("new THREE.PointLight"), false, "rest nodes must not add real-time lights");
+  assert.ok(source.includes("addPromenadeRestNook(-12,23.2,Math.PI/2,PALETTE.violet)"));
+  assert.ok(source.includes("addPromenadeRestNook(12,23.2,-Math.PI/2,PALETTE.blue)"));
+});
+
+test("promenade rest nook does not generate placeholder bystanders", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  const start = source.indexOf("function addPromenadeRestNook(");
+  const end = source.indexOf("function addOrnamentalArch(", start);
+  const builder = source.slice(start, end);
+  assert.equal(builder.includes("spawnNpc("), false);
+  assert.equal(builder.includes("addNPC("), false);
+  assert.equal(builder.includes("createPlayer("), false);
+});
+
+
+test("GitHub Pages release requires a manual owner-confirmed dispatch from main", () => {
+  const workflow = readFileSync(new URL("../.github/workflows/pages.yml", import.meta.url), "utf8");
+  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+  assert.ok(workflow.includes("workflow_dispatch:"));
+  assert.ok(workflow.includes("confirm_release:"));
+  assert.ok(workflow.includes("github.event_name == 'workflow_dispatch'"));
+  assert.ok(workflow.includes("github.ref == 'refs/heads/main'"));
+  assert.ok(workflow.includes("github.actor == 'Edward11031709'"));
+  assert.ok(workflow.includes("inputs.confirm_release == true"));
+  assert.equal(workflow.includes("\n  push:"), false, "push must not auto-publish Pages");
+  assert.ok(readme.includes("合併 Pull Request 或更新 `main` 不會自動更新公開網站。"));
+  assert.ok(readme.includes("星夢樂園檢查與正式發布"));
+});
+
+test("moonlit garden island trees sit on the correct deck and use lightweight flower detailing", () => {
+  const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+  const start = source.indexOf("const moonflowerPetalGeometry=");
+  const end = source.indexOf("// The old satellite islands", start);
+  assert.notEqual(start, -1, "moonflower shared geometry and builder exist");
+  assert.ok(end > start, "garden helper has a clear boundary");
+  const helper = source.slice(start, end);
+  assert.ok(helper.includes("function addMoonflower("));
+  assert.ok(helper.includes("new THREE.SphereGeometry(1,12,8)"));
+  assert.ok(helper.includes("for(let petal=0;petal<6;petal++)"));
+  assert.ok(helper.includes("moonflowerPetals[variant%moonflowerPetals.length]"));
+  assert.equal(helper.includes("new THREE.PointLight"), false);
+  const rightStart = source.indexOf("const right=makeIsland(scene,30,0.68,-16.5,4.1");
+  const rightEnd = source.indexOf("const planet=", rightStart);
+  assert.ok(rightStart >= 0 && rightEnd > rightStart, "moonlit garden island block exists");
+  const garden = source.slice(rightStart, rightEnd);
+  assert.ok(garden.includes("tree.position.y=0.21"));
+  assert.ok(garden.includes("new THREE.TorusGeometry(3.52,0.052,8,96)"));
+  assert.ok(garden.includes("for(let bloom=0;bloom<6;bloom++)"));
+  assert.ok(garden.includes("addMoonflower(right"));
+});
