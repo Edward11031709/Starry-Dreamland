@@ -691,21 +691,21 @@ function buildEntranceGate(scene,materials){
     addTower(wing,0,0,1.42,2.25,0.34,materials,true);
     addMesh(wing,new THREE.BoxGeometry(2.34,0.11,0.72),materials.darkStone,[0,0.12,0],null,false,false);
   });
-  // Low approach treads face the park side; the main walking line remains open.
+  // Low approach treads extend toward the outer arrival side; the main walking line remains open.
   for(let step=0;step<4;step++){
     const width=7.2+step*0.72,depth=0.48;
     addMesh(gate,new THREE.BoxGeometry(width,0.105,depth),step%2?materials.top:materials.darkStone,
-      [0,0.08-step*0.035,-0.48-step*0.49],null,false,true);
+      [0,0.08-step*0.035,0.48+step*0.49],null,false,true);
     addMesh(gate,new THREE.BoxGeometry(width-0.16,0.018,0.045),materials.gold,
-      [0,0.14-step*0.035,-0.68-step*0.49],null,false,false);
+      [0,0.14-step*0.035,0.68+step*0.49],null,false,false);
   }
-  addMesh(gate,new THREE.CylinderGeometry(0.94,0.98,0.055,64),materials.darkStone,[0,0.2,-2.78],null,false,true);
-  const sealRing=addMesh(gate,new THREE.TorusGeometry(0.82,0.035,8,72),materials.gold,[0,0.24,-2.78],null,false,false);
+  addMesh(gate,new THREE.CylinderGeometry(0.94,0.98,0.055,64),materials.darkStone,[0,0.2,2.78],null,false,true);
+  const sealRing=addMesh(gate,new THREE.TorusGeometry(0.82,0.035,8,72),materials.gold,[0,0.24,2.78],null,false,false);
   sealRing.rotation.x=Math.PI/2;
   for(let ray=0;ray<8;ray++){
     const a=ray/8*Math.PI*2;
     const sealGem=addMesh(gate,new THREE.OctahedronGeometry(0.12,0),ray%2?materials.crystal:materials.silverMetal,
-      [Math.cos(a)*0.62,0.25,-2.78+Math.sin(a)*0.62],[0.68,0.25,1.45],null,false,false);
+      [Math.cos(a)*0.62,0.25,2.78+Math.sin(a)*0.62],[0.68,0.25,1.45],null,false,false);
     sealGem.rotation.y=a;
   }
   return gate;
