@@ -1433,7 +1433,7 @@ function submitAdminIssueReport(createGitHubIssue=false){
  if(createGitHubIssue){
   const body="## 星夢樂園管理員錯誤回報\n\n- 問題類別："+category+"\n- 嚴重程度："+severity+"\n- 候選版本："+(commitSha||"未指定")+"\n- 回報時間："+report.createdAt+"\n\n## 問題描述\n"+description+"\n\n## 預期結果／修正方向\n"+(expected||"尚未提供");
   const url="https://github.com/Edward11031709/Starry-Dreamland/issues/new?title="+encodeURIComponent("[管理員回報] "+title)+"&body="+encodeURIComponent(body);
-  const opened=window.open(url,"_blank","noopener,noreferrer");
+  const opened=window.open(url,"_blank");if(opened)opened.opener=null;
   if(status)status.textContent=opened?"問題已保存在本機，並已開啟 GitHub 修正單表單；請在新分頁按下提交，才會正式建立 issue。":"問題已保存在本機，但瀏覽器阻擋了 GitHub 新分頁；請允許彈出式視窗後再按一次「建立 GitHub 修正單」。";
  }else{
   if(status)status.textContent="問題紀錄已儲存在這台裝置的瀏覽器。要讓開發紀錄共用，請再按「建立 GitHub 修正單」。";
