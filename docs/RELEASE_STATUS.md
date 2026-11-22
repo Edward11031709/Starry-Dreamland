@@ -6,10 +6,10 @@
 - PR #17、#18 已關閉，原因是內容已由整合 PR #20 取代；兩份舊 PR 保留於 Closed 歷史，不再列於 Open PR 清單。
 - PR #20 合併後，owner 於 2026-11-22 手動執行 Actions #167（run ID `45004106298`）；`管理員確認後發布正式版` job 與 `發布正式網站` 步驟均成功，部署目標為 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc`。此為目前可確認的公開版來源；尚未直接讀回公開網站的 `release.json` 作外部比對。
 - 目前續作分支：`feature/castle-gothic-architecture-20261122`，從 `main` @ `991088dd987617de0937a79ea2178a138a4bb5fc` 建立。
-- 續作內容：城堡主入口雙層尖拱、晶石拱心石、階梯金銀雙層欄杆與細柱；新增尖拱曲線與結構測試。
+- 續作內容：城堡主入口與外圍入園門統一多層尖拱語彙，搭配晶石拱心石、階梯金銀雙層欄杆與細柱；新增曲線對稱、階梯及外圍拱門結構測試。
 - 已重新檢查 `AGENT.md`、繁中 README、3D 路線與發布流程；本批次遵守既有分支／人工發布規則，`AGENT.md` 無需修訂。
 - 不修改 Supabase schema、RLS、RPC、migration 或正式玩家資料；不調整星塵、服裝所有權、帳號、遊戲紀錄、聊天或探索資料。
-- Actions run #169（run ID `45004424008`）對目前最新 head `1fc677f167d486daa2e0afade5467d84e0133ca4` 成功：Node tests **29 passed／0 failed**；Three.js 與 Supabase Edge Function 語法、首頁 inline JavaScript parse 均通過。PR 事件中的正式部署 job 為 skipped。
+- Actions run #174（run ID `45004582110`）對程式與測試最新 head `ea749b7755e529952e46f8c59e81fcb15a4adb70` 成功：Node tests **30 passed／0 failed**；Three.js 與 Supabase Edge Function 語法、首頁 inline JavaScript parse 均通過。PR 事件中的正式部署 job 為 skipped。
 - 私有預覽與真實瀏覽器 WebGL、桌機／手機畫質、碰撞與 FPS 尚未完成實際人工驗收；不可將自動化測試當作視覺驗收。
 
 
