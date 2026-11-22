@@ -1,0 +1,51 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+
+const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+const start = source.indexOf("function makeLancetArchCurve(");
+const end = source.indexOf("\nfunction makeWindow(", start);
+assert.notEqual(start, -1, "makeLancetArchCurve must exist");
+assert.notEqual(end, -1, "makeLancetArchCurve must end before makeWindow");
+
+class MockVector3 {
+  constructor(x, y, z) { this.x = x; this.y = y; this.z = z; }
+}
+class MockCurve3 {
+  constructor(points, closed, curveType) {
+    this.points = points;
+    this.closed = closed;
+    this.curveType = curveType;
+  }
+}
+const context = {
+  THREE: { Vector3: MockVector3, CatmullRomCurve3: MockCurve3 }
+};
+vm.runInNewContext(`${source.slice(start, end)}\nthis.makeLancetArchCurve = makeLancetArchCurve;`, context);
+const makeLancetArchCurve = context.makeLancetArchCurve;
+
+test("lancet arch control points form a centred, symmetric pointed profile", () => {
+  const curve = makeLancetArchCurve(2, 1.5, -4, 2.4, 3.2);
+  assert.equal(curve.points.length, 7);
+  assert.equal(curve.closed, false);
+  assert.equal(curve.curveType, "centripetal");
+  const [leftBase, leftSpring, leftShoulder, apex, rightShoulder, rightSpring, rightBase] = curve.points;
+  assert.deepEqual([leftBase.x, leftBase.y, leftBase.z], [0.8, 1.5, -4]);
+  assert.deepEqual([apex.x, apex.y, apex.z], [2, 4.7, -4]);
+  assert.deepEqual([rightBase.x, rightBase.y, rightBase.z], [3.2, 1.5, -4]);
+  assert.equal(leftSpring.x + rightSpring.x, 4);
+  assert.equal(leftShoulder.x + rightShoulder.x, 4);
+  assert.equal(leftSpring.y, rightSpring.y);
+  assert.equal(leftShoulder.y, rightShoulder.y);
+});
+
+test("castle entrance uses nested lancet trim and stair balustrades", () => {
+  const castleStart = source.indexOf("function buildCastle(");
+  const castleEnd = source.indexOf("\nfunction buildObservatory(", castleStart);
+  const castle = source.slice(castleStart, castleEnd);
+  assert.match(castle, /makeLancetArchCurve\(0,1\.37,2\.17,1\.62,1\.47\)/);
+  assert.match(castle, /makeLancetArchCurve\(0,1\.43,2\.215,1\.39,1\.35\)/);
+  assert.match(castle, /Fine twin balustrades finish the grand stair/);
+  assert.match(castle, /new THREE\.CylinderGeometry\(0\.032,0\.046,postHeight,10\)/);
+});
