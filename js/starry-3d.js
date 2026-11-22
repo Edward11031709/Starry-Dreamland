@@ -211,40 +211,57 @@ function addCrystal(parent, x, y, z, size, color) {
 function createTree(parent,x,z,scale,materials){
  const tree=new THREE.Group();tree.position.set(x,0.62,z);tree.scale.setScalar(scale);parent.add(tree);
  const wood=materials.wood||makeMaterial(0x3b2e4c,0.84,0.12);
- const a=materials.foliageA||makeMaterial(0x30445f,0.94,0.02);
- const b=materials.foliageB||makeMaterial(0x485071,0.92,0.03);
- const cc=materials.foliageC||makeMaterial(0x655b83,0.9,0.04);
- addMesh(tree,new THREE.CylinderGeometry(0.44,0.5,0.16,20),materials.darkStone,[0,0.08,0]);
- const rootRing=addMesh(tree,new THREE.TorusGeometry(0.42,0.045,8,36),materials.gold,[0,0.17,0]);rootRing.rotation.x=Math.PI/2;
- addMesh(tree,new THREE.CylinderGeometry(0.09,0.18,1.72,14),wood,[0,0.88,0]);
- const tiers=[
-  {y:0.58,r:0.82,h:0.98,mat:a},
-  {y:1.02,r:0.66,h:0.9,mat:b},
-  {y:1.46,r:0.48,h:0.78,mat:cc}
+ const foliageA=materials.foliageA||makeMaterial(0x344b67,0.92,0.04);
+ const foliageB=materials.foliageB||makeMaterial(0x526184,0.92,0.04);
+ const foliageC=materials.foliageC||makeMaterial(0x756b98,0.9,0.05);
+ const silver=materials.silverMetal||makeMaterial(0xb8c9e2,0.3,0.52);
+ const gold=materials.gold||makeMaterial(0xe9d09a,0.28,0.52);
+ addMesh(tree,new THREE.CylinderGeometry(0.42,0.5,0.14,24),materials.darkStone,[0,0.07,0]);
+ const rootRing=addMesh(tree,new THREE.TorusGeometry(0.39,0.035,8,48),gold,[0,0.16,0]);rootRing.rotation.x=Math.PI/2;
+ const trunkProfile=[
+  new THREE.Vector2(0,0),new THREE.Vector2(0.16,0),new THREE.Vector2(0.2,0.35),
+  new THREE.Vector2(0.14,0.82),new THREE.Vector2(0.12,1.25),new THREE.Vector2(0.15,1.68),
+  new THREE.Vector2(0.1,2.08),new THREE.Vector2(0.045,2.34),new THREE.Vector2(0,2.42)
  ];
- tiers.forEach((tier,index)=>{
-  const canopy=addMesh(tree,new THREE.IcosahedronGeometry(tier.r,1),tier.mat,[0,tier.y,0],[1.0,tier.h/tier.r,0.9]);
-  canopy.rotation.y=index*0.37+0.18;
-  const collar=addMesh(tree,new THREE.TorusGeometry(tier.r*0.74,0.026,7,48),materials.gold,[0,tier.y-tier.h*0.28,0]);
-  collar.rotation.x=Math.PI/2;
-  for(let k=0;k<6;k++){
-   const angle=k/6*Math.PI*2+index*0.22,rr=tier.r*0.76;
-   const leaf=addMesh(tree,new THREE.OctahedronGeometry(0.105+(k%2)*0.025,1),
-    index===1?materials.crystal:(k%3===0?materials.gold:tier.mat),
-    [Math.cos(angle)*rr,tier.y+Math.sin(k*1.7)*0.12,Math.sin(angle)*rr],
-    [0.62,1.25,0.62],false,false);
-   leaf.rotation.set(angle*0.3,angle,Math.PI/4);
-  }
- });
- for(let k=0;k<8;k++){
-  const angle=k/8*Math.PI*2;
-  addMesh(tree,new THREE.SphereGeometry(0.055,10,8),materials.lampGlow,
-   [Math.cos(angle)*0.54,0.58+Math.sin(angle)*0.08,Math.sin(angle)*0.54],null,false,false);
+ addMesh(tree,new THREE.LatheGeometry(trunkProfile,16),wood,[0,0.14,0]);
+ // Five curved limbs open the canopy into a wide moonlit silhouette instead of stacked pointed cones.
+ for(let branch=0;branch<5;branch++){
+  const angle=branch/5*Math.PI*2+0.24;
+  const points=[
+   new THREE.Vector3(Math.cos(angle)*0.08,0.94,Math.sin(angle)*0.08),
+   new THREE.Vector3(Math.cos(angle)*0.32,1.23,Math.sin(angle)*0.32),
+   new THREE.Vector3(Math.cos(angle)*0.62,1.58,Math.sin(angle)*0.62),
+   new THREE.Vector3(Math.cos(angle)*0.9,1.78,Math.sin(angle)*0.9)
+  ];
+  addMesh(tree,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),24,0.055,8,false),silver,null,null,false,false);
  }
- const crown=addMesh(tree,new THREE.OctahedronGeometry(0.19,1),materials.crystal,[0,2.0,0],[0.7,1.55,0.7],false,false);
- crown.rotation.y=Math.PI/4;
- const halo=addMesh(tree,new THREE.TorusGeometry(0.29,0.022,6,40),materials.gold,[0,1.92,0]);
- halo.rotation.x=Math.PI/2;halo.rotation.z=0.24;
+ const canopyGeometry=new THREE.DodecahedronGeometry(0.72,1);
+ const canopyClusters=[
+  {position:[0,1.94,0],scale:[1.22,0.78,1.12],material:foliageA,rotation:0.12},
+  {position:[-0.58,1.65,0.04],scale:[0.76,0.72,0.83],material:foliageB,rotation:0.4},
+  {position:[0.56,1.67,-0.06],scale:[0.78,0.7,0.82],material:foliageC,rotation:-0.34},
+  {position:[0,1.54,0.58],scale:[0.82,0.68,0.72],material:foliageB,rotation:0.22},
+  {position:[0.08,1.62,-0.58],scale:[0.78,0.7,0.74],material:foliageA,rotation:-0.28},
+  {position:[0,2.36,0],scale:[0.68,0.7,0.68],material:foliageC,rotation:0.18}
+ ];
+ canopyClusters.forEach((cluster,index)=>{
+  const canopy=addMesh(tree,canopyGeometry,cluster.material,cluster.position,cluster.scale,false,true);
+  canopy.rotation.y=cluster.rotation+index*0.13;
+ });
+ // Fine branchlets add depth at walking height without cluttering the paths.
+ for(let spray=0;spray<10;spray++){
+  const angle=spray/10*Math.PI*2;
+  const branchlet=new THREE.CatmullRomCurve3([
+   new THREE.Vector3(Math.cos(angle)*0.42,1.55,Math.sin(angle)*0.42),
+   new THREE.Vector3(Math.cos(angle)*0.74,1.92,Math.sin(angle)*0.74),
+   new THREE.Vector3(Math.cos(angle)*1.02,1.98+Math.sin(spray*1.3)*0.12,Math.sin(angle)*1.02)
+  ]);
+  addMesh(tree,new THREE.TubeGeometry(branchlet,14,0.018,5,false),spray%2?gold:silver,null,null,false,false);
+ }
+ const halo=addMesh(tree,new THREE.TorusGeometry(0.62,0.022,6,56),gold,[0,2.18,0],[1.25,1,0.88],false,false);
+ halo.rotation.x=Math.PI/2;halo.rotation.z=0.18;
+ const crown=addMesh(tree,new THREE.OctahedronGeometry(0.17,1),materials.crystal||silver,[0,2.62,0],[0.68,1.45,0.68],null,false,false);
+ crown.rotation.z=Math.PI/4;
  return tree;
 }
 
