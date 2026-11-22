@@ -2,15 +2,18 @@
 
 ## 2026-11-22 主線與公開版狀態校正、園區美術升級候選
 
-- PR #21 已合併至 main，merge commit：\`309fe992f52a67a544b07ce22200f9d94a8c758c\`。
-- PR #22（AGENT.md 維護規範）已合併；目前 main HEAD：\`a590bef43caad3c1ed07903f13a66ce8d06d9ab9\`。
-- Actions run #177（run ID \`45011044075\`）只完成語法／測試檢查；正式發布 job 為 skipped，不能視為公開部署成功。
-- 最近可確認成功部署仍是 Actions #167（run ID \`45004106298\`），部署來源為 main @ \`991088dd987617de0937a79ea2178a138a4bb5fc\`。因此 PR #21、PR #22 及本次美術候選均不能宣稱已經出現在公開網站。
-- 本次美術升級分支：\`feature/park-visual-overhaul-20261122\`，從最新 main @ \`a590bef43caad3c1ed07903f13a66ce8d06d9ab9\` 建立。
+- PR #21 已合併至 main，merge commit：`309fe992f52a67a544b07ce22200f9d94a8c758c`。
+- PR #22（AGENT.md 維護規範）已合併；目前 main HEAD：`a590bef43caad3c1ed07903f13a66ce8d06d9ab9`。
+- Actions run #177（run ID `45011044075`）只完成語法／測試檢查；正式發布 job 為 skipped，不能視為公開部署成功。
+- 最近可確認成功部署仍是 Actions #167（run ID `45004106298`），部署來源為 main @ `991088dd987617de0937a79ea2178a138a4bb5fc`。因此 PR #21、PR #22 及本次美術候選均不能宣稱已經出現在公開網站。
+- 本次美術升級分支：`feature/park-visual-overhaul-20261122`，從最新 main @ `a590bef43caad3c1ed07903f13a66ce8d06d9ab9` 建立。
 - 本候選範圍：塔樓、城堡正面山牆、觀測站、入口與分區尖拱、票亭、兌換／補給服務亭、樹木、城堡倒影池、浮島邊界欄杆、天空材質／燈光與主要遊樂設施比例。
 - 本分支只修改 Three.js 場景與結構測試，另同步 3D Roadmap；沒有修改 Supabase schema、RLS、RPC、migration、登入資料、星塵、服裝所有權、遊戲紀錄、聊天室或探索紀錄。
 - 真實瀏覽器 WebGL、私有預覽、桌機／手機橫向視覺、碰撞、設施乘坐與 FPS 尚未人工驗收；自動化結構測試不可代替人工視覺驗收。
-- PR 尚待建立／CI 驗證；不合併、不發布公開網站。
+- PR #23 已建立為 Ready for review（非 Draft），目前 open、mergeable=true，尚未合併。
+- PR head：`715794b50520b0a06d558541fa56b39a1baf44b6`；差異 4 個檔案（`js/starry-3d.js`、新增美術結構測試、3D Roadmap、Release Status）。
+- Actions run #179（run ID `45013333957`）成功：JavaScript 語法檢查、Supabase Edge Function 語法檢查、首頁 inline script parse 全部通過；Node tests **46 passed／0 failed**。
+- PR #23 的 `管理員確認後發布正式版` job 為 skipped；本批次沒有部署公開網站。仍待管理員私有預覽及真實瀏覽器 WebGL、桌機／手機橫向、碰撞、設施搭乘與 FPS 人工驗收。
 
 
 ## 2026-11-22 最新狀態：整合版已合併，城堡精修續作中
