@@ -24,3 +24,11 @@
 - 正式發布須由 owner 從 main 手動執行 Pages workflow，明確確認並通過 production Environment。
 - main branch protection 與 production Environment Required reviewers 必須在 GitHub Settings 另外核對，不可僅憑 workflow YAML 宣稱已完整保護。
 - 程式版本更新或回復不可回滾 Supabase 玩家資料。
+
+## PR #20 最新檢查（2026-11-22）
+
+- 整合 PR：[#20](https://github.com/Edward11031709/Starry-Dreamland/pull/20)，目前 Draft／Open，尚未合併。
+- 最新候選 SHA：`a784dae19b391edc2036ee9a2a28cf81472318fe`；基底 `main` @ `8f4873fddad924bd00d949eae60d8c41bcb2aac2`，相對 main ahead 12、behind 0，GitHub 回報 mergeable。
+- Actions run #165（run ID `45001921229`）成功：Node tests **27 passed／0 failed**；`js/starry-3d.js` 語法、Supabase Edge Function 語法及首頁 inline JavaScript parse 均通過。正式部署 job 為 skipped。
+- 尚未完成真實瀏覽器 WebGL、角色正／側／背面視覺、桌機／手機碰撞與 FPS 實機驗收；不得把自動測試當成美術驗收。
+- PR #17、#18 保留作為原始工作紀錄；PR #20 合併後再將 #17、#18 關閉為已由整合版取代，不要再各自合併。
