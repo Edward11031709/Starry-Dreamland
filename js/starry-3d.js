@@ -1203,6 +1203,29 @@ function buildArcadeStalls(scene,materials){
   return {root:market,stalls};
 }
 
+function addReflectingPool(parent,materials,x,z){
+ const pool=new THREE.Group();pool.name="MoonlitReflectingPool";pool.position.set(x,0.72,z);parent.add(pool);
+ addMesh(pool,new THREE.CylinderGeometry(1.13,1.28,0.24,56),materials.darkStone,[0,0.12,0],[1.12,1,0.88]);
+ const outerRim=addMesh(pool,new THREE.TorusGeometry(1.12,0.09,10,72),materials.gold,[0,0.25,0],[1.12,1,0.88],false,false);
+ outerRim.rotation.x=Math.PI/2;
+ const innerRim=addMesh(pool,new THREE.TorusGeometry(0.94,0.035,8,72),materials.silverMetal,[0,0.27,0],[1.12,1,0.88],false,false);
+ innerRim.rotation.x=Math.PI/2;
+ addMesh(pool,new THREE.CylinderGeometry(0.98,0.98,0.035,56),materials.water,[0,0.25,0],[1.12,1,0.88],false,true);
+ for(let ripple=0;ripple<3;ripple++){
+  const ring=addMesh(pool,new THREE.TorusGeometry(0.28+ripple*0.19,0.012,5,48),materials.crystal,
+   [0,0.28+ripple*0.003,0],[1.12,1,0.88],false,false);
+  ring.rotation.x=Math.PI/2;
+ }
+ addMesh(pool,new THREE.CylinderGeometry(0.22,0.3,0.2,16),materials.trim,[0,0.42,0]);
+ addMesh(pool,new THREE.OctahedronGeometry(0.2,1),materials.crystal,[0,0.68,0],[0.72,1.55,0.72],null,false,false);
+ for(let gem=0;gem<8;gem++){
+  const angle=gem/8*Math.PI*2,rr=0.72;
+  addMesh(pool,new THREE.OctahedronGeometry(0.07,1),gem%2?materials.gold:materials.crystal,
+   [Math.cos(angle)*rr,0.35,Math.sin(angle)*rr],[0.7,1.35,0.7],null,false,false);
+ }
+ return pool;
+}
+
 function buildEnvironment(scene) {
   const materials = {
     rock: makeMaterial(0x211e39, 0.92, 0.12),
@@ -1607,6 +1630,10 @@ function buildEnvironment(scene) {
   // The old satellite islands become reachable themed gardens at the far end of the park.
   buildCastle(scene,materials);
   addCollider(0,-18.2,5.7,"星夢城堡");
+  addReflectingPool(island,materials,-5.35,-14.95);
+  addReflectingPool(island,materials,5.35,-14.95);
+  addCollider(-5.35,-14.95,1.35,"月光倒影池");
+  addCollider(5.35,-14.95,1.35,"月光倒影池");
   const left=makeIsland(scene,-30,0.68,-16.5,4.4,{rock:materials.rock,top:materials.top,trim:materials.gold});
   left.rotation.y=-0.12;
   buildObservatory(scene,-30,0.68,-16.5,materials);
