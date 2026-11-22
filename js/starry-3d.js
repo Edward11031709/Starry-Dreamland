@@ -1295,6 +1295,33 @@ function buildEnvironment(scene) {
   addMesh(island,new THREE.CylinderGeometry(44.15,44.15,0.48,96),materials.top,[0,0.46,0]);
   addMesh(island,new THREE.TorusGeometry(43.82,0.23,12,144),materials.gold,[0,0.70,0]).rotation.x=Math.PI/2;
   addMesh(island,new THREE.CylinderGeometry(41.8,41.8,0.13,96),makeMaterial(0x46466e,0.88,0.14),[0,0.72,0]);
+  // A continuous silver balustrade finishes the floating-island edge without entering the walkable radius.
+  const edgeRail=new THREE.Group();edgeRail.name="FloatingIslandPerimeterBalustrade";island.add(edgeRail);
+  [1.05,1.62].forEach((height,index)=>{
+    const rail=addMesh(edgeRail,new THREE.TorusGeometry(41.42,index===0?0.055:0.07,8,192),
+      index===0?materials.gold:materials.silverMetal,[0,height,0],null,false,false);
+    rail.rotation.x=Math.PI/2;
+  });
+  const postGeometry=new THREE.CylinderGeometry(0.065,0.09,0.86,8);
+  const postInstances=new THREE.InstancedMesh(postGeometry,materials.silverMetal,64);
+  const capGeometry=new THREE.OctahedronGeometry(0.09,0);
+  const capInstances=new THREE.InstancedMesh(capGeometry,materials.crystal,64);
+  const railDummy=new THREE.Object3D();
+  for(let i=0;i<64;i++){
+    const angle=i/64*Math.PI*2, radius=41.42;
+    railDummy.position.set(Math.sin(angle)*radius,1.31,Math.cos(angle)*radius);
+    railDummy.rotation.set(0,-angle,0);railDummy.updateMatrix();
+    postInstances.setMatrixAt(i,railDummy.matrix);
+    railDummy.position.set(Math.sin(angle)*radius,1.78,Math.cos(angle)*radius);
+    railDummy.scale.set(0.8,1.25,0.8);railDummy.updateMatrix();
+    capInstances.setMatrixAt(i,railDummy.matrix);
+    railDummy.scale.set(1,1,1);
+  }
+  postInstances.instanceMatrix.needsUpdate=true;
+  capInstances.instanceMatrix.needsUpdate=true;
+  postInstances.castShadow=false;postInstances.receiveShadow=false;
+  capInstances.castShadow=false;capInstances.receiveShadow=false;
+  edgeRail.add(postInstances,capInstances);
 
   const pavingMaterials=[makeMaterial(0x4c4d78,0.86,0.12),makeMaterial(0x55547f,0.84,0.14)];
   for(let i=0;i<24;i++){
