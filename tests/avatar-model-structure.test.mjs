@@ -48,12 +48,21 @@ class MockColor {
   constructor(value) { this.value = value; }
 }
 
+class MockShape {
+  constructor() { this.commands = []; }
+  moveTo(...args) { this.commands.push(["moveTo", ...args]); }
+  lineTo(...args) { this.commands.push(["lineTo", ...args]); }
+  quadraticCurveTo(...args) { this.commands.push(["quadraticCurveTo", ...args]); }
+  closePath() { this.commands.push(["closePath"]); }
+}
+
 const THREE = new Proxy({
   Group: MockGroup,
   Mesh: MockMesh,
   MeshStandardMaterial: MockMaterial,
   MeshPhysicalMaterial: MockMaterial,
-  Color: MockColor
+  Color: MockColor,
+  Shape: MockShape
 }, {
   get(target, property) {
     if (property in target) return target[property];
