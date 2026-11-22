@@ -1230,22 +1230,22 @@ function buildEnvironment(scene) {
   const materials = {
     rock: makeMaterial(0x211e39, 0.92, 0.12),
     rockLight: makeMaterial(0x39345d, 0.84, 0.18),
-    wall: makeMaterial(0x51496f, 0.42, 0.36, {clearcoat:0.42,clearcoatRoughness:0.28}),
-    roof: makeMaterial(0x292544, 0.24, 0.72, {clearcoat:0.7,clearcoatRoughness:0.16}),
-    trim: makeMaterial(0xc4b2ed, 0.18, 0.82, {clearcoat:0.9}),
-    gold: makeMaterial(0xf4dba3, 0.16, 0.88, {clearcoat:1,clearcoatRoughness:0.12}),
-    silver: makeMaterial(0xd8e1f1, 0.16, 0.84, {clearcoat:0.85}),
-    silverMetal: new THREE.MeshPhysicalMaterial({color:0xc2c8dc,roughness:0.24,metalness:0.78,clearcoat:0.65}),
-    darkStone: makeMaterial(0x17172e, 0.72, 0.42),
-    top: makeMaterial(0x292747, 0.72, 0.22),
-    wood: makeMaterial(0x2b2038, 0.8, 0.12),
-    foliageA: makeMaterial(0x344b67, 0.95, 0.02), foliageB: makeMaterial(0x465578, 0.93, 0.03),
-    foliageC: makeMaterial(0x675b88, 0.92, 0.04),
+    wall: makeMaterial(0x625a7d, 0.66, 0.12, {clearcoat:0.36,clearcoatRoughness:0.3}),
+    roof: makeMaterial(0x302b4e, 0.4, 0.38, {clearcoat:0.62,clearcoatRoughness:0.2}),
+    trim: makeMaterial(0xc4b9df, 0.31, 0.48, {clearcoat:0.82}),
+    gold: makeMaterial(0xf0d49a, 0.3, 0.5, {clearcoat:0.9,clearcoatRoughness:0.17}),
+    silver: makeMaterial(0xd8e1f1, 0.32, 0.42, {clearcoat:0.82}),
+    silverMetal: new THREE.MeshPhysicalMaterial({color:0xcbd4e6,roughness:0.34,metalness:0.42,clearcoat:0.68}),
+    darkStone: makeMaterial(0x1c1b35, 0.84, 0.18),
+    top: makeMaterial(0x34324f, 0.84, 0.12),
+    wood: makeMaterial(0x352940, 0.88, 0.05),
+    foliageA: makeMaterial(0x405775, 0.95, 0.02), foliageB: makeMaterial(0x56658a, 0.95, 0.02),
+    foliageC: makeMaterial(0x756b98, 0.94, 0.02),
     crystal: new THREE.MeshPhysicalMaterial({color:0xe0d5ff,emissive:0x8064d7,emissiveIntensity:0.48,roughness:0.1,metalness:0.38,clearcoat:1,clearcoatRoughness:0.045,ior:1.42,thickness:0.72}),
-    water: new THREE.MeshPhysicalMaterial({color:0x829fe8,emissive:0x222b75,emissiveIntensity:0.38,roughness:0.075,metalness:0.48,transparent:true,opacity:0.76,clearcoat:1,clearcoatRoughness:0.04,ior:1.36}),
+    water: new THREE.MeshPhysicalMaterial({color:0x9aaddf,emissive:0x202b68,emissiveIntensity:0.24,roughness:0.16,metalness:0.18,transparent:true,opacity:0.84,clearcoat:1,clearcoatRoughness:0.08,ior:1.36}),
     road: makeMaterial(0x292d50, 0.94, 0.08), roadEdge: makeMaterial(0xb5a0c9, 0.48, 0.48),
-    paving: makeMaterial(0x393451, 0.78, 0.22),
-    lampGlow: new THREE.MeshStandardMaterial({color:0xfff1d2,emissive:0xffc979,emissiveIntensity:2.15,roughness:0.12,metalness:0.24}),
+    paving: makeMaterial(0x45415f, 0.84, 0.12),
+    lampGlow: new THREE.MeshStandardMaterial({color:0xfff2d8,emissive:0xffc979,emissiveIntensity:1.72,roughness:0.2,metalness:0.08}),
   };
   applyPattern(materials.wall,"stone","#655b83","rgba(15,13,36,0.42)","#e2d7ff",2.2,2.2);
   applyPattern(materials.roof,"roof","#393253","rgba(9,8,27,0.48)","#e5c58d",2.4,2.4);
@@ -1254,15 +1254,15 @@ function buildEnvironment(scene) {
   applyPattern(materials.top,"stone","#373451","rgba(12,11,33,0.4)","#9c8cc6",2.5,2.5);
   // Metals need a balanced dielectric response in this lightweight scene (no HDR reflection probe).
   [materials.trim,materials.gold,materials.silver,materials.silverMetal].forEach((material,index)=>{
-    material.metalness=[0.52,0.58,0.48,0.56][index];
-    material.roughness=Math.max(material.roughness,0.24);
+    material.metalness=[0.34,0.46,0.38,0.44][index];
+    material.roughness=Math.max(material.roughness,0.31);
     material.clearcoat=0.82;
-    material.clearcoatRoughness=0.16;
+    material.clearcoatRoughness=0.2;
     material.needsUpdate=true;
   });
-  materials.wall.roughness=0.58;
+  materials.wall.roughness=0.64;
   materials.wall.metalness=0.12;
-  materials.wall.clearcoat=0.28;
+  materials.wall.clearcoat=0.32;
 
   // A large connected floating island gives the park room for real exploration.
   const island = new THREE.Group();
@@ -2278,7 +2278,7 @@ function mount(host) {
   const height = Math.max(1, host.clientHeight);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PALETTE.night);
-  scene.fog = new THREE.FogExp2(PALETTE.night, 0.0038);
+  scene.fog = new THREE.FogExp2(PALETTE.night, 0.00325);
 
   const isSmall = width < 650;
   const camera = new THREE.PerspectiveCamera(isSmall ? 62 : 60,width/height,0.1,320);
@@ -2290,20 +2290,20 @@ function mount(host) {
   renderer.setSize(width, height, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.16;
+  renderer.toneMappingExposure = 1.08;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = "starry-3d-canvas";
   renderer.domElement.setAttribute("aria-label", "可自由探索星夢夜遊園、漫遊各主題園區並點擊挑戰星門");
   host.appendChild(renderer.domElement);
 
-  const hemisphere = new THREE.HemisphereLight(0xe0e5ff, 0x211832, 1.34);
+  const hemisphere = new THREE.HemisphereLight(0xe4e7ff, 0x211832, 1.18);
   scene.add(hemisphere);
 
-  const moonLight = new THREE.DirectionalLight(0xffefd9, 2.28);
+  const moonLight = new THREE.DirectionalLight(0xffefd0, 2.42);
   moonLight.position.set(-15, 28, 18);
   moonLight.castShadow = true;
-  const shadowResolution = isSmall ? 768 : 1536;
+  const shadowResolution = isSmall ? 1024 : 2048;
   moonLight.shadow.mapSize.set(shadowResolution, shadowResolution);
   moonLight.shadow.camera.near = 1;
   moonLight.shadow.camera.far = 90;
@@ -2317,7 +2317,7 @@ function mount(host) {
   moonLight.shadow.camera.updateProjectionMatrix();
   scene.add(moonLight);
 
-  const fillLight = new THREE.DirectionalLight(0x9c91eb, 0.68);
+  const fillLight = new THREE.DirectionalLight(0x9c91eb, 0.82);
   fillLight.position.set(12, 8, -12);
   scene.add(fillLight);
 
