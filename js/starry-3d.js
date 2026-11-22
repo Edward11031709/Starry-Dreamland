@@ -1740,6 +1740,7 @@ function buildEnvironment(scene) {
   applyPattern(materials.road,"paving","#343451","rgba(13,13,34,0.5)","#bda7e6",1.4,2.8);
   applyPattern(materials.paving,"paving","#4a456b","rgba(22,18,48,0.34)","#ddc89b",2.8,2.8);
   applyPattern(materials.top,"stone","#373451","rgba(12,11,33,0.4)","#9c8cc6",2.5,2.5);
+  applyPattern(materials.wood,"wood","#352940","rgba(16,10,24,0.44)","#c6a77d",1.8,5.2);
   // Metals need a balanced dielectric response in this lightweight scene (no HDR reflection probe).
   [materials.trim,materials.gold,materials.silver,materials.silverMetal].forEach((material,index)=>{
     material.metalness=[0.34,0.46,0.38,0.44][index];
