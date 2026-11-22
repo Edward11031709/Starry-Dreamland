@@ -1601,6 +1601,27 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     addHairStrand([[-0.11,1.68,0.2],[-0.06,1.71,0.235],[0,1.72,0.24]],0.006,hairHighlight);
     addHairStrand([[0.02,1.72,0.24],[0.09,1.7,0.23],[0.14,1.66,0.21]],0.006,hairHighlight);
   }
+
+  // Secondary locks create finer, directional highlights without adding a heavy hair mesh.
+  if(appearance.hairStyle==="long"){
+    [-1,1].forEach(side=>addHairStrand([
+      [side*0.19,1.6,0.18],[side*0.225,1.47,0.185],
+      [side*0.23,1.3,0.16],[side*0.205,1.14,0.12]
+    ],0.0065,hairHighlight));
+  }else if(appearance.hairStyle==="twin"){
+    [-1,1].forEach(side=>addHairStrand([
+      [side*0.3,1.58,0.035],[side*0.355,1.43,0.015],
+      [side*0.35,1.25,0.035],[side*0.305,1.14,0.06]
+    ],0.007,hairHighlight));
+  }else if(appearance.hairStyle==="short"){
+    addHairStrand([[-0.17,1.61,0.2],[-0.13,1.64,0.235],[-0.08,1.63,0.25],[-0.035,1.61,0.25]],0.0065,hairHighlight);
+    addHairStrand([[0.02,1.65,0.25],[0.08,1.64,0.245],[0.13,1.61,0.22],[0.18,1.58,0.19]],0.0065,hairHighlight);
+  }else{
+    [-1,1].forEach(side=>addHairStrand([
+      [side*0.2,1.61,0.12],[side*0.22,1.55,0.16],
+      [side*0.2,1.48,0.17],[side*0.17,1.42,0.16]
+    ],0.006,hairHighlight));
+  }
   addMesh(headRig,new THREE.OctahedronGeometry(0.12,1),trim,[0,1.77,0.05],[0.72,1.2,0.72],false,false);
 
   // A delicate diadem bridges the hairline; tiny side stones catch the rim light.
