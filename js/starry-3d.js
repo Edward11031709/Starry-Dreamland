@@ -915,12 +915,31 @@ function buildCarousel(scene,materials,x,z){
 
 function buildFerrisWheel(scene,materials,x,y,z){
   const root=new THREE.Group();root.position.set(x,y,z);root.scale.setScalar(1.4);root.userData.action="ride-ferris";scene.add(root);
+  // A broad octagonal foundation ties both supports into one intentional ride footprint.
+  addMesh(root,new THREE.CylinderGeometry(1.88,2.08,0.28,48),materials.darkStone,[0,0.14,0]);
+  const foundationRim=addMesh(root,new THREE.TorusGeometry(1.88,0.075,9,80),materials.gold,[0,0.29,0]);
+  foundationRim.rotation.x=Math.PI/2;
+  addMesh(root,new THREE.CylinderGeometry(1.68,1.72,0.07,48),materials.top,[0,0.31,0]);
+  for(let mark=0;mark<12;mark++){
+    const angle=mark/12*Math.PI*2,rr=1.76;
+    const star=addMesh(root,new THREE.OctahedronGeometry(0.075,0),mark%3===0?materials.crystal:materials.silverMetal,
+      [Math.cos(angle)*rr,0.36,Math.sin(angle)*rr],[0.72,0.28,1.35],null,false,false);
+    star.rotation.y=angle;
+  }
   [-0.82,0.82].forEach((sx,i)=>{
     addMesh(root,new THREE.CylinderGeometry(0.34,0.4,0.26,12),materials.darkStone,[sx,0.16,0]);
     addMesh(root,new THREE.TorusGeometry(0.31,0.045,8,28),materials.gold,[sx,0.31,0]).rotation.x=Math.PI/2;
     const leg=addMesh(root,new THREE.BoxGeometry(0.23,3.5,0.28),materials.silverMetal,[sx,1.6,0]);leg.rotation.z=i===0?-0.26:0.26;
     const inlay=addMesh(root,new THREE.BoxGeometry(0.045,3.02,0.045),materials.gold,[sx+(i===0?0.12:-0.12),1.58,0.15]);inlay.rotation.z=i===0?-0.26:0.26;
+    [-1,1].forEach(side=>{
+      const fluting=addMesh(root,new THREE.BoxGeometry(0.026,2.75,0.035),materials.trim,
+        [sx+side*0.071,1.55,0.16],null,false,false);
+      fluting.rotation.z=i===0?-0.26:0.26;
+    });
     addMesh(root,new THREE.BoxGeometry(0.62,0.18,0.72),materials.gold,[sx,0.12,0]);
+    addMesh(root,new THREE.CylinderGeometry(0.48,0.54,0.18,12),materials.darkStone,[sx,0.25,0]);
+    const footRing=addMesh(root,new THREE.TorusGeometry(0.45,0.04,8,40),materials.silverMetal,[sx,0.35,0]);
+    footRing.rotation.x=Math.PI/2;
   });
   const wheel=new THREE.Group();wheel.position.set(0,3.45,0.18);root.add(wheel);
   addMesh(wheel,new THREE.TorusGeometry(2.62,0.085,12,80),materials.gold,[0,0,0]);
