@@ -5,7 +5,7 @@ import vm from "node:vm";
 
 const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
 const start = source.indexOf("function makeLancetArchCurve(");
-const end = source.indexOf("\nfunction makeWindow(", start);
+const end = source.indexOf("\\nfunction makeWindow(", start);
 assert.notEqual(start, -1, "makeLancetArchCurve must exist");
 assert.notEqual(end, -1, "makeLancetArchCurve must end before makeWindow");
 
@@ -42,20 +42,20 @@ test("lancet arch control points form a centred, symmetric pointed profile", () 
 
 test("castle entrance uses nested lancet trim and stair balustrades", () => {
   const castleStart = source.indexOf("function buildCastle(");
-  const castleEnd = source.indexOf("\nfunction buildObservatory(", castleStart);
+  const castleEnd = source.indexOf("\\nfunction buildObservatory(", castleStart);
   const castle = source.slice(castleStart, castleEnd);
-  assert.match(castle, /makeLancetArchCurve\(0,1\.37,2\.17,1\.62,1\.47\)/);
-  assert.match(castle, /makeLancetArchCurve\(0,1\.43,2\.215,1\.39,1\.35\)/);
-  assert.match(castle, /Fine twin balustrades finish the grand stair/);
-  assert.match(castle, /new THREE\.CylinderGeometry\(0\.032,0\.046,postHeight,10\)/);
+  assert.ok(castle.includes("makeLancetArchCurve(0,1.37,2.17,1.62,1.47)"));
+  assert.ok(castle.includes("makeLancetArchCurve(0,1.43,2.215,1.39,1.35)"));
+  assert.ok(castle.includes("Fine twin balustrades finish the grand stair"));
+  assert.ok(castle.includes("new THREE.CylinderGeometry(0.032,0.046,postHeight,10)"));
 });
 
 test("park threshold repeats the castle lancet motif at three nested depths", () => {
   const gateStart = source.indexOf("function buildEntranceGate(");
-  const gateEnd = source.indexOf("\\nfunction buildTicketBooth(", gateStart);
+  const gateEnd = source.indexOf("function buildTicketBooth(", gateStart);
   const gate = source.slice(gateStart, gateEnd);
-  assert.match(gate, /makeLancetArchCurve\\(0,3\\.72,0,6\\.24,3\\.05\\)/);
-  assert.match(gate, /makeLancetArchCurve\\(0,3\\.72,-0\\.04,5\\.72,2\\.78\\)/);
-  assert.match(gate, /makeLancetArchCurve\\(0,3\\.72,-0\\.08,5\\.28,2\\.55\\)/);
-  assert.match(gate, /Repeat the castle's pointed lancet profile/);
+  assert.ok(gate.includes("makeLancetArchCurve(0,3.72,0,6.24,3.05)"));
+  assert.ok(gate.includes("makeLancetArchCurve(0,3.72,-0.04,5.72,2.78)"));
+  assert.ok(gate.includes("makeLancetArchCurve(0,3.72,-0.08,5.28,2.55)"));
+  assert.ok(gate.includes("Repeat the castle's pointed lancet profile"));
 });
