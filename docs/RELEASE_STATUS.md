@@ -9,10 +9,11 @@
 - 續作內容：城堡主入口雙層尖拱、晶石拱心石、階梯金銀雙層欄杆與細柱；新增尖拱曲線與結構測試。
 - 已重新檢查 `AGENT.md`、繁中 README、3D 路線與發布流程；本批次遵守既有分支／人工發布規則，`AGENT.md` 無需修訂。
 - 不修改 Supabase schema、RLS、RPC、migration 或正式玩家資料；不調整星塵、服裝所有權、帳號、遊戲紀錄、聊天或探索資料。
-- 目前這輪尚待 CI 與私有預覽驗收；沒有做真實瀏覽器 WebGL、桌機／手機畫質或 FPS 實測。
+- Actions run #168（run ID `45004340672`）成功：Node tests **29 passed／0 failed**；Three.js 與 Supabase Edge Function 語法、首頁 inline JavaScript parse 均通過。PR 事件中的正式部署 job 為 skipped。
+- 私有預覽與真實瀏覽器 WebGL、桌機／手機畫質、碰撞與 FPS 尚未完成實際人工驗收；不可將自動化測試當作視覺驗收。
 
 
-## 2026-11-22 整合開發批次
+## 2026-11-22 整合開發批次（PR #20 合併前的歷史紀錄）
 
 - Repository：`Edward11031709/Starry-Dreamland`；預設分支：`main`。
 - 本批次基準：`main` @ `8f4873fddad924bd00d949eae60d8c41bcb2aac2`（已含 PR #19 的管理員預覽、審核入口與登入恢復變更）。
