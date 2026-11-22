@@ -409,6 +409,26 @@ body:before{opacity:.72;background-size:560px 500px}
 .admin-actions a:hover{background:#4a3c6c}
 .admin-note{padding:13px 15px;border:1px solid #e2ca8c66;border-radius:14px;background:#8b6b3020;color:#e7d6ac;font-size:12px;line-height:1.8}
 .admin-loading{padding:24px;text-align:center;color:#d0c6e8}
+.admin-command-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.admin-command-card{padding:17px;border:1px solid #d7c18f77;border-radius:17px;background:linear-gradient(145deg,#36335f,#151b38);box-shadow:inset 0 1px 0 #fff2}
+.admin-command-card h3{margin:0 0 7px;color:#f2d9a0;font-size:16px}
+.admin-command-card p{margin:0 0 13px;color:#cbc7df;font-size:12px;line-height:1.8}
+.admin-review-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}
+.admin-review-toolbar label,.admin-issue-form label{display:grid;gap:7px;color:#d9d0ec;font-size:11px;letter-spacing:.06em}
+.admin-review-toolbar select,.admin-issue-form input,.admin-issue-form select,.admin-issue-form textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid #cdb9eb88;border-radius:12px;background:#0c1430;color:#f4e9ce;outline:none;font:inherit;font-size:13px}
+.admin-issue-form textarea{min-height:92px;resize:vertical;line-height:1.7}
+.admin-review-toolbar select:focus,.admin-issue-form input:focus,.admin-issue-form select:focus,.admin-issue-form textarea:focus{border-color:#efd49a;box-shadow:0 0 0 3px #efd49a20}
+.admin-command-buttons{display:flex;flex-wrap:wrap;gap:8px}
+.admin-command-buttons button{min-height:40px}
+.admin-release-status,.admin-issue-status{margin-top:11px;min-height:22px;color:#d6c8f1;font-size:12px;line-height:1.75}
+.admin-issue-form{display:grid;gap:12px}
+.admin-issue-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.admin-issue-history{display:grid;gap:9px;margin-top:14px}
+.admin-issue-entry{padding:12px 14px;border:1px solid #cdb9eb55;border-radius:13px;background:#101831}
+.admin-issue-entry strong{display:block;color:#f1dfb6;font-size:13px}
+.admin-issue-entry p{margin:5px 0 0;color:#c4c0dc;font-size:11px;line-height:1.7;overflow-wrap:anywhere}
+.admin-command-note{margin-top:13px}
+@media(max-width:760px){.admin-command-grid{grid-template-columns:1fr}.admin-review-toolbar{grid-template-columns:1fr}.admin-issue-grid{grid-template-columns:1fr}.admin-command-buttons{display:grid;grid-template-columns:1fr}.admin-command-buttons button{width:100%}}
 
 .admin-preview-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,auto);gap:12px;align-items:end}
 .admin-preview-controls label{display:grid;gap:7px;color:#d9d0ec;font-size:11px;letter-spacing:.06em}
@@ -600,9 +620,853 @@ async function bootCloud(){
   authMessage("無法自動恢復登入狀態："+friendlyAuthError(error)+"。可以先按「重新嘗試恢復登入」，不必立即重新輸入密碼。",true);
  }
 }
+async function syncCloudRecord(record){
+ if(!cloudMode||!sb||!cloudUser)return;
+ const {error}=await sb.from("sd_game_records").insert({user_id:cloudUser.id,game_id:record.game,category:record.category,score:record.score,status:record.status,reward:record.reward});
+ if(error){say("本次成績尚未同步雲端："+friendlyAuthError(error));return}
+ const {data:rows,error:readError}=await sb.rpc("sd_my_game_records");
+ if(readError){say("成績已送出，但暫時無法更新星塵總數。");return}
+ const refreshed=(rows||[]).map(r=>({id:r.record_id,uid:cloudUser.id,name:me()?.name||"",game:r.game_id,category:r.category,score:Number(r.score)||0,status:r.status,reward:Number(r.reward)||0,time:Date.parse(r.created_at)||Date.now()}));
+ state.records=refreshed.sort((a,b)=>a.time-b.time);
+ const p=me();if(p){p.adultPoints=refreshed.filter(r=>r.category==="adult").reduce((s,r)=>s+r.reward,0);p.kidsPoints=refreshed.filter(r=>r.category==="kids").reduce((s,r)=>s+r.reward,0);p.points=p.adultPoints}
+ const {data:avatarRows,error:avatarError}=await sb.rpc("sd_avatar_state");
+ if(!avatarError&&Array.isArray(avatarRows)&&avatarRows[0]&&p){
+  p.avatarPoints=Number(avatarRows[0].points_balance)||0;
+  p.ownedAvatarIds=avatarRows[0].owned_avatar_ids||p.ownedAvatarIds;
+  p.avatarId=avatarRows[0].avatar_id||p.avatarId;
+ }
+ header();
+ const totalEl=document.getElementById("resultTotal");if(totalEl)totalEl.textContent=(KIDS_GAME_IDS.includes(record.game)?kidsTotal():total())+" ✦";
+}
+
+function renderParkSocialGate(kind,message){
+ const online=document.getElementById("parkOnlineCount"),list=document.getElementById("parkPlayers"),feed=document.getElementById("parkChatMessages"),status=document.getElementById("parkChatStatus"),input=document.getElementById("parkChatInput"),send=document.getElementById("parkChatSend");
+ if(online)online.textContent=kind==="admin"?"隱身模式":"尚未連線";
+ if(list)list.innerHTML='<div class="chat-placeholder">'+esc(message)+'</div>';
+ if(feed)feed.innerHTML='<div class="chat-placeholder">'+esc(message)+'</div>';
+ if(status)status.textContent=kind==="admin"?"管理員隱身中":kind==="guest"?"登入雲端帳號後即可加入":"正在連線園區頻道…";
+ if(input)input.disabled=true;if(send)send.disabled=true;
+}
+function appendParkChat(row){
+ const feed=document.getElementById("parkChatMessages");if(!feed||!row)return;
+ if(row.id&&feed.querySelector('[data-chat-id="'+String(row.id)+'"]'))return;
+ const empty=feed.querySelector(".chat-placeholder");if(empty)empty.remove();
+ const item=document.createElement("article");item.className="park-chat-message";
+ if(row.id)item.dataset.chatId=String(row.id);
+ const top=document.createElement("div");top.className="park-chat-message-top";
+ const name=document.createElement("b");name.textContent=String(row.nickname||"星空旅人");
+ const time=document.createElement("time");time.textContent=row.created_at?new Date(row.created_at).toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"}):"剛剛";
+ const body=document.createElement("p");body.textContent=String(row.message||"");
+ top.append(name,time);item.append(top,body);feed.append(item);
+ while(feed.children.length>40)feed.firstElementChild.remove();
+ feed.scrollTop=feed.scrollHeight;
+}
+function renderParkOnline(players){
+ const online=document.getElementById("parkOnlineCount"),list=document.getElementById("parkPlayers");
+ if(!online||!list)return;
+ const unique=new Map();
+ (players||[]).forEach(p=>{if(p&&p.sessionId)unique.set(p.sessionId,p)});
+ const rows=[...unique.values()];
+ online.textContent=rows.length+" 位旅人在線";
+ list.innerHTML="";
+ if(!rows.length){list.innerHTML='<div class="chat-placeholder">目前沒有其他旅人在線，等等看星門是否有人抵達。</div>';return}
+ rows.slice(0,12).forEach(p=>{
+  const item=document.createElement("div");item.className="park-online-person";
+  const orb=document.createElement("span");orb.className="park-online-orb";orb.textContent="✦";
+  const name=document.createElement("b");name.textContent=(p.sessionId===parkSessionId?"你 · ":"")+String(p.nickname||"星空旅人");
+  const state=document.createElement("small");state.textContent=p.sessionId===parkSessionId?"正在探索":"在線探索中";
+  item.append(orb,name,state);list.append(item);
+ });
+}
+function renderParkVisitorMarkers(players){
+ const group=document.getElementById("parkMapVisitors");if(!group)return;
+ group.replaceChildren();
+ (players||[]).forEach(p=>{
+  if(!p||p.sessionId===parkSessionId)return;
+  const x=Math.max(-41,Math.min(41,Number(p.x)||0)),z=Math.max(-43,Math.min(43,Number(p.z)||0));
+  const dot=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  dot.setAttribute("cx",String(x));dot.setAttribute("cy",String(z));dot.setAttribute("r","1.55");dot.setAttribute("class","map-visitor");
+  const title=document.createElementNS("http://www.w3.org/2000/svg","title");title.textContent=String(p.nickname||"旅人");dot.append(title);group.append(dot);
+ });
+}
+function currentParkPresence(){
+ const p=me();return {
+  sessionId:parkSessionId,nickname:p?.name||"星空旅人",avatarId:p?.avatarId||"wanderer",
+  avatarType:p?.avatarType||"wanderer",appearance:Object.assign({},DEFAULT_APPEARANCE,p?.appearance||{}),
+  x:parkLocalPosition.x,z:parkLocalPosition.z,yaw:parkLocalPosition.yaw,
+  onlineAt:new Date().toISOString()
+ };
+}
+async function refreshParkPresence(){
+ if(!parkChannel||!cloudUser||me()?.isAdmin)return;
+ try{await parkChannel.track(currentParkPresence())}catch(error){console.warn("Park presence update failed:",error)}
+}
+async function loadParkChatHistory(){
+ if(!sb||!parkChannel||me()?.isAdmin)return;
+ const {data,error}=await sb.from("sd_chat_messages")
+  .select("id,nickname,message,created_at")
+  .order("created_at",{ascending:false}).limit(40);
+ if(error){const status=document.getElementById("parkChatStatus");if(status)status.textContent="聊天紀錄暫時無法載入";console.warn("Park chat history failed:",error);return}
+ const feed=document.getElementById("parkChatMessages");if(feed)feed.innerHTML="";
+ (data||[]).slice().reverse().forEach(appendParkChat);
+ if(!data?.length){const feed=document.getElementById("parkChatMessages");if(feed)feed.innerHTML='<div class="chat-placeholder">夜色正好，向其他旅人打聲招呼吧。</div>'}
+}
+async function startParkSocial(){
+ const feed=document.getElementById("parkChatMessages");if(!feed)return;
+ if(!cloudMode||!cloudUser){renderParkSocialGate("guest","登入遊戲帳號後，就能在園區遇見其他旅人並即時聊天。");return}
+ if(me()?.isAdmin){renderParkSocialGate("admin","管理員隱身模式已啟用：你的角色、在線狀態與聊天紀錄不會公開。");renderParkVisitorMarkers([]);window.dispatchEvent(new CustomEvent("starry-3d-players",{detail:{players:[]}}));return}
+ if(parkChannel){await loadParkChatHistory();return}
+ if(parkSocialStarting)return;
+ parkSocialStarting=true;
+ const status=document.getElementById("parkChatStatus");if(status)status.textContent="正在連接星夢園區…";
+ const channel=sb.channel("park:lobby",{
+  config:{private:true,presence:{key:parkSessionId},broadcast:{ack:false,self:false}}
+ });
+ parkChannel=channel;
+ channel
+  .on("presence",{event:"sync"},()=>{
+   const state=channel.presenceState(),players=[],seen=new Set();
+   Object.values(state).flat().forEach(p=>{
+    if(p&&p.sessionId&&!seen.has(p.sessionId)){seen.add(p.sessionId);players.push(p)}
+   });
+   parkPresencePlayers=players;parkRemoteMap=new Map(players.filter(p=>p&&p.sessionId&&p.sessionId!==parkSessionId).map(p=>[p.sessionId,p]));
+   renderParkOnline(players);renderParkVisitorMarkers([...parkRemoteMap.values()]);
+   window.dispatchEvent(new CustomEvent("starry-3d-players",{detail:{players}}));
+  })
+  .on("broadcast",{event:"player_move"},({payload})=>{
+   if(!payload||!payload.sessionId||payload.sessionId===parkSessionId)return;
+   parkRemoteMap.set(payload.sessionId,payload);
+   renderParkVisitorMarkers([...parkRemoteMap.values()]);
+   window.dispatchEvent(new CustomEvent("starry-3d-player-move",{detail:{player:payload}}));
+  })
+  .on("broadcast",{event:"player_chat"},({payload})=>{
+   if(!payload||!payload.sessionId||payload.sessionId===parkSessionId||!payload.message)return;
+   window.dispatchEvent(new CustomEvent("starry-3d-player-chat",{detail:payload}));
+  })
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"sd_chat_messages"},payload=>{
+   if(payload&&payload.new)appendParkChat(payload.new);
+  })
+  .subscribe(async state=>{
+   if(state==="SUBSCRIBED"){
+    parkSocialStarting=false;
+    try{
+     await channel.track(currentParkPresence());
+     if(status)status.textContent="已連線 · 你正在星夢樂園中";
+     const input=document.getElementById("parkChatInput"),send=document.getElementById("parkChatSend");
+     if(input)input.disabled=false;if(send)send.disabled=false;
+     document.querySelectorAll("[data-park-reaction]").forEach(button=>button.disabled=false);
+     await loadParkChatHistory();
+    }catch(error){if(status)status.textContent="已加入園區，但同步狀態失敗";console.warn("Park channel setup failed:",error)}
+   }else if(state==="CHANNEL_ERROR"||state==="TIMED_OUT"||state==="CLOSED"){
+    parkSocialStarting=false;
+    if(status)status.textContent="園區連線中斷，請重新整理頁面再試";
+   }
+  });
+}
+async function sendParkChatMessage(rawMessage){
+ if(!parkChannel||!sb||!cloudUser||me()?.isAdmin||parkChatSending)return false;
+ const message=String(rawMessage||"").trim();
+ if(!message)return false;
+ if(message.length>180){say("聊天訊息最多 180 個字。");return false}
+ parkChatSending=true;
+ const send=document.getElementById("parkChatSend");
+ if(send)send.disabled=true;
+ document.querySelectorAll("[data-park-reaction]").forEach(button=>button.disabled=true);
+ try{
+  const {data,error}=await sb.from("sd_chat_messages")
+   .insert({user_id:cloudUser.id,message})
+   .select("id,nickname,message,created_at").single();
+  if(error){say("訊息未能送出："+friendlyAuthError(error));return false}
+  appendParkChat(data);
+  const payload={
+   sessionId:parkSessionId,
+   nickname:data.nickname||me()?.name||"星空旅人",
+   message:data.message||message,
+   createdAt:data.created_at||new Date().toISOString()
+  };
+  try{await parkChannel.send({type:"broadcast",event:"player_chat",payload})}
+  catch(error){console.warn("Park chat bubble broadcast failed:",error)}
+  window.dispatchEvent(new CustomEvent("starry-3d-player-chat",{detail:payload}));
+  return true;
+ }finally{
+  parkChatSending=false;
+  if(send)send.disabled=false;
+  document.querySelectorAll("[data-park-reaction]").forEach(button=>button.disabled=false);
+ }
+}
+async function sendParkChat(){
+ const input=document.getElementById("parkChatInput");if(!input)return;
+ const sent=await sendParkChatMessage(input.value);
+ if(sent)input.value="";
+ input.focus();
+}
+async function sendParkReaction(reaction){
+ if(!["👋","✨","☾","💖"].includes(reaction))return;
+ await sendParkChatMessage(reaction);
+}
+async function stopParkSocial(){
+ const channel=parkChannel;parkChannel=null;parkSocialStarting=false;parkMoveLast=null;parkRemoteMap.clear();
+ if(channel&&sb){try{await channel.untrack()}catch(e){}try{await sb.removeChannel(channel)}catch(e){}}
+ renderParkVisitorMarkers([]);
+ window.dispatchEvent(new CustomEvent("starry-3d-players",{detail:{players:[]}}));
+}
+
+function updateParkFullscreenButton(){
+ const button=document.querySelector("[data-park-fullscreen]");
+ if(!button)return;
+ const active=!!document.fullscreenElement;
+ button.textContent=active?"⤢ 離開全螢幕":"⛶ 全螢幕";
+}
+async function enterLandscapeMode(){
+ const plaza=document.getElementById("starry-plaza");
+ if(plaza&&!document.fullscreenElement){
+  try{
+   if(plaza.requestFullscreen)await plaza.requestFullscreen({navigationUI:"hide"});
+   else if(plaza.webkitRequestFullscreen)plaza.webkitRequestFullscreen();
+  }catch(error){console.warn("Fullscreen request unavailable:",error)}
+ }
+ try{
+  if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock("landscape");
+ }catch(error){
+  const status=document.getElementById("starry-3d-status");
+  if(status)status.textContent="請手動將手機轉為橫向，即可使用完整觸控操作";
+ }
+ updateParkFullscreenButton();
+}
+async function toggleParkFullscreen(){
+ if(document.fullscreenElement){
+  try{await document.exitFullscreen()}catch(error){console.warn("Exit fullscreen failed:",error)}
+ }else{
+  await enterLandscapeMode();
+ }
+ updateParkFullscreenButton();
+}
+function bindParkTouchControls(){
+ const joystick=document.getElementById("parkJoystick");
+ const knob=document.getElementById("parkJoystickKnob");
+ const runButton=document.getElementById("parkRunButton");
+ const viewButton=document.querySelector("[data-camera-toggle]");
+ if(viewButton){
+  viewButton.dataset.bound="1";
+  viewButton.textContent="切換第三人稱";
+ }
+ if(!window.__parkCameraModeListener){
+  window.__parkCameraModeListener=true;
+  window.addEventListener("starry-3d-camera-mode",event=>{
+   const current=document.querySelector("[data-camera-toggle]");
+   if(current)current.textContent=event.detail?.mode==="first"?"切換第三人稱":"切換第一人稱";
+  });
+ }
+ if(joystick&&!joystick.dataset.bound){
+  joystick.dataset.bound="1";
+  let pointerId=null;
+  const moveStick=event=>{
+   if(pointerId!==event.pointerId)return;
+   const rect=joystick.getBoundingClientRect();
+   const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+   const radius=rect.width*0.34;
+   let dx=event.clientX-cx,dy=event.clientY-cy;
+   const length=Math.hypot(dx,dy);
+   if(length>radius){dx=dx/length*radius;dy=dy/length*radius}
+   const x=dx/radius,y=dy/radius;
+   knob.style.transform="translate("+dx+"px,"+dy+"px)";
+   window.dispatchEvent(new CustomEvent("starry-3d-touch-move",{detail:{x,y}}));
+  };
+  const resetStick=event=>{
+   if(pointerId===null||(event&&event.pointerId!==pointerId))return;
+   pointerId=null;knob.style.transform="translate(0,0)";
+   window.dispatchEvent(new CustomEvent("starry-3d-touch-move",{detail:{x:0,y:0}}));
+  };
+  joystick.addEventListener("pointerdown",event=>{
+   event.preventDefault();pointerId=event.pointerId;
+   try{joystick.setPointerCapture(pointerId)}catch(error){}
+   moveStick(event);
+  });
+  joystick.addEventListener("pointermove",moveStick);
+  joystick.addEventListener("pointerup",resetStick);
+  joystick.addEventListener("pointercancel",resetStick);
+  joystick.addEventListener("lostpointercapture",resetStick);
+ }
+ if(runButton&&!runButton.dataset.bound){
+  runButton.dataset.bound="1";
+  const setRun=active=>{window.dispatchEvent(new CustomEvent("starry-3d-touch-run",{detail:{active}}));runButton.classList.toggle("active",active)};
+  runButton.addEventListener("pointerdown",event=>{event.preventDefault();try{runButton.setPointerCapture(event.pointerId)}catch(error){}setRun(true)});
+  ["pointerup","pointercancel","lostpointercapture"].forEach(name=>runButton.addEventListener(name,()=>setRun(false)));
+ }
+ if(!window.__parkNearbyListener){
+  window.__parkNearbyListener=true;
+  window.addEventListener("starry-3d-nearby",event=>{
+   const button=document.querySelector("[data-park-interact]");
+   if(button)button.textContent=event.detail?.label||"互動　E";
+  });
+ }
+ if(!window.__parkFullscreenListener){
+  window.__parkFullscreenListener=true;
+  document.addEventListener("fullscreenchange",updateParkFullscreenButton);
+  document.addEventListener("webkitfullscreenchange",updateParkFullscreenButton);
+ }
+}
+function renderParkJournal(){
+ const p=me();if(!p)return;
+ const validIds=Array.isArray(p.parkDiscoveries)?p.parkDiscoveries.filter(id=>PARK_DISCOVERIES.some(item=>item.id===id)):[];
+ const discovered=new Set(validIds);
+ const total=PARK_DISCOVERIES.length,count=discovered.size;
+ const countEl=document.getElementById("parkDiscoveryCount");
+ const progress=document.getElementById("parkDiscoveryProgress");
+ const grid=document.getElementById("parkDiscoveryGrid");
+ const milestone=document.getElementById("parkDiscoveryMilestone");
+ if(countEl)countEl.textContent=count+" / "+total;
+ if(progress)progress.style.width=(count/total*100)+"%";
+ if(grid)grid.innerHTML=PARK_DISCOVERIES.map(item=>{
+  const found=discovered.has(item.id);
+  return '<article class="park-journal-item '+(found?"found":"locked")+'"><span class="park-journal-symbol">'+(found?"✦":"◇")+'</span><div><b>'+(found?esc(item.name):"未探索地點")+'</b><small>'+(found?esc(item.description):"親自抵達這處地標即可解鎖")+'</small></div><em>'+(found?"已記錄":"待發現")+'</em></article>';
+ }).join("");
+ if(milestone){
+  milestone.textContent=count===total
+   ?"✦ 星光收藏家：完成全部 12 處探索，手帳已全部點亮。"
+   :count>=8
+   ?"✦ 星境漫遊者：已發現 "+count+" 處地點，再尋找最後幾處星光。"
+   :count>=4
+   ?"✦ 初識星夢：已發現 "+count+" 處地點，繼續沿著星光步道前進。"
+   :"漫遊園區、靠近地標，即可自動記錄探索足跡。";
+ }
+}
+async function recordParkDiscovery(detail){
+ const item=PARK_DISCOVERIES.find(x=>x.id===detail?.id),p=me();
+ if(!item||!p||parkDiscoveryPending.has(item.id))return;
+ p.parkDiscoveries=Array.isArray(p.parkDiscoveries)?p.parkDiscoveries:[];
+ if(p.parkDiscoveries.includes(item.id)){renderParkJournal();return}
+ parkDiscoveryPending.add(item.id);
+ try{
+  if(cloudMode&&cloudUser&&sb){
+   const {data,error}=await sb.rpc("sd_park_discovery_claim",{p_discovery_id:item.id});
+   if(error)throw error;
+   const result=Array.isArray(data)?data[0]:data;
+   if(!result||result.discovery_id!==item.id)throw new Error("探索紀錄未能確認");
+   p.parkDiscoveries=[...new Set([...p.parkDiscoveries,item.id])];
+   renderParkJournal();
+   if(result.newly_discovered){
+    const total=Number(result.total_discovered)||p.parkDiscoveries.length;
+    const title=total===12?"星光收藏家":total===8?"星境漫遊者":total===4?"初識星夢":"";
+    say("✦ 新地點發現："+item.name+(title?" · 里程碑："+title:""));
+   }
+  }else{
+   p.parkDiscoveries=[...new Set([...p.parkDiscoveries,item.id])];
+   save();renderParkJournal();
+   say("✦ 新地點發現："+item.name);
+  }
+ }catch(error){
+  console.warn("Park discovery save failed:",error);
+  say("探索紀錄同步失敗，請重新整理後再進入該區域重試。");
+ }finally{
+  parkDiscoveryPending.delete(item.id);
+ }
+}
+function mountCurrentPark(host=document.getElementById("starry-3d")){
+ if(!host||!host.isConnected||!window.Starry3D?.mount)return false;
+ try{
+  window.Starry3D.mount(host);
+  return host.dataset.status==="ready";
+ }catch(error){
+  console.error("Starry Dreamland 3D scene mount failed:",error);
+  host.dataset.status="fallback";
+  const stage=window.STARRY_3D_BOOT_STAGE||"unknown";
+  const reason=error&&error.message?error.message:String(error||"Unknown error");
+  host.dataset.errorStage=stage;
+  host.dataset.errorMessage=reason;
+  const fallback=host.querySelector(".starry-3d-fallback");
+  if(fallback){
+   fallback.hidden=false;
+   fallback.innerHTML='<strong>3D 世界啟動失敗</strong><span>已定位初始化失敗點；請將下方錯誤資訊回傳，以便精準修復。下方遊戲入口仍可使用。</span>';
+   const detail=document.createElement("code");
+   detail.style.cssText="display:block;max-width:min(90%,760px);white-space:pre-wrap;overflow-wrap:anywhere;margin:12px auto 0;padding:10px 12px;border:1px solid #d5c09166;border-radius:10px;background:#090d2bcc;color:#f2d69a;font:12px/1.6 ui-monospace,monospace;text-align:left";
+   detail.textContent="初始化階段："+stage+"\n錯誤："+reason;
+   fallback.appendChild(detail);
+  }
+  const status=document.getElementById("starry-3d-status");
+  if(status)status.textContent="3D 場景初始化失敗 · "+stage+" · "+reason;
+  return false;
+ }
+}
+function home(){disposeAvatarAtelierPreview();nav("home");header();shell('<section class="hero"><div class="eyebrow">STAR DREAMLAND · AFTER DARK</div><h1>星夢夜遊園</h1><p>入夜後才開始的星際遊樂園。登上雲霄飛車、挑戰霓虹靶場、穿越鏡屋密室，在城堡燈火之間展開夜間冒險。</p></section><section class="plaza plaza-3d" id="starry-plaza"><div id="starry-3d" class="starry-3d-stage" aria-label="星夢樂園 3D 中央廣場"><div class="starry-3d-fallback"><strong>星夢廣場準備中</strong><span>正在載入 3D 場景；若暫時無法顯示，仍可從下方遊戲入口開始挑戰。</span></div></div><aside class="park-minimap" aria-label="星夢樂園地圖">\n <div class="park-map-heading"><span>✦ 園區導覽</span><button class="map-expand-button" data-map-expand aria-label="放大園區地圖">放大 ↗</button></div>\n <svg class="park-map-svg" viewBox="-44 -48 88 96" role="img" aria-label="星夢樂園設施位置簡圖">\n  <circle cx="0" cy="0" r="42" class="map-island"/>\n  <path class="map-path" d="M0 44 L0 36 L0 27 L0 18 L0 9 L0 0 L0 -10 L0 -19"/>\n  <path class="map-path" d="M0 15 L-10 15 L-18 9 L-22 1 L-23 -9 L-25 -19"/>\n  <path class="map-path" d="M0 15 L10 15 L18 9 L23 1 L25 -8 L25 -18"/>\n  <path class="map-path" d="M0 -15 L-9 -20 L-20 -21 L-30 -17"/>\n  <path class="map-path" d="M0 -15 L9 -20 L20 -21 L30 -17"/>\n  <path class="map-path" d="M0 -3 L-10 -3 L-19 -8"/>\n  <circle cx="0" cy="-18" r="3.3" class="map-castle"/><text x="0" y="-23" class="map-label">城堡</text>\n  <circle cx="-21.5" cy="0.7" r="3" class="map-ride"/><text x="-21.5" y="7" class="map-label">木馬</text>\n  <circle cx="-13" cy="-11.5" r="2.7" class="map-ride"/><text x="-13" y="-6.5" class="map-label">茶杯</text>\n  <circle cx="13" cy="-10" r="2.7" class="map-ride"/><text x="13" y="-5" class="map-label">塔</text>\n  <circle cx="25" cy="-17" r="3" class="map-ride"/><text x="25" y="-11" class="map-label">摩天輪</text>\n  <circle cx="18" cy="9" r="2.8" class="map-game"/><text x="18" y="14" class="map-label">射擊</text>\n  <circle cx="-19" cy="-8" r="2.8" class="map-game"/><text x="-19" y="-3" class="map-label">鏡屋</text>\n  <circle cx="-4.8" cy="30.5" r="2.6" class="map-service"/><text x="-4.8" y="36" class="map-label">票亭</text>\n  <circle cx="0" cy="42" r="2.35" class="map-castle"/><text x="0" y="47" class="map-label">入口</text>\n  <circle cx="-13" cy="-11.5" r="1.0" class="map-service"/><text x="-13" y="-16" class="map-label">茶杯</text>\n  <circle cx="13" cy="-10" r="1.0" class="map-service"/><text x="13" y="-15" class="map-label">落體塔</text>\n  <circle cx="-7.2" cy="8.2" r="1.75" class="map-game"/><circle cx="0" cy="8.2" r="1.75" class="map-game"/><circle cx="7.2" cy="8.2" r="1.75" class="map-game"/>\n  <text x="0" y="4.8" class="map-label">星門挑戰</text>\n  <circle cx="-24.5" cy="-19" r="2.0" class="map-ride"/><text x="-24.5" y="-14.8" class="map-label">雲霄飛車</text>\n  <circle cx="-30" cy="-16.5" r="2.5" class="map-service"/><text x="-30" y="-11" class="map-label">觀測站</text>\n  <circle cx="8.25" cy="5.45" r="1.4" class="map-service"/><text x="8.25" y="3.1" class="map-label">補給</text>\n  <circle cx="5.1" cy="6.9" r="1.4" class="map-service"/><text x="5.1" y="10.1" class="map-label">兌換</text>\n  <g class="map-north" transform="translate(34 -35)"><path d="M0 5 L0 -5 M0 -5 L-2 -1 M0 -5 L2 -1"/><text x="0" y="-7">N</text></g>\n  <g id="parkMapVisitors"></g>\n  <g id="parkMapPlayer" class="map-player" transform="translate(0 33)">\n   <circle r="3.1"/><path d="M0 -7 L-2.2 -1.3 L2.2 -1.3 Z"/>\n  </g>\n </svg>\n <div class="park-map-legend"><span><i class="legend-ride"></i>設施</span><span><i class="legend-game"></i>遊戲場</span><span><i class="legend-player"></i>玩家</span></div>\n</aside>\n<div class="plaza-topline"><span class="plaza-tag">✦ OPEN WORLD NIGHT PARK</span><span class="plaza-camera">入口第三人稱視角</span></div><div class="locked">✧ 星際競技館<br><small>尚未開放 · COMING SOON</small></div><div id="starry-3d-status" class="plaza-status">正在喚醒星夢廣場…</div>\n<div class="park-stage-tools">\n <button type="button" class="park-tool-button" data-park-fullscreen>⛶ 全螢幕</button>\n <button type="button" class="park-tool-button" data-camera-toggle>切換第三人稱</button>\n</div>\n<div id="parkTouchControls" class="park-touch-controls" aria-label="手機觸控操作">\n <div class="park-joystick-wrap"><div id="parkJoystick" class="park-joystick" aria-label="移動搖桿"><div id="parkJoystickKnob" class="park-joystick-knob"></div></div><small>移動</small></div>\n <div class="park-mobile-actions">\n  <div class="park-look-hint">滑動右側畫面環顧四周</div>\n  <button type="button" id="parkRunButton" class="park-action-button">奔跑</button>\n  <button type="button" class="park-action-button park-interact-button" data-park-interact>互動　E</button>\n </div>\n</div>\n<div id="parkRotatePrompt" class="park-rotate-overlay">\n <div class="park-rotate-card">\n  <div class="park-rotate-symbol">↻</div>\n  <h2>請將手機轉為橫向</h2>\n  <p>星夢樂園以橫式視野設計，橫向才能完整看見園區並使用觸控搖桿。</p>\n  <button type="button" class="btn" data-enter-landscape>嘗試切換橫向並全螢幕</button>\n  <small>若瀏覽器不支援自動旋轉，請手動旋轉手機。</small>\n </div>\n</div>\n<div class="plaza-controls"><span>WASD／方向鍵：移動</span><span>Shift：奔跑</span><span>E：互動／下車</span><span>拖曳：旋轉視角</span><span>滾輪：調整遠近</span></div><div class="caption">✦ STAR DREAMLAND　／　自由探索夜遊園</div></section><section class="park-journal-panel" aria-label="星境探索手帳">\n <div class="park-journal-heading">\n  <div><small>EXPLORER&#39;S FIELD NOTES</small><h2>星境探索手帳</h2><p>親自走訪園區地標，讓手帳逐一亮起星光。</p></div>\n  <div class="park-journal-score"><b id="parkDiscoveryCount">0 / 12</b><small>已發現地點</small></div>\n </div>\n <div class="park-journal-progress"><span id="parkDiscoveryProgress"></span></div>\n <div id="parkDiscoveryGrid" class="park-journal-grid"></div>\n <div id="parkDiscoveryMilestone" class="park-journal-milestone">漫遊園區、靠近地標，即可自動記錄探索足跡。</div>\n</section><section class="park-social-panel">\n <div class="park-social-heading"><div><small>LIVE PARK LOUNGE</small><h2>旅人會客廳</h2><p>在園區碰見其他旅人，也可以在這裡即時聊天。</p></div><span id="parkOnlineCount" class="park-online-count">尚未連線</span></div>\n <div class="park-social-layout">\n  <aside class="park-online-panel"><h3>✦ 在線旅人</h3><div id="parkPlayers"><div class="chat-placeholder">載入在線名單…</div></div></aside>\n  <div class="park-chat-panel"><div class="park-chat-top"><b>星夢廣場公共頻道</b><span id="parkChatStatus">準備連線…</span></div><div id="parkChatMessages" class="park-chat-messages"><div class="chat-placeholder">登入後即可開始聊天。</div></div><div class="park-chat-reactions" aria-label="快速表情">\n   <button type="button" data-park-reaction="👋" disabled>👋 揮手</button>\n   <button type="button" data-park-reaction="✨" disabled>✨ 星光</button>\n   <button type="button" data-park-reaction="☾" disabled>☾ 月亮</button>\n   <button type="button" data-park-reaction="💖" disabled>💖 愛心</button>\n  </div>\n  <form id="parkChatForm" class="park-chat-form"><input id="parkChatInput" maxlength="180" placeholder="向其他旅人打聲招呼…" autocomplete="off" disabled/><button id="parkChatSend" class="btn sm" type="submit" disabled>傳送</button></form></div>\n </div>\n</section><div class="wardrobe-entry"><div><b>旅人角色工坊</b><small>選擇旅人類型，調整髮型、髮色、膚色與星紋／眼睛光色，也能收藏不同服裝。</small></div><button class="btn sm" data-wardrobe>編輯角色外觀</button></div><div class="head"><div><h2>夜遊設施</h2><p>每項設施都有獨立玩法與隨機關卡，完成挑戰即可收集星塵。</p></div></div><section class="cards"><article class="card"><div class="art">☾</div><h3>月相共鳴</h3><p>在不規則節奏中判斷月光時機，連續命中可取得更高分數。</p><button class="btn sm" data-game="moon">進入挑戰</button></article><article class="card"><div class="art">⌘</div><h3>星域解碼</h3><p>從符號位置與命中數量推理四位密碼，線索不會直接揭露答案。</p><button class="btn sm" data-game="cipher">進入挑戰</button></article><article class="card"><div class="art">⌁</div><h3>軌道接線</h3><p>旋轉不同形狀的節點，將起點接通出口；路線每次重新生成。</p><button class="btn sm" data-game="orbit">進入挑戰</button></article></section><div class="head"><div><h2>夜間限定設施</h2><p>兩款新增遊戲都會在每次結束時完整公開正解與操作紀錄。</p></div></div><section class="cards"><article class="card"><div class="art">◎</div><h3>霓虹神射手</h3><p>24 秒反應靶場，依序命中六個亮起的目標，考驗專注力與反應速度。</p><button class="btn sm" data-game="shooting-range">進入靶場</button></article><article class="card"><div class="art">◇</div><h3>幻影鏡屋</h3><p>三輪漸進式光影記憶試煉，記住符號順序，穿越鏡面長廊。</p><button class="btn sm" data-game="mirror-house">進入鏡屋</button></article></section><div class="head"><div><h2>旅人資料</h2><p>'+(cloudMode&&!cloudUser?"目前為訪客預覽，遊玩不會儲存成績；按右上角「登入／註冊」即可連接全球帳號。":"你的星塵與遊玩紀錄會隨帳號同步保存。")+'</p></div></div><div class="stats"><div class="stat"><small>玩家暱稱</small><b>'+esc(me().name)+'</b></div><div class="stat"><small>星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div><div class="stat"><small>一般遊戲</small><b>'+state.records.filter(r=>r.uid===me().id&&ADULT_GAME_IDS.includes(r.game)).length+'</b></div></div><div class="footer">Starry Dreamland · 星夢樂園　｜　一般遊戲與星芽探索分開計分</div>');const host=document.getElementById("starry-3d");if(host&&me()){host.dataset.avatar=me().avatarId||"wanderer";host.dataset.avatarCustomization=JSON.stringify({avatarType:me().avatarType||"wanderer",appearance:Object.assign({},DEFAULT_APPEARANCE,me().appearance||{})});host.dataset.sessionId=parkSessionId;host.dataset.parkDiscoveries=JSON.stringify(me().parkDiscoveries||[])}if(host)mountCurrentPark(host);renderParkJournal();startParkSocial();bindParkTouchControls();updateParkFullscreenButton() }
+
+function avatarSelectMarkup(id,label,options,value){
+ return '<label class="avatar-setting"><span>'+label+'</span><select id="'+id+'">'+options.map(o=>'<option value="'+o.id+'" '+(o.id===value?"selected":"")+'>'+o.name+'</option>').join("")+'</select></label>';
+}
+let atelierPreviewWaiting=false;
+function avatarAtelierPreviewOptions(){
+ const p=me();if(!p)return null;
+ const get=id=>document.getElementById(id)?.value;
+ return {
+  avatarId:atelierPreviewOutfit||p.avatarId||"wanderer",
+  avatarType:get("avatarTypeSelect")||p.avatarType||"wanderer",
+  appearance:{
+   hairStyle:get("avatarHairStyle")||p.appearance?.hairStyle||DEFAULT_APPEARANCE.hairStyle,
+   hairColor:get("avatarHairColor")||p.appearance?.hairColor||DEFAULT_APPEARANCE.hairColor,
+   skinTone:get("avatarSkinTone")||p.appearance?.skinTone||DEFAULT_APPEARANCE.skinTone,
+   accentColor:get("avatarAccentColor")||p.appearance?.accentColor||DEFAULT_APPEARANCE.accentColor
+  }
+ };
+}
+function updateAvatarAtelierPreview(){
+ const host=document.getElementById("avatarLivePreview"),options=avatarAtelierPreviewOptions();
+ if(!host||!options)return;
+ if(!window.Starry3D?.mountAvatarPreview||!window.Starry3D?.updateAvatarPreview){
+  if(!atelierPreviewWaiting){
+   atelierPreviewWaiting=true;
+   window.addEventListener("starry-3d-ready",()=>{atelierPreviewWaiting=false;updateAvatarAtelierPreview()},{once:true});
+  }
+  return;
+ }
+ if(host.dataset.previewMounted==="1")window.Starry3D.updateAvatarPreview(host,options);
+ else{
+  const mounted=window.Starry3D.mountAvatarPreview(host,options);
+  if(mounted)host.dataset.previewMounted="1";
+ }
+ document.querySelectorAll("[data-avatar-preview]").forEach(button=>{
+  button.classList.toggle("selected-preview",button.dataset.avatarPreview===atelierPreviewOutfit);
+ });
+}
+function disposeAvatarAtelierPreview(){
+ const host=document.getElementById("avatarLivePreview");
+ if(host&&window.Starry3D?.disposeAvatarPreview)window.Starry3D.disposeAvatarPreview(host);
+}
+function wardrobe(){
+ nav("home");
+ if(window.Starry3D?.dispose)window.Starry3D.dispose();
+ header();
+ const p=me();if(!p)return;
+ const owned=Array.isArray(p.ownedAvatarIds)?p.ownedAvatarIds:["wanderer"];
+ const activeId=p.avatarId||"wanderer";
+ atelierPreviewOutfit=activeId;
+ const balance=Number(p.avatarPoints??p.adultPoints)||0;
+ const avatarType=p.avatarType||"wanderer";
+ const appearance=Object.assign({},DEFAULT_APPEARANCE,p.appearance||{});
+ const cards=AVATARS.map(a=>{
+  const has=owned.includes(a.id),current=activeId===a.id,previewing=atelierPreviewOutfit===a.id;
+  const previewButton='<button class="btn alt" data-avatar-preview="'+a.id+'">3D 預覽</button>';
+  const action=has
+   ? '<button class="btn '+(current?"":"alt")+'" data-avatar-equip="'+a.id+'" '+(current?"disabled":"")+'>'+(current?"目前使用中":"套用造型")+'</button>'
+   : '<button class="btn" data-avatar-unlock="'+a.id+'">解鎖 · '+a.cost+' ✦</button>';
+  return '<article class="avatar-card '+(current?"current ":"")+(previewing?"previewing":"")+'"><div class="avatar-preview avatar-'+a.id+'"><span class="avatar-figure"><i class="avatar-cape"></i><i class="avatar-body"></i><i class="avatar-head"></i><i class="avatar-crown"></i></span></div><div class="avatar-rarity">'+a.rarity+'</div><h3>'+a.name+(current?'　✦':'')+'</h3><p>'+a.description+'</p><div class="avatar-price">'+(has?"已擁有":a.cost===0?"免費造型":a.cost+" 星塵")+'</div><div class="avatar-card-actions">'+previewButton+action+'</div></article>';
+ }).join("");
+ const typeOptions=avatarSelectMarkup("avatarTypeSelect","旅人類型",AVATAR_TYPES,avatarType);
+ const hairOptions=avatarSelectMarkup("avatarHairStyle","髮型",AVATAR_OPTIONS.hairStyle,appearance.hairStyle);
+ const hairColor=avatarSelectMarkup("avatarHairColor","髮色",AVATAR_OPTIONS.hairColor,appearance.hairColor);
+ const skinColor=avatarSelectMarkup("avatarSkinTone","膚色",AVATAR_OPTIONS.skinTone,appearance.skinTone);
+ const accentColor=avatarSelectMarkup("avatarAccentColor","星紋／眼睛光色",AVATAR_OPTIONS.accentColor,appearance.accentColor);
+ shell('<section class="hero"><div class="eyebrow">TRAVELER ATELIER · CHARACTER STUDIO</div><h1>旅人角色工坊</h1><p>選擇旅人類型與服裝，即時旋轉查看 3D 角色，再自訂髮型、髮色、膚色與星紋／眼睛光色。儲存後會同步到其他在線旅人。</p></section><div class="wardrobe-balance"><span>目前服裝：<b>'+esc(AVATARS.find(a=>a.id===activeId)?.name||"星旅者")+'</b></span><span>可用星塵：<b>'+balance+' ✦</b></span></div><section class="avatar-customizer"><div class="customizer-title"><div><small>CHARACTER IDENTITY</small><h2>角色類型與外觀</h2><p>調整下面選項，預覽角色會即時更新；服裝收藏可先預覽再決定是否套用。</p></div><span class="customizer-gem">✧</span></div><div class="avatar-live-preview-wrap"><div id="avatarLivePreview" class="avatar-live-preview" aria-label="旅人 3D 角色即時預覽"></div><div class="avatar-live-preview-caption"><b id="avatarPreviewName">'+esc(AVATARS.find(a=>a.id===activeId)?.name||"星旅者")+'</b><span>拖曳旋轉 · 即時外觀</span></div></div><div class="avatar-settings-grid">'+typeOptions+hairOptions+hairColor+skinColor+accentColor+'</div><div class="customizer-actions"><button class="btn" data-avatar-save>保存角色設定</button><span>預覽不會立即扣除星塵或變更已裝備服裝。</span></div></section><div class="head"><div><h2>星幻服裝收藏</h2><p>每套服裝可先試穿；未解鎖服裝仍可預覽，解鎖後才能正式套用。</p></div></div><section class="wardrobe-grid">'+cards+'</section><div class="panel" style="margin-top:18px"><p style="margin:0;color:var(--muted);font-size:12px;line-height:1.8">已解鎖的服裝永久保存在帳號。購買後可隨時切換，不會影響遊戲成績或排行榜。</p><button class="btn alt" data-page="home" style="margin-top:12px">返回星夢廣場</button></div>');
+ ["avatarTypeSelect","avatarHairStyle","avatarHairColor","avatarSkinTone","avatarAccentColor"].forEach(id=>{
+  document.getElementById(id)?.addEventListener("change",updateAvatarAtelierPreview);
+ });
+ updateAvatarAtelierPreview();
+}
+async function saveAvatarCustomization(){
+ const p=me();if(!p)return;
+ const get=id=>document.getElementById(id)?.value;
+ const next={
+  avatarType:get("avatarTypeSelect")||"wanderer",
+  appearance:{
+   hairStyle:get("avatarHairStyle")||"long",
+   hairColor:get("avatarHairColor")||DEFAULT_APPEARANCE.hairColor,
+   skinTone:get("avatarSkinTone")||DEFAULT_APPEARANCE.skinTone,
+   accentColor:get("avatarAccentColor")||DEFAULT_APPEARANCE.accentColor
+  }
+ };
+ if(!AVATAR_TYPES.some(x=>x.id===next.avatarType)||
+    !AVATAR_OPTIONS.hairStyle.some(x=>x.id===next.appearance.hairStyle)||
+    !AVATAR_OPTIONS.hairColor.some(x=>x.id===next.appearance.hairColor)||
+    !AVATAR_OPTIONS.skinTone.some(x=>x.id===next.appearance.skinTone)||
+    !AVATAR_OPTIONS.accentColor.some(x=>x.id===next.appearance.accentColor)){
+   say("角色設定包含無效選項，請重新選擇。");return;
+ }
+ if(cloudMode&&cloudUser&&sb){
+  const {data,error}=await sb.rpc("sd_customize_avatar",{
+   p_avatar_type:next.avatarType,
+   p_hair_style:next.appearance.hairStyle,
+   p_hair_color:next.appearance.hairColor,
+   p_skin_tone:next.appearance.skinTone,
+   p_accent_color:next.appearance.accentColor
+  });
+  if(error){say("保存角色設定失敗："+friendlyAuthError(error));return}
+  if(!data||data.avatar_type!==next.avatarType){say("資料庫未能確認設定，請重新整理後再試。");return}
+ }
+ p.avatarType=next.avatarType;p.appearance=next.appearance;save();
+ window.dispatchEvent(new CustomEvent("starry-3d-avatar-change",{detail:{
+  avatarId:p.avatarId||"wanderer",avatarType:p.avatarType,appearance:p.appearance
+ }}));
+ await refreshParkPresence();
+ say("旅人外觀已保存並同步。");
+ wardrobe();
+}
+async function unlockAvatar(id){
+ const p=me(),avatar=AVATARS.find(a=>a.id===id);if(!p||!avatar)return;
+ const owned=Array.isArray(p.ownedAvatarIds)?p.ownedAvatarIds:["wanderer"];
+ if(owned.includes(id)){say("這款造型已經在你的衣櫥裡了。");return}
+ if(cloudMode&&cloudUser&&sb){
+  const {data,error}=await sb.rpc("sd_avatar_unlock",{p_avatar_id:id});
+  if(error){say("解鎖失敗："+friendlyAuthError(error));return}
+  const row=Array.isArray(data)?data[0]:data;
+  if(!row){say("造型解鎖結果未能確認，請重新整理後再試。");return}
+  p.ownedAvatarIds=row.owned_avatar_ids||[...owned,id];
+  p.avatarPoints=Number(row.points_balance)||0;
+ }else{
+  const balance=Number(p.avatarPoints??p.adultPoints)||0;
+  if(balance<avatar.cost){say("星塵不足，再完成幾次挑戰就能解鎖。");return}
+  p.avatarPoints=balance-avatar.cost;
+  p.ownedAvatarIds=[...owned,id];
+  save();
+ }
+ say("已解鎖「"+avatar.name+"」！造型已永久加入衣櫥。");
+ header();wardrobe();
+}
+async function equipAvatar(id){
+ const p=me();if(!p)return;
+ const owned=Array.isArray(p.ownedAvatarIds)?p.ownedAvatarIds:["wanderer"];
+ if(!owned.includes(id)){say("這款造型尚未解鎖。");return}
+ if(cloudMode&&cloudUser&&sb){
+  const {data,error}=await sb.rpc("sd_avatar_equip",{p_avatar_id:id});
+  if(error){say("套用造型失敗："+friendlyAuthError(error));return}
+  if(data!==id){say("資料庫沒有確認造型變更，請重新整理再試。");return}
+ }
+ p.avatarId=id;save();
+ window.dispatchEvent(new CustomEvent("starry-3d-avatar-change",{detail:{avatarId:id,avatarType:p.avatarType||"wanderer",appearance:p.appearance||DEFAULT_APPEARANCE}}));
+ refreshParkPresence();header();wardrobe();
+}
+
+function instructions(id){const d={moon:["月相共鳴","月亮會以不同速度與節奏穿越星軌。依照提示區判斷時機，完成 12 至 15 拍的動態節奏挑戰。","☾"],cipher:["星域解碼","破解由 7 種符號組成的 4 位不重複密碼。每次提交都會回報位置正確數與符號正確但位置錯誤數；最多 8 次推理機會。","⌘"],orbit:["軌道接線","旋轉 5 × 5 星際節點，將左側起點接通右側出口。管線方向與隨機路線每局都不同。","⌁"],constellation:["星座校準","45 秒內依序連接 8 顆目標星。星點位置與順序每局都會改變；點錯會扣分。","✧"],maze:["引力迷航","使用方向鍵或畫面按鈕移動光球，收集兩枚星塵碎片後抵達出口。迷宮每次重新生成。","◈"],"shooting-range":["霓虹神射手","在 24 秒內命中六個依序亮起的目標。誤按會扣分；結束後會列出六輪正解與你的反應紀錄。","◎"],"mirror-house":["幻影鏡屋","觀察三輪逐漸變長的光影序列，再依序點擊四種符號。每次結束都會揭曉所有關卡的完整正解。","◇"]}[id];if(!d)return;const kids=KIDS_GAME_IDS.includes(id);nav(kids?"children":"home");shell('<section class="hero"><div class="eyebrow">'+(kids?"LITTLE STARLAND":"ADVANCED STAR CHALLENGE")+'</div><h1>'+d[0]+'</h1><p>'+d[1]+'</p></section><div class="panel" style="max-width:700px;margin:auto;text-align:center"><div style="font-size:65px;color:var(--gold)">'+d[2]+'</div><p style="color:var(--muted);line-height:1.8">'+(kids?"這款遊戲的獎勵會累積到星芽星塵，不會影響星夢遊戲排行榜。":"挑戰分數會累積到星塵。每局題目或節奏都會變化。")+'</p><button class="btn" data-launch="'+id+'">開始挑戰</button> <button class="btn alt" data-page="'+(kids?"children":"home")+'">返回'+(kids?"星芽探索區":"星夢廣場")+'</button></div>')}
+function answerMarkup(review){if(!review)return "";return '<section class="answer-review"><h3>✦ 本局正解與解題回顧</h3><p>'+esc(review.summary||"以下為本局正確答案。")+'</p><ol>'+(review.lines||[]).map(line=>'<li>'+esc(line)+'</li>').join("")+'</ol></section>'}
+async function result(score,status,id){const review=active&&active.id===id&&typeof active.review==="function"?active.review(status):null;stop();score=Math.max(0,Math.min(100,Math.round(score)));const p=me(),isKids=KIDS_GAME_IDS.includes(id),reward=(status==="abandoned"||status==="failed")?0:Math.floor(score/10)+(status==="completed"?5:0);if(!p)return;if(reward){if(isKids)p.kidsPoints=(Number(p.kidsPoints)||0)+reward;else{p.adultPoints=(Number(p.adultPoints)||0)+reward;p.avatarPoints=(Number(p.avatarPoints??(p.adultPoints-reward))||0)+reward}p.points=p.adultPoints}const record={uid:p.id,name:p.name,game:id,score,status,reward,category:isKids?"kids":"adult",time:Date.now()};state.records.push(record);save();header();const totalLabel=isKids?"星芽星塵":"星塵",totalValue=isKids?kidsTotal():total();const replay=isKids?(id==="child-connect"?'<button class="btn alt" data-child="connect">再玩一次</button>':id==="child-memory"?'<button class="btn alt" data-child="memory">再玩一次</button>':'<button class="btn alt" data-childgame="'+id+'">再玩一次</button>'):'<button class="btn alt" data-game="'+id+'">再玩一次</button>';shell('<section class="hero"><div class="eyebrow">YOUR STAR JOURNEY</div><h1>挑戰結果</h1><p>'+({completed:"太棒了！你完成了本次挑戰。",timed_out:"時間到了，星空仍記住你的努力。",abandoned:"已提前離開，本次不發放星塵。",failed:"這次還沒破解成功，再試一次吧。"}[status])+'</p></section><div class="panel" style="max-width:650px;margin:auto;text-align:center"><div style="font-size:54px;color:var(--gold)">✦</div><div class="stats"><div class="stat"><small>本次分數</small><b>'+score+'</b></div><div class="stat"><small>獲得星塵</small><b>+'+reward+' ✦</b></div><div class="stat"><small>挑戰狀態</small><b style="font-size:17px">'+({completed:"完成",timed_out:"時間到",abandoned:"提前退出",failed:"尚未破解"}[status])+'</b></div></div><p style="color:var(--muted)">目前累積'+totalLabel+'：<b id="resultTotal">'+totalValue+' ✦</b></p>'+answerMarkup(review)+'<button class="btn" data-page="home">返回星夢廣場</button> '+replay+'</div>');if(cloudMode&&cloudUser)await syncCloudRecord(record)}
+
+function startConstellation(){let pts=[];while(pts.length<12){const p=[Math.floor(9+Math.random()*82),Math.floor(12+Math.random()*76)];if(pts.every(q=>Math.hypot(q[0]-p[0],q[1]-p[1])>12))pts.push(p)}let order=0,score=100,sec=45,done=[];active={id:"constellation"};shell('<div class="panel"><div class="head"><div><h2>✧ 星座校準</h2><p>按照閃爍指引連接 8 顆目標星。</p></div><div class="meta"><span class="chip" id="timer">45 秒</span><button class="ghost" data-quit>退出</button></div></div><div class="progress"><i id="progress"></i></div><div class="board"><svg id="lines" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"></svg><div class="nodes" id="nodes"></div></div><div class="head"><span class="chip" id="hint">星空指引：尋找第 1 顆星 ✧</span><b id="score" style="color:var(--gold)">分數 100</b></div></div>');const host=document.getElementById("nodes");pts.forEach((pt,i)=>{const b=document.createElement("button");b.className="node";b.textContent=i<8?"✦":"✧";b.style.left=pt[0]+"%";b.style.top=pt[1]+"%";if(i===0)b.classList.add("next");b.onclick=()=>{if(done.includes(i))return;if(i===order&&i<8){done.push(i);order++;b.classList.add("done");b.classList.remove("next");if(order<8)host.children[order].classList.add("next");document.getElementById("hint").textContent=order===8?"星座完成！":"星空指引：尋找第 "+(order+1)+" 顆星 ✧";document.getElementById("progress").style.width=(order/8*100)+"%";document.getElementById("lines").innerHTML=done.slice(1).map((n,k)=>'<line x1="'+pts[done[k]][0]+'" y1="'+pts[done[k]][1]+'" x2="'+pts[n][0]+'" y2="'+pts[n][1]+'" stroke="#f4d69c" stroke-width="1.3"/>').join("");if(order===8)result(Math.min(100,score+Math.max(0,sec-20)),"completed","constellation")}else{score=Math.max(0,score-5);b.style.opacity=".35";document.getElementById("score").textContent="分數 "+score;say("這不是目標星，再試一次！")}};host.appendChild(b)});clock=setInterval(()=>{sec--;const t=document.getElementById("timer");if(t)t.textContent=sec+" 秒";if(sec<=0)result(Math.max(0,Math.round(order/8*100)-(100-score)),"timed_out","constellation")},1000)}
+function startMoon(){let index=0,combo=0,score=0,sec=0,beats=12+Math.floor(Math.random()*4),start=Date.now()+1800,judged=false;const intervals=Array.from({length:beats},()=>950+Math.floor(Math.random()*551)),beatTimes=[0];for(let i=1;i<beats;i++)beatTimes.push(beatTimes[i-1]+intervals[i-1]);active={id:"moon"};shell('<div class="panel"><div class="head"><div><h2>☾ 月相共鳴</h2><p>每局節奏速度不同，掌握變化中的月光時機。</p></div><div class="meta"><span class="chip" id="beat">準備中</span><span class="chip" id="combo">COMBO 0</span><button class="ghost" data-quit>退出</button></div></div><div class="moon-track"><div class="hit-zone"></div><div class="moon-token" id="token">☾</div></div><div class="head"><span class="chip" id="feedback">等待月光靠近</span><b id="mscore" style="color:var(--gold)">分數 0</b></div><div class="progress"><i id="mprogress"></i></div><div style="text-align:center;margin-top:16px"><button class="btn" id="hit">☾ 共鳴</button></div></div>');function targetAt(i){return start+beatTimes[i]}function tick(){if(index>=beats)return;const now=Date.now(),diff=now-targetAt(index),pct=Math.max(0,Math.min(100,(diff+650)/1300*100)),token=document.getElementById("token");if(!token)return;token.style.left=pct+"%";document.getElementById("beat").textContent="第 "+(index+1)+" / "+beats+" 拍";document.getElementById("mprogress").style.width=((index+pct/100)/beats*100)+"%";if(Math.abs(diff)<320)document.getElementById("feedback").textContent="現在可以按下共鳴！";else if(diff< -320)document.getElementById("feedback").textContent="準備迎接月光…";else document.getElementById("feedback").textContent="月光通過中央光圈";if(diff>520&&!judged){judged=true;combo=0;document.getElementById("combo").textContent="COMBO 0";document.getElementById("feedback").textContent="錯過節拍";next()}frame=requestAnimationFrame(tick)}function next(){index++;judged=false;if(index>=beats)setTimeout(()=>result(score,"completed","moon"),250)}function hit(){if(index>=beats||Date.now()<start-500||judged)return;const delta=Date.now()-targetAt(index);if(delta < -320){document.getElementById("feedback").textContent="再等一下，月亮正在靠近中央";return}if(delta<=320){combo++;score=Math.min(100,score+Math.round(100/beats)+(Math.abs(delta)<150?2:0));document.getElementById("combo").textContent="COMBO "+combo;document.getElementById("mscore").textContent="分數 "+score;document.getElementById("feedback").textContent=Math.abs(delta)<150?"完美共鳴！✦":"共鳴成功！"}else{combo=0;document.getElementById("combo").textContent="COMBO 0";document.getElementById("feedback").textContent="慢了一拍，下一顆月亮再試試"}judged=true;next()}document.getElementById("hit").onclick=hit;const key=e=>{if(e.code==="Space"){e.preventDefault();hit()}};window.addEventListener("keydown",key);active.cleanup=()=>window.removeEventListener("keydown",key);frame=requestAnimationFrame(tick)}
+
+function startMaze(){let sec=45;mazeX=1;mazeY=1;mazeKeys=0;mazeSteps=0;const size=8,grid=Array.from({length:size},()=>Array(size).fill("#")),cells=[1,3,5];function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}function carve(cx,cy){grid[cy][cx]=".";const dirs=shuffle([[0,-2],[0,2],[-2,0],[2,0]]);dirs.forEach(([dx,dy])=>{const nx=cx+dx,ny=cy+dy;if(nx>=1&&nx<=5&&ny>=1&&ny<=5&&grid[ny][nx]==="#"){grid[cy+dy/2][cx+dx/2]=".";carve(nx,ny)}})}carve(1,1);grid[5][6]="E";const candidates=shuffle([[3,1],[5,1],[1,3],[3,3],[5,3],[1,5],[3,5],[5,5]]);mazeKeyPositions=candidates.slice(0,2);mazeKeyPositions.forEach(([kx,ky])=>grid[ky][kx]="K");mazeMap=grid.map(row=>row.join(""));active={id:"maze"};shell('<div class="panel"><div class="head"><div><h2>◈ 引力迷航</h2><p>收集兩枚隨機位置的星塵碎片，再抵達出口星門。</p></div><div class="meta"><span id="mtimer" class="chip">45 秒</span><span id="mkeys" class="chip">星塵 0 / 2</span><button class="ghost" data-quit>退出</button></div></div><div class="maze" id="maze"></div><div class="dpad"><span></span><button data-dir="up">↑</button><span></span><button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button></div><div class="head"><span class="chip" id="mhint">尋找兩枚星塵碎片</span><b id="steps" style="color:var(--gold)">步數 0</b></div></div>');draw();const key=e=>{const d={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[e.key];if(d){e.preventDefault();move(d[0],d[1])}};window.addEventListener("keydown",key);active.cleanup=()=>window.removeEventListener("keydown",key);clock=setInterval(()=>{sec--;const t=document.getElementById("mtimer");if(t)t.textContent=sec+" 秒";if(sec<=0)result(Math.max(0,Number(Boolean(mazeKeys&1))*40+Number(Boolean(mazeKeys&2))*40-mazeSteps),"timed_out","maze")},1000)}
+function draw(){const el=document.getElementById("maze");if(!el)return;el.innerHTML="";mazeMap.forEach((row,yy)=>row.split("").forEach((ch,xx)=>{const c=document.createElement("div");c.className="cell";if(ch==="#")c.classList.add("wall");if(ch==="E")c.classList.add("exit");const ki=mazeKeyPositions.findIndex(([kx,ky])=>kx===xx&&ky===yy);if(ch==="K"&&ki>=0&&!(mazeKeys&(1<<ki)))c.classList.add("key");if(mazeX===xx&&mazeY===yy){c.classList.add("player");c.textContent="🔮"}else if(ch==="K"&&c.classList.contains("key"))c.textContent="✦";else if(ch==="E")c.textContent="門";el.appendChild(c)}))}
+function move(dx,dy){const nx=mazeX+dx,ny=mazeY+dy;if(!mazeMap[ny]||mazeMap[ny][nx]==="#")return;mazeX=nx;mazeY=ny;mazeSteps++;const ch=mazeMap[mazeY][mazeX];if(ch==="K"){const ki=mazeKeyPositions.findIndex(([kx,ky])=>kx===mazeX&&ky===mazeY);if(ki>=0&&!(mazeKeys&(1<<ki))){mazeKeys|=1<<ki;say("收集到星塵碎片！")}}document.getElementById("mkeys").textContent="星塵 "+(Number(Boolean(mazeKeys&1))+Number(Boolean(mazeKeys&2)))+" / 2";document.getElementById("steps").textContent="步數 "+mazeSteps;if(ch==="E"){if(mazeKeys===3){result(Math.max(0,Math.min(100,100-(mazeSteps-15)*3)),"completed","maze");return}else document.getElementById("mhint").textContent="還需要收集兩枚星塵碎片！"}draw()}
+function start(id){stop();instructions(id)}
+function launch(id){if(id==="constellation")startConstellation();if(id==="moon")startMoon();if(id==="maze")startMaze();if(id==="cipher")startCipher();if(id==="orbit")startOrbit();if(id==="shooting-range")startShootingRange();if(id==="mirror-house")startMirrorHouse()}
+
+function startShootingRange(){
+ const glyphs=["✦","☾","✧","◇","◈","⊙","△","✹","✶"],seq=glyphs.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,6);
+ let round=0,hits=0,misses=0,seconds=24,live=false,targetStart=0,targetTimer=null,roundToken=0;
+ const outcomes=Array(6).fill(null),wrong=[],timers=new Set();
+ active={id:"shooting-range",review:()=>({summary:"每一輪都列出正確目標、你的命中結果與反應時間。",lines:seq.map((p,i)=>"第 "+(i+1)+" 輪正解：第 "+(p+1)+" 號靶 "+glyphs[p]+"；"+(outcomes[i]?.hit?"命中，反應 "+outcomes[i].ms+" ms":"未命中／超時")+(outcomes[i]?.wrong?"，誤按 "+outcomes[i].wrong+" 次":"")).concat(wrong.length?["額外誤按："+wrong.join("、")]:[])}),cleanup:()=>{timers.forEach(clearTimeout);timers.clear();targetTimer=null;roundToken++}};
+ function later(fn,ms){const t=setTimeout(()=>{timers.delete(t);fn()},ms);timers.add(t);return t}
+ shell('<section class="hero"><div class="eyebrow">NEON SHOOTING GALLERY</div><h1>霓虹神射手</h1><p>夜場反應靶場：記住每輪亮起的靶位，快速命中六個目標。</p></section><div class="panel shooting-panel"><div class="head"><div><h2>◎ 極光反應靶場</h2><p>只有發亮的靶才是本輪目標；誤按會扣分。</p></div><div class="meta"><span class="chip" id="shootTime">24 秒</span><span class="chip" id="shootCount">命中 0 / 6</span><button class="ghost" data-quit>結束</button></div></div><div class="shooting-status" id="shootStatus">準備瞄準第一輪…</div><div class="shooting-grid" id="shootGrid"></div><div class="head"><span class="chip" id="shootHint">依序命中六個亮起的目標</span><b id="shootScore" style="color:var(--gold)">命中 0　失誤 0</b></div><div class="progress"><i id="shootProgress"></i></div></div>');
+ const grid=document.getElementById("shootGrid");
+ glyphs.forEach((glyph,i)=>{
+  const b=document.createElement("button");b.className="shoot-target";b.innerHTML='<span>'+glyph+'</span><small>靶位 '+(i+1)+'</small>';
+  b.onclick=()=>{
+   if(!live||round>=6)return;
+   if(i!==seq[round]){misses++;wrong.push("第 "+(round+1)+" 輪誤按 "+(i+1)+" 號靶");document.getElementById("shootScore").textContent="命中 "+hits+"　失誤 "+misses;b.classList.add("wrong");later(()=>b.classList.remove("wrong"),240);return}
+   live=false;roundToken++;if(targetTimer!==null){clearTimeout(targetTimer);timers.delete(targetTimer);targetTimer=null}outcomes[round]={hit:true,ms:Date.now()-targetStart,wrong:wrong.filter(x=>x.startsWith("第 "+(round+1)+" 輪")).length};hits++;b.classList.remove("lit");b.classList.add("hit");
+   document.getElementById("shootCount").textContent="命中 "+hits+" / 6";document.getElementById("shootScore").textContent="命中 "+hits+"　失誤 "+misses;document.getElementById("shootProgress").style.width=(hits/6*100)+"%";
+   later(()=>{b.classList.remove("hit");round++;present()},320);
+  };
+  grid.appendChild(b);
+ });
+ function finish(status){live=false;result(Math.max(0,Math.min(100,Math.round(hits/6*100-misses*2))),status,"shooting-range")}
+ function present(){
+  if(round>=6){finish("completed");return}
+  const p=seq[round],b=grid.children[p],thisRound=++roundToken;live=true;targetStart=Date.now();
+  document.getElementById("shootStatus").textContent="第 "+(round+1)+" / 6 輪：目標出現！";
+  document.getElementById("shootHint").textContent="瞄準發亮的 "+glyphs[p]+"（靶位 "+(p+1)+"）";b.classList.add("lit");
+  targetTimer=later(()=>{targetTimer=null;if(thisRound!==roundToken||!live)return;live=false;b.classList.remove("lit");outcomes[round]={hit:false,wrong:wrong.filter(x=>x.startsWith("第 "+(round+1)+" 輪")).length};misses++;document.getElementById("shootScore").textContent="命中 "+hits+"　失誤 "+misses;later(()=>{round++;present()},280)},2600);
+ }
+ present();clock=setInterval(()=>{seconds--;const el=document.getElementById("shootTime");if(el)el.textContent=seconds+" 秒";if(seconds<=0)finish("timed_out")},1000);
+}
+
+function startMirrorHouse(){
+ const symbols=["☾","✦","◇","◈"],lengths=[3,4,5],answers=[],entered=[];let round=0,step=0,seconds=75,accepting=false;const timers=new Set();
+ active={id:"mirror-house",review:()=>({summary:"每一關都有唯一的符號順序，以下會完整揭曉正解與你的輸入。",lines:lengths.map((_,i)=>{const a=answers[i]||[],mine=entered[i]||[];return "第 "+(i+1)+" 關正解："+(a.length?a.map(x=>symbols[x]).join(" → "):"未開始")+"；你的輸入："+(mine.length?mine.map(x=>symbols[x]).join(" → "):"尚未輸入")+(mine.length===a.length&&mine.every((v,j)=>v===a[j])?"（全對）":"")})}),cleanup:()=>timers.forEach(clearTimeout)};
+ function later(fn,ms){const t=setTimeout(()=>{timers.delete(t);fn()},ms);timers.add(t)}
+ shell('<section class="hero"><div class="eyebrow">MIRROR MAZE · MEMORY TRIAL</div><h1>幻影鏡屋</h1><p>觀察光影亮起順序，再依正確次序重現。每關記憶長度都會增加。</p></section><div class="panel mirror-panel"><div class="head"><div><h2>◇ 光影記憶試煉</h2><p>共三關，依序記住月、星與晶石的閃光。</p></div><div class="meta"><span class="chip" id="mirrorTime">75 秒</span><span class="chip" id="mirrorRound">第 1 / 3 關</span><button class="ghost" data-quit>結束</button></div></div><div class="mirror-stage"><div class="mirror-status" id="mirrorStatus">觀察光影序列…</div><div class="mirror-pads" id="mirrorPads"></div><div class="mirror-progress" id="mirrorProgress">準備開始</div></div></div>');
+ const pads=document.getElementById("mirrorPads");
+ symbols.forEach((sym,i)=>{
+  const b=document.createElement("button");b.className="mirror-pad";b.innerHTML='<span>'+sym+'</span><small>'+["月輪","星芒","菱鏡","晶石"][i]+'</small>';
+  b.onclick=()=>{
+   if(!accepting)return;
+   const a=answers[round],mine=entered[round];mine.push(i);b.classList.add("flash");later(()=>b.classList.remove("flash"),220);
+   if(i!==a[step]){accepting=false;document.getElementById("mirrorStatus").textContent="光影順序錯誤，本局正解將在結果揭曉。";finish("failed");return}
+   step++;document.getElementById("mirrorProgress").textContent="已正確重現 "+step+" / "+a.length+" 個光影";
+   if(step===a.length){accepting=false;round++;if(round===lengths.length){finish("completed");return}document.getElementById("mirrorStatus").textContent="本關通過！下一關的序列會更長。";later(beginRound,900)}
+  };
+  pads.appendChild(b);
+ });
+ function beginRound(){
+  if(round>=3){finish("completed");return}
+  step=0;accepting=false;const answer=Array.from({length:lengths[round]},()=>Math.floor(Math.random()*4));answers[round]=answer;entered[round]=[];
+  document.getElementById("mirrorRound").textContent="第 "+(round+1)+" / 3 關";document.getElementById("mirrorStatus").textContent="仔細觀察，記住亮起的順序…";document.getElementById("mirrorProgress").textContent="本關序列長度："+answer.length;
+  answer.forEach((p,i)=>later(()=>{const b=pads.children[p];b.classList.add("flash");later(()=>b.classList.remove("flash"),310)},i*650));
+  later(()=>{accepting=true;document.getElementById("mirrorStatus").textContent="換你了！按照剛才順序點擊。";document.getElementById("mirrorProgress").textContent="輸入 0 / "+answer.length},answer.length*650+420);
+ }
+ function finish(status){accepting=false;const done=entered.reduce((sum,a,i)=>sum+(answers[i]&&a.length===answers[i].length&&a.every((v,j)=>v===answers[i][j])?1:0),0);const score=status==="completed"?100:Math.round(done/3*75+(round<3?step/Math.max(1,lengths[round]||1)*25:0));result(Math.max(0,Math.min(100,score)),status,"mirror-house")}
+ clock=setInterval(()=>{seconds--;const el=document.getElementById("mirrorTime");if(el)el.textContent=seconds+" 秒";if(seconds<=0)finish("timed_out")},1000);beginRound();
+}
+
+function startCipher(){const symbols=["✦","☾","✧","◇","◈","⊙","△"],pool=symbols.slice();for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}const secret=pool.slice(0,4);let guess=[],tries=0,sec=180;active={id:"cipher"};shell('<div class="panel"><div class="head"><div><h2>⌘ 星域解碼</h2><p>破解四位不重複符號密碼。線索只會告訴你有幾個位置正確、幾個符號存在但位置錯誤。</p></div><div class="meta"><span class="chip" id="cipherTime">180 秒</span><span class="chip" id="cipherTry">0 / 8 次</span><button class="ghost" data-quit>退出</button></div></div><div class="cipher-slots" id="cipherSlots"><span>？</span><span>？</span><span>？</span><span>？</span></div><div class="cipher-symbols" id="cipherSymbols"></div><div class="head"><button class="btn alt" id="cipherClear">清除重選</button><button class="btn" id="cipherSubmit" disabled>提交推理</button></div><div class="cipher-history" id="cipherHistory"><p>每次提交後會得到新的推理線索。</p></div></div>');const slots=document.getElementById("cipherSlots"),history=document.getElementById("cipherHistory"),submit=document.getElementById("cipherSubmit");function paint(){slots.innerHTML=Array.from({length:4},(_,i)=>'<span class="'+(guess[i]?"filled":"")+'">'+(guess[i]||"？")+'</span>').join("");submit.disabled=guess.length!==4;document.getElementById("cipherTry").textContent=tries+" / 8 次"}symbols.forEach(sym=>{const b=document.createElement("button");b.className="cipher-symbol";b.textContent=sym;b.onclick=()=>{if(guess.length>=4||guess.includes(sym))return;guess.push(sym);b.classList.add("picked");paint()};document.getElementById("cipherSymbols").appendChild(b)});document.getElementById("cipherClear").onclick=()=>{guess=[];document.querySelectorAll(".cipher-symbol").forEach(b=>b.classList.remove("picked"));paint()};submit.onclick=()=>{if(guess.length!==4)return;tries++;const exact=guess.filter((s,i)=>s===secret[i]).length,total=guess.filter(s=>secret.includes(s)).length,near=total-exact;const row=document.createElement("div");row.className="cipher-row";row.innerHTML='<span class="cipher-code">'+guess.join(" ")+'</span><span>位置正確 <b>'+exact+'</b>　符號正確 <b>'+near+'</b></span>';history.prepend(row);if(exact===4){result(Math.max(45,100-(tries-1)*7),"completed","cipher");return}guess=[];document.querySelectorAll(".cipher-symbol").forEach(b=>b.classList.remove("picked"));paint();if(tries>=8){say("推理次數已用完，正確密碼："+secret.join(" "));result(0,"failed","cipher")}};paint();clock=setInterval(()=>{sec--;const t=document.getElementById("cipherTime");if(t)t.textContent=sec+" 秒";if(sec<=0)result(0,"timed_out","cipher")},1000)}
+function startOrbit(){
+ const n=5,dirs=[["N",0,-1],["E",1,0],["S",0,1],["W",-1,0]],opposite={N:"S",E:"W",S:"N",W:"E"};
+ let sy=1+Math.floor(Math.random()*3),x=0,y=sy,path=[[x,y]],rotations=0,sec=120;
+ for(let col=0;col<4;col++){
+  x++;path.push([x,y]);
+  let steps=col<3?1+Math.floor(Math.random()*2):Math.floor(Math.random()*2),sign=Math.random()<.5?-1:1;
+  if(y+sign*steps<0||y+sign*steps>=n)sign*=-1;
+  for(let k=0;k<steps;k++){y+=sign;path.push([x,y])}
+ }
+ const exitY=path[path.length-1][1];
+ const grid=Array.from({length:n},()=>Array.from({length:n},()=>({kind:Math.random()<.5?"S":"L",rot:Math.floor(Math.random()*4)})));
+ function ports(tile){
+  const pairs=tile.kind==="S"?[["E","W"],["N","S"]]:[["N","E"],["E","S"],["S","W"],["W","N"]];
+  return pairs[tile.rot%pairs.length]
+ }
+ function dir(a,b){if(b[0]>a[0])return"E";if(b[0]<a[0])return"W";if(b[1]>a[1])return"S";return"N"}
+ function rotationFor(kind,wanted){
+  const len=kind==="S"?2:4;
+  for(let r=0;r<len;r++){const p=ports({kind,rot:r});if(wanted.every(v=>p.includes(v)))return r}
+  return 0
+ }
+ path.forEach((p,i)=>{
+  const wanted=[i===0?"W":dir(p,path[i-1]),i===path.length-1?"E":dir(p,path[i+1])];
+  const kind=(wanted.includes("N")&&wanted.includes("S")||wanted.includes("E")&&wanted.includes("W"))?"S":"L";
+  const targetRot=rotationFor(kind,wanted),count=kind==="S"?2:4;
+  const rot=(targetRot+1+Math.floor(Math.random()*(count-1)))%count;
+  grid[p[1]][p[0]]={kind,rot,targetRot}
+ });
+ function connectedCells(){
+  const first=grid[sy][0];
+  if(!ports(first).includes("W"))return new Set();
+  const q=[[0,sy]],seen=new Set(["0,"+sy]);
+  for(let i=0;i<q.length;i++){
+   const [cx,cy]=q[i],ps=ports(grid[cy][cx]);
+   ps.forEach(d=>{
+    const dd=dirs.find(v=>v[0]===d),nx=cx+dd[1],ny=cy+dd[2];
+    if(nx<0||ny<0||nx>=n||ny>=n)return;
+    const key=nx+","+ny;
+    if(!seen.has(key)&&ports(grid[ny][nx]).includes(opposite[d])){seen.add(key);q.push([nx,ny])}
+   })
+  }
+  return seen
+ }
+ function reachedExit(reached){
+  return reached.has((n-1)+","+exitY)&&ports(grid[exitY][n-1]).includes("E")
+ }
+ active={id:"orbit"};
+ shell('<div class="panel"><div class="head"><div><h2>⌁ 軌道接線</h2><p>從左側能源入口開始，旋轉管線，接通右側指定的星門出口。</p></div><div class="meta"><span class="chip" id="orbitTime">120 秒</span><span class="chip" id="orbitMoves">旋轉 0 次</span><button class="ghost" data-quit>退出</button></div></div><div class="orbit-labels"><span class="chip">① 從左側金色 IN 接入能源</span><span class="chip">② 接到右側綠色 OUT 星門</span></div><div class="orbit-map"><div class="orbit-rail orbit-rail-in" aria-label="能源入口所在列"><span style="--endpoint-row:'+(sy+1)+'">◀<b>能源入口</b><small>IN · 第 '+(sy+1)+' 列</small></span></div><div class="orbit-grid" id="orbitGrid"></div><div class="orbit-rail orbit-rail-out" aria-label="星門出口所在列"><span style="--endpoint-row:'+(exitY+1)+'"><b>星門出口</b><small>OUT · 第 '+(exitY+1)+' 列</small>▶</span></div></div><div class="head"><span class="chip" id="orbitHint">點擊管線，每次順時針旋轉 90°；發光表示能源已通過。</span><b style="color:var(--gold)">5 × 5 隨機矩陣</b></div><div class="shooting-status" id="orbitFlowStatus">能源尚未進入管線，先從左側金色 IN 開始。</div></div>');
+ function glyph(tile){
+  const p=ports(tile).join("");
+  if(tile.kind==="S")return p.includes("E")?"─":"│";
+  return {"NE":"└","ES":"┌","SW":"┐","WN":"┘"}[p]||"┌"
+ }
+ function render(){
+  const el=document.getElementById("orbitGrid");if(!el)return;
+  const reached=connectedCells();el.innerHTML="";
+  grid.forEach((row,yy)=>row.forEach((tile,xx)=>{
+   const b=document.createElement("button");b.type="button";b.className="orbit-tile";b.textContent=glyph(tile);
+   const isEntry=xx===0&&yy===sy,isExit=xx===n-1&&yy===exitY,key=xx+","+yy;
+   if(isEntry)b.classList.add("orbit-entry-tile");
+   if(isExit)b.classList.add("orbit-exit-tile");
+   if(reached.has(key))b.classList.add("orbit-powered");
+   const label=isEntry?"能源入口 IN；":isExit?"指定星門出口 OUT；":"";
+   b.setAttribute("aria-label",label+"第 "+(yy+1)+" 列第 "+(xx+1)+" 欄，旋轉管線");
+   b.title=label+"點擊旋轉管線";
+   b.onclick=()=>{
+    tile.rot=(tile.rot+1)%(tile.kind==="S"?2:4);rotations++;
+    const moves=document.getElementById("orbitMoves");if(moves)moves.textContent="旋轉 "+rotations+" 次";
+    render();
+    const updated=connectedCells(),flow=document.getElementById("orbitFlowStatus");
+    if(reachedExit(updated)){
+     if(flow)flow.textContent="✦ 能源已抵達指定星門出口！連線成功！";
+     const score=Math.max(40,100-rotations*2);result(score,"completed","orbit");return
+    }
+    if(flow){
+     const count=updated.size;
+     flow.textContent=count?("能源已通過 "+count+" 個節點，繼續接往右側綠色 OUT。"): "能源尚未進入管線；請先讓左側金色 IN 接上第一個節點。";
+    }
+   };
+   el.appendChild(b)
+  }))
+ }
+ render();
+ clock=setInterval(()=>{
+  sec--;const t=document.getElementById("orbitTime");if(t)t.textContent=sec+" 秒";
+  if(sec<=0){
+   const pathTiles=grid.flat().filter(t=>typeof t.targetRot==="number"),correct=pathTiles.filter(t=>t.rot===t.targetRot).length;
+   result(Math.round(correct/pathTiles.length*100),"timed_out","orbit")
+  }
+ },1000)
+}
+function finishAbandon(){if(active)result(0,"abandoned",active.id)}
+
+function children(){nav("children");header();shell('<section class="hero"><div class="eyebrow">LITTLE STARLAND</div><h1>星芽探索區</h1><p>放慢腳步，和星星交朋友。這裡以輕鬆探索為主，星芽遊戲會獨立記錄。</p><div class="stats"><div class="stat"><small>目前星芽星塵</small><b>'+kidsTotal()+' ✦</b></div><div class="stat"><small>星芽遊玩次數</small><b>'+state.records.filter(r=>r.uid===me().id&&KIDS_GAME_IDS.includes(r.game)).length+'</b></div></div></section><div class="child"><div class="big">🌟</div><div><h2>小小星空探險家</h2><p>不需要競速，也不必擔心一般遊戲排名。星芽遊戲會獨立記錄，按照自己的步調探索就好。</p></div></div><section class="cards kids-cards" style="margin-top:16px"><article class="card"><span class="game-type-tag">星芽遊戲</span><div class="art">⭐</div><h3>星星連連看</h3><p>依照提示順序連接 6 顆星星，點位每次都會變化。</p><button class="btn sm" data-child="connect">開始探索</button></article><article class="card"><span class="game-type-tag">星芽遊戲</span><div class="art">🌙</div><h3>星星記憶</h3><p>翻開卡片，找出相同的星月圖案。每次洗牌都不同。</p><button class="btn sm" data-child="memory">開始探索</button></article><article class="card"><span class="game-type-tag">星芽遊戲</span><div class="art">✧</div><h3>星座校準</h3><p>在時間內依序連接目標星點，位置與星點排列每局隨機改變。</p><button class="btn sm" data-childgame="constellation">開始探索</button></article><article class="card"><span class="game-type-tag">星芽遊戲</span><div class="art">◈</div><h3>引力迷航</h3><p>探索隨機迷宮、收集兩枚星塵碎片，再尋找星門出口。</p><button class="btn sm" data-childgame="maze">開始探索</button></article></section><div class="footer">星芽星塵獨立累積　｜　不列入星塵排行榜</div>')}
+function childConnect(){let order=0,pts=[[18,28],[40,14],[67,24],[83,51],[63,79],[30,72]].map(()=>[Math.floor(12+Math.random()*76),Math.floor(15+Math.random()*70)]),done=[];shell('<div class="panel"><div class="head"><div><h2>🌟 星星連連看</h2><p>依序點亮閃爍的星星，沒有時間限制喔！每次排列都不同。</p></div><button class="ghost" data-page="children">返回</button></div><div class="board"><svg id="clines" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"></svg><div class="nodes" id="cnodes"></div></div><div class="head"><span class="chip" id="cstep">第 1 / 6 顆</span><button class="btn" id="cf" disabled>完成星座</button></div></div>');pts.forEach((pt,n)=>{const b=document.createElement("button");b.className="node";b.textContent="✦";b.style.left=pt[0]+"%";b.style.top=pt[1]+"%";if(n===0)b.classList.add("next");b.onclick=()=>{if(n!==order){say("找找正在閃爍的星星喔！");return}done.push(n);b.classList.add("done");b.classList.remove("next");order++;if(order<6)document.getElementById("cnodes").children[order].classList.add("next");document.getElementById("cstep").textContent="第 "+Math.min(order+1,6)+" / 6 顆";document.getElementById("clines").innerHTML=done.slice(1).map((v,k)=>'<line x1="'+pts[done[k]][0]+'" y1="'+pts[done[k]][1]+'" x2="'+pts[v][0]+'" y2="'+pts[v][1]+'" stroke="#f4d69c" stroke-width="1.5"/>').join("");if(order===6)document.getElementById("cf").disabled=false};document.getElementById("cnodes").appendChild(b)});document.getElementById("cf").onclick=()=>result(100,"completed","child-connect")}
+function childMemory(){let faces=["✦","☾","✧"],cards=faces.concat(faces).sort(()=>Math.random()-.5),open=[],matched=0,moves=0;shell('<div class="panel"><div class="head"><div><h2>🌙 星星記憶</h2><p>翻開兩張卡片，找出相同圖案。</p></div><button class="ghost" data-page="children">返回</button></div><div class="meta"><span class="chip" id="mm">已配對 0 / 3</span><span class="chip" id="mv">翻牌 0 次</span></div><div class="memory" id="memory"></div></div>');cards.forEach((face,i)=>{const b=document.createElement("button");b.textContent="?";b.onclick=()=>{if(b.classList.contains("matched")||open.includes(i)||open.length===2)return;moves++;b.textContent=face;b.classList.add("open");open.push(i);document.getElementById("mv").textContent="翻牌 "+moves+" 次";if(open.length===2){const a=open[0],c=open[1];if(cards[a]===cards[c]){setTimeout(()=>{document.querySelectorAll(".memory button")[a].classList.replace("open","matched");document.querySelectorAll(".memory button")[c].classList.replace("open","matched");open=[];matched++;document.getElementById("mm").textContent="已配對 "+matched+" / 3";if(matched===3)result(Math.max(60,100-moves*2),"completed","child-memory")},250)}else setTimeout(()=>{document.querySelectorAll(".memory button")[a].textContent="?";document.querySelectorAll(".memory button")[c].textContent="?";document.querySelectorAll(".memory button")[a].classList.remove("open");document.querySelectorAll(".memory button")[c].classList.remove("open");open=[]},650)}};document.getElementById("memory").appendChild(b)})}
+async function rank(){nav("leaderboard");const labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};let entries=[];if(cloudMode&&cloudUser){if(!sb){say("雲端連線尚未就緒。");return}const {data,error}=await sb.rpc("sd_global_best_scores");if(error){shell('<section class="hero"><h1>星塵排行榜</h1><p>目前無法載入全球排行榜。</p></section><div class="panel">'+esc(friendlyAuthError(error))+'</div>');return}entries=(data||[]).map(r=>({uid:r.user_id,name:r.nickname,game:r.game_id,category:r.category,score:Number(r.best_score)||0,time:Date.parse(r.first_achieved_at)||Date.now()}))}else{state.players.forEach(p=>{[...ADULT_GAME_IDS,...KIDS_GAME_IDS].forEach(g=>{const eligible=state.records.filter(r=>r.uid===p.id&&r.game===g&&r.status!=="abandoned"&&r.status!=="failed");const score=Math.max(0,...eligible.map(r=>r.score));const first=eligible.filter(r=>r.score===score).sort((a,b)=>a.time-b.time)[0];entries.push({uid:p.id,name:p.name,game:g,category:KIDS_GAME_IDS.includes(g)?"kids":"adult",score,time:first?first.time:(p.created||0)})})})}function overall(games){const map=new Map();entries.filter(e=>games.includes(e.game)).forEach(e=>{let r=map.get(e.uid);if(!r){r={uid:e.uid,name:e.name,total:0,best:{},reachedAt:0};map.set(e.uid,r)}r.best[e.game]=e.score;r.total+=e.score;r.reachedAt=Math.max(r.reachedAt,e.time)});return [...map.values()].sort((a,b)=>b.total-a.total||a.reachedAt-b.reachedAt)}function overallTable(rows){return '<table class="table"><thead><tr><th>排名</th><th>旅人</th><th>總分</th></tr></thead><tbody>'+(rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.name)+'</td><td>'+r.total+'</td></tr>').join("")||'<tr><td colspan="3">目前還沒有排行資料</td></tr>')+'</tbody></table>'}function gameCards(games){return '<section class="cards" style="margin-top:15px">'+games.map(g=>{const rr=entries.filter(e=>e.game===g).sort((a,b)=>b.score-a.score||a.time-b.time).slice(0,5);return '<article class="card"><h3>'+labels[g]+'</h3><table class="table"><tbody>'+(rr.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td>'+x.score+'</td></tr>').join("")||'<tr><td colspan="3">尚無紀錄</td></tr>')+'</tbody></table></article>'}).join("")+'</section>'}const adults=overall(ADULT_GAME_IDS),kids=overall(KIDS_GAME_IDS);shell('<section class="hero"><div class="eyebrow">STAR DUST RANKING</div><h1>星塵排行榜</h1><p>'+(cloudMode&&cloudUser?"全球旅人即時排行榜；":cloudMode?"訪客展示模式，登入後可查看全球排行榜；":"目前為本機展示排行榜；")+'一般遊戲與星芽探索分開排行，同分時以較早達成者優先。</p>'+(me()?.isAdmin?'<p class="admin-ranking-note">管理員模式：此帳號成績不會被納入全球排行榜。</p>':'')+'</section><div class="panel"><h3 style="color:var(--gold)">一般遊戲總排行</h3>'+overallTable(adults)+'</div>'+gameCards(ADULT_GAME_IDS)+'<div class="panel" style="margin-top:18px"><h3 style="color:#f5d7ed">星芽遊戲總排行</h3>'+overallTable(kids)+'</div>'+gameCards(KIDS_GAME_IDS))}
+function history(){nav("history");let rs=state.records.filter(r=>r.uid===me().id).slice().reverse(),labels={moon:"月相共鳴",cipher:"星域解碼",orbit:"軌道接線","shooting-range":"霓虹神射手","mirror-house":"幻影鏡屋",constellation:"星座校準",maze:"引力迷航","child-connect":"星星連連看","child-memory":"星星記憶"};shell('<section class="hero"><div class="eyebrow">MY STAR JOURNEY</div><h1>我的遊玩紀錄</h1><p>一般遊戲及星芽探索各自記錄，不會混在一起。</p></section><div class="stats"><div class="stat"><small>星塵</small><b>'+total()+' ✦</b></div><div class="stat"><small>星芽星塵</small><b>'+kidsTotal()+' ✦</b></div></div><div class="panel"><table class="table"><thead><tr><th>分區</th><th>遊戲</th><th>分數</th><th>狀態</th><th>星塵</th></tr></thead><tbody>'+(rs.map(r=>'<tr><td>'+(KIDS_GAME_IDS.includes(r.game)?"星芽遊戲":"一般")+'</td><td>'+(labels[r.game]||r.game)+'</td><td>'+r.score+'</td><td>'+({completed:"完成",timed_out:"時間到",abandoned:"提前退出",failed:"尚未破解"}[r.status]||r.status)+'</td><td>+'+r.reward+' ✦</td></tr>').join("")||'<tr><td colspan="5">目前還沒有遊玩紀錄。</td></tr>')+'</tbody></table></div>')}
+
+
+function prepareAdminPreviewTab(tab,sha){
+ const doc=tab.document;
+ doc.open();
+ doc.write("<!doctype html><html lang='zh-Hant'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><meta name='theme-color' content='#090d2b'><title>星夢樂園｜管理員測試預覽</title></head><body><header id='previewTabHeader'><strong>✦ 星夢樂園 · 管理員私有測試</strong><span id='previewTabStatus'>正在準備隔離預覽…</span><button id='previewTabClose' type='button'>關閉分頁</button></header><main id='previewTabStage'><div id='previewTabLoading'>正在安全匯入候選版本，請稍候…</div></main></body></html>");
+ doc.close();
+ const style=doc.createElement("style");
+ style.textContent=":root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Microsoft JhengHei',sans-serif;background:#080b22;color:#f2efff}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}#previewTabHeader{height:48px;display:flex;align-items:center;gap:14px;padding:0 16px;background:linear-gradient(100deg,#111735,#29234e,#111735);border-bottom:1px solid #c5a66d88;box-shadow:0 4px 22px #0007}#previewTabHeader strong{font-size:13px;color:#f2d9a0;white-space:nowrap}#previewTabStatus{flex:1;min-width:0;font-size:11px;color:#c7bfdc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#previewTabClose{border:1px solid #b49bdd77;border-radius:99px;background:#292750;color:#eee5ff;padding:7px 13px;font:inherit;font-size:11px;cursor:pointer}#previewTabClose:hover{border-color:#efd49a;color:#efd49a}#previewTabStage{height:calc(100% - 48px);width:100%;overflow:hidden}#previewTabStage iframe{display:block;width:100%;height:100%;border:0;background:#080b22}#previewTabLoading{height:100%;display:grid;place-items:center;padding:24px;text-align:center;color:#d9c99f;font-size:14px}#previewTabLoading.error{color:#f1aaaa}";
+ doc.head.append(style);
+ doc.getElementById("previewTabClose").addEventListener("click",()=>tab.close());
+ tab.opener=null;
+}
+function setAdminPreviewTabStatus(tab,message,isError=false){
+ if(!tab||tab.closed)return;
+ const status=tab.document.getElementById("previewTabStatus");
+ if(status)status.textContent=message;
+ const loading=tab.document.getElementById("previewTabLoading");
+ if(loading&&isError){loading.textContent=message;loading.classList.add("error")}
+}
+async function openAdminPrivatePreview(target="tab"){
+ const shaInput=document.getElementById("adminPreviewSha"),status=document.getElementById("adminPreviewStatus"),frame=document.getElementById("adminPreviewFrame"),button=document.getElementById("adminPreviewOpen"),inlineButton=document.getElementById("adminPreviewInline");
+ if(!me()?.isAdmin||!sb){if(status)status.textContent="此功能僅限已驗證的管理員使用。";return}
+ const sha=(shaInput?.value||"").trim().toLowerCase();
+ if(!/^[a-f0-9]{40}$/.test(sha)){if(status)status.textContent="請輸入完整的 40 字元 commit SHA。";shaInput?.focus();return}
+ const openInTab=target!=="inline";
+ let previewTab=null;
+ if(openInTab){
+  previewTab=window.open("about:blank","_blank");
+  if(!previewTab){if(status)status.textContent="瀏覽器阻擋了新分頁。請允許此網站開啟彈出式視窗後，再重新點擊「另開全螢幕測試分頁」。";return}
+  prepareAdminPreviewTab(previewTab,sha);
+ }
+ if(button){button.disabled=true;button.textContent=openInTab?"正在開啟測試分頁…":"正在建立預覽…"}
+ if(inlineButton)inlineButton.disabled=true;
+ const updateStatus=message=>{
+  if(status)status.textContent=message;
+  setAdminPreviewTabStatus(previewTab,message);
+ };
+ updateStatus("正在由 Supabase 伺服器安全匯入 GitHub 候選版本…");
+ try{
+  const {data:importData,error:importError}=await sb.functions.invoke("sd-admin-preview",{body:{action:"import",commit_sha:sha}});
+  if(importError)throw new Error(importError.message||"候選版本匯入失敗。");
+  if(!importData?.ok)throw new Error(importData?.error||"候選版本匯入失敗。");
+  updateStatus("已匯入 "+importData.filesUploaded+" 個檔案，正在建立隔離預覽…");
+  const signFile=async path=>{
+   const {data,error}=await sb.functions.invoke("sd-admin-preview",{body:{commit_sha:sha,path}});
+   if(error)throw new Error(error.message||"私有預覽服務尚未完成設定。");
+   if(!data?.signedUrl)throw new Error("預覽檔案不存在，請先上傳這個 commit。");
+   return data.signedUrl;
+  };
+  const indexUrl=await signFile("index.html");
+  const response=await fetch(indexUrl,{cache:"no-store"});
+  if(!response.ok)throw new Error("無法讀取預覽首頁（HTTP "+response.status+"）。");
+  const parser=new DOMParser(),doc=parser.parseFromString(await response.text(),"text/html");
+  doc.querySelectorAll('script[src*="supabase-client"]').forEach(node=>node.remove());
+  const shim=doc.createElement("script");
+  shim.textContent='(()=>{window.STARRY_PREVIEW_MODE=true;window.STARRY_CONFIG={...(window.STARRY_CONFIG||{}),mode:"local"};const m=new Map();const s={getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k),clear:()=>m.clear(),key:i=>Array.from(m.keys())[i]??null,get length(){return m.size}};try{window.localStorage.setItem("__sd_preview_probe","1");window.localStorage.removeItem("__sd_preview_probe")}catch(e){try{Object.defineProperty(window,"localStorage",{value:s,configurable:true})}catch(_){}}})();';
+  const configScript=doc.querySelector('script[src*="config.js"]');
+  if(configScript)configScript.after(shim);else doc.head.prepend(shim);
+  const resources=[...doc.querySelectorAll("script[src],link[href],img[src],source[src]")];
+  for(const node of resources){
+   const attr=node.hasAttribute("src")?"src":"href",raw=node.getAttribute(attr)||"";
+   if(!raw.startsWith("./"))continue;
+   const relative=raw.slice(2).split(/[?#]/)[0];
+   if(!relative)continue;
+   node.setAttribute(attr,await signFile(relative));
+  }
+  const banner=doc.createElement("div");
+  banner.textContent="✦ 管理員私有預覽 · 未發布候選版本 · 不影響正式玩家 ✦";
+  banner.style.cssText="position:sticky;top:0;z-index:99999;padding:8px 12px;text-align:center;background:linear-gradient(100deg,#242047,#5c477e,#242047);border-bottom:1px solid #efd49a;color:#ffe8b5;font:600 12px system-ui;letter-spacing:.08em";
+  doc.body.prepend(banner);
+  const previewHtml="<!doctype html>\n"+doc.documentElement.outerHTML;
+  if(openInTab){
+   if(previewTab.closed)throw new Error("測試分頁已被關閉，請重新開啟預覽。");
+   const stage=previewTab.document.getElementById("previewTabStage");
+   const previewFrame=previewTab.document.createElement("iframe");
+   previewFrame.title="星夢樂園管理員私有開發預覽";
+   previewFrame.setAttribute("sandbox","allow-scripts allow-forms allow-pointer-lock");
+   previewFrame.setAttribute("allow","fullscreen; gamepad");
+   previewFrame.setAttribute("referrerpolicy","no-referrer");
+   previewFrame.srcdoc=previewHtml;
+   stage.replaceChildren(previewFrame);
+   updateStatus("已開啟全螢幕測試分頁（"+sha.slice(0,7)+"）。此畫面為訪客隔離模式，不會影響正式玩家。");
+   setAdminPreviewTabStatus(previewTab,"測試版本 "+sha.slice(0,7)+" · 隔離預覽已就緒");
+  }else{
+   frame.srcdoc=previewHtml;
+   frame.classList.remove("hidden");
+   if(status)status.textContent="頁內預覽已開啟（"+sha.slice(0,7)+"）。此畫面使用訪客模式；短效檔案連結約 5 分鐘後失效，重新開啟預覽即可更新。";
+  }
+ }catch(error){
+  const message="無法開啟私有預覽："+(error?.message||String(error))+"。請確認管理員權限、私有 bucket、Edge Function 與 GitHub commit 存在。";
+  if(status)status.textContent=message;
+  setAdminPreviewTabStatus(previewTab,message,true);
+ }finally{
+  if(button){button.disabled=false;button.textContent="另開全螢幕測試分頁"}
+  if(inlineButton){inlineButton.disabled=false;inlineButton.textContent="頁內快速預覽"}
+ }
+}
+
+const ADMIN_ISSUE_STORAGE_KEY="starryDreamland.adminIssueReports.v1";
+function readAdminIssueReports(){
+ try{const value=JSON.parse(localStorage.getItem(ADMIN_ISSUE_STORAGE_KEY)||"[]");return Array.isArray(value)?value.slice(0,40):[]}
+ catch(error){return []}
+}
+function renderAdminIssueReports(){
+ const host=document.getElementById("adminIssueHistory");if(!host)return;
+ const reports=readAdminIssueReports();
+ host.innerHTML=reports.length?reports.map(item=>'<article class="admin-issue-entry"><strong>'+esc(item.title||"未命名問題")+'</strong><p>'+esc(item.category||"其他")+' · '+esc(item.severity||"一般")+' · '+esc(item.status||"已儲存")+' · '+esc(item.createdAt?new Intl.DateTimeFormat("zh-TW",{dateStyle:"medium",timeStyle:"short"}).format(new Date(item.createdAt)):"時間未記錄")+'</p><p>版本：'+esc(item.commitSha||"未指定")+'<br>'+esc(item.description||"")+'</p></article>').join(""):'<div class="admin-note">尚無問題紀錄。發現錯誤時可以在上方填寫並儲存。</div>';
+}
+function submitAdminIssueReport(createGitHubIssue=false){
+ if(!me()?.isAdmin||!cloudUser){say("此操作僅限已驗證的管理員。");return}
+ const title=(document.getElementById("adminIssueTitle")?.value||"").trim();
+ const description=(document.getElementById("adminIssueDescription")?.value||"").trim();
+ const expected=(document.getElementById("adminIssueExpected")?.value||"").trim();
+ const category=document.getElementById("adminIssueCategory")?.value||"其他";
+ const severity=document.getElementById("adminIssueSeverity")?.value||"一般";
+ const selected=document.getElementById("adminReviewCandidate")?.selectedOptions?.[0];
+ const previewSha=(document.getElementById("adminPreviewSha")?.value||"").trim();
+ const commitSha=selected?.dataset.sha||previewSha||"";
+ const status=document.getElementById("adminIssueStatus");
+ if(!title||!description){if(status)status.textContent="請至少填寫問題標題與錯誤訊息／發生步驟。";return}
+ const report={id:Date.now(),title,description,expected,category,severity,commitSha,status:createGitHubIssue?"已開啟 GitHub 修正單表單（待提交）":"已儲存於本機",createdAt:new Date().toISOString()};
+ const reports=[report,...readAdminIssueReports()].slice(0,40);
+ try{localStorage.setItem(ADMIN_ISSUE_STORAGE_KEY,JSON.stringify(reports))}
+ catch(error){if(status)status.textContent="無法在此瀏覽器保存問題紀錄："+(error?.message||String(error));return}
+ renderAdminIssueReports();
+ if(createGitHubIssue){
+  const body="## 星夢樂園管理員錯誤回報\n\n- 問題類別："+category+"\n- 嚴重程度："+severity+"\n- 候選版本："+(commitSha||"未指定")+"\n- 回報時間："+report.createdAt+"\n\n## 問題描述\n"+description+"\n\n## 預期結果／修正方向\n"+(expected||"尚未提供");
+  const url="https://github.com/Edward11031709/Starry-Dreamland/issues/new?title="+encodeURIComponent("[管理員回報] "+title)+"&body="+encodeURIComponent(body);
+  const opened=window.open(url,"_blank","noopener,noreferrer");
+  if(status)status.textContent=opened?"問題已保存在本機，並已開啟 GitHub 修正單表單；請在新分頁按下提交，才會正式建立 issue。":"問題已保存在本機，但瀏覽器阻擋了 GitHub 新分頁；請允許彈出式視窗後再按一次「建立 GitHub 修正單」。";
+ }else{
+  if(status)status.textContent="問題紀錄已儲存在這台裝置的瀏覽器。要讓開發紀錄共用，請再按「建立 GitHub 修正單」。";
+ }
+}
+async function adminCenter(){
+ if(!me()?.isAdmin||!cloudUser||!sb){say("此區僅限已驗證的管理員帳號。");home();return}
+ stop();nav("admin");header();
+ shell('<section class="admin-shell"><div class="admin-hero"><div class="admin-kicker">STARRY DREAMLAND · PRIVATE CONTROL ROOM</div><h1>星夢管理中心</h1><p>正式園區與開發候選版本分開管理。審核與問題回報入口集中在此處；正式公開仍受 GitHub 核准與 production 環境保護。</p></div><div class="admin-metrics"><div class="admin-metric"><small>目前公開版本</small><strong id="adminLiveSha">讀取中…</strong></div><div class="admin-metric"><small>main 最新候選</small><strong id="adminMainSha">讀取中…</strong></div><div class="admin-metric"><small>待審核開發版本</small><strong id="adminPrCount">讀取中…</strong></div></div><section class="admin-section"><h2>版本審核與發布操作</h2><p>把審核與發布入口集中在這裡。先選擇候選版本，核准後合併至 main，再啟動正式發布。</p><div class="admin-command-grid"><div class="admin-command-card"><h3>✦ 同意此版本</h3><p>開啟所選版本的 GitHub 檢視與審核頁。請檢查程式差異及自動檢查後，在 GitHub 的 Review changes 中送出 Approve。</p><div class="admin-review-toolbar"><label>要審核的候選版本<select id="adminReviewCandidate"><option value="main">main 最新候選版本</option></select></label><div class="admin-command-buttons"><button id="adminApproveCandidate" class="btn sm" type="button">前往同意此版本</button></div></div></div><div class="admin-command-card"><h3>✧ 更新公開版</h3><p>只會發布已合併到 main 的版本。正式工作流程會再次執行檢查，並保留 production 環境保護。</p><div class="admin-command-buttons"><button id="adminOpenRelease" class="btn sm" type="button">前往發布公開版</button></div></div></div><div id="adminReleaseStatus" class="admin-release-status" role="status" aria-live="polite">尚未執行審核或發布。正式發布目前仍使用 GitHub 受保護工作流程。</div><div class="admin-note admin-command-note"><strong>關於真正的一鍵發布：</strong>目前網站是公開 GitHub Pages 靜態前端，沒有 GitHub 寫入憑證，因此不會把可核准 PR、合併程式或啟動部署的金鑰放進瀏覽器。此區提供直接進入該版本審核與發布頁的操作入口；真正的一鍵核准／發布還需要將限定該 Repository 權限的 GitHub Token 安全存放在 Supabase Edge Function Secrets，並維持 production 環境的最終保護。</div></section><section class="admin-section"><h2>問題回報與修正紀錄</h2><p>發現畫面、遊戲、手機操作或資料錯誤時，直接在這裡記錄。紀錄會先保存在目前這台裝置；建立 GitHub 修正單後，開發流程也能追蹤。</p><div class="admin-issue-form"><div class="admin-issue-grid"><label>問題類別<select id="adminIssueCategory"><option value="3D 場景／模型">3D 場景／模型</option><option value="遊戲操作／規則">遊戲操作／規則</option><option value="登入／帳號">登入／帳號</option><option value="手機／平板版面">手機／平板版面</option><option value="資料同步／儲存">資料同步／儲存</option><option value="其他">其他</option></select></label><label>嚴重程度<select id="adminIssueSeverity"><option value="一般">一般</option><option value="重要">重要</option><option value="阻斷遊玩">阻斷遊玩</option></select></label></div><label>問題標題<input id="adminIssueTitle" maxlength="100" placeholder="例如：星河摩天輪登乘後角色位置錯誤"></label><label>錯誤訊息／發生步驟<textarea id="adminIssueDescription" maxlength="4000" placeholder="記錄在哪個頁面、做了什麼操作、實際出現什麼狀況；錯誤訊息可直接貼在這裡。"></textarea></label><label>預期結果或希望如何修正<textarea id="adminIssueExpected" maxlength="2000" placeholder="描述原本應該怎麼運作，或你希望修改成什麼樣子。"></textarea></label><div class="admin-command-buttons"><button id="adminSaveIssue" class="btn alt sm" type="button">儲存問題紀錄</button><button id="adminCreateIssue" class="btn sm" type="button">建立 GitHub 修正單</button></div></div><div id="adminIssueStatus" class="admin-issue-status" role="status" aria-live="polite">本機問題紀錄只會保存在目前瀏覽器，不會影響正式玩家資料。</div><div id="adminIssueHistory" class="admin-issue-history"><div class="admin-loading">尚無問題紀錄。</div></div></section><section class="admin-section"><h2>候選開發版本</h2><p>每個候選版本都先在 GitHub 分支檢查；只有核准後才可進入正式發布流程。</p><div id="adminCandidates" class="admin-version-list"><div class="admin-loading">正在讀取開發候選版本…</div></div></section><section class="admin-section"><h2>星塵與玩家資料安全</h2><p>管理員專用的唯讀檢查摘要。安全修正完成前，不開放直接調整真實星塵。</p><div class="admin-note"><strong>需要優先修正：獎勵紀錄尚未完全由伺服器驗證。</strong><br>目前資料庫允許玩家為自己的帳號新增遊戲紀錄，reward 欄位雖限制 0–15，但餘額計算會加總這些紀錄。必須先完成伺服器權威回合驗證與不可任意修改的星塵帳本，才會開放管理員調整功能。</div><div class="admin-version-list" style="margin-top:12px"><article class="admin-version"><div><h3>資料庫 migration 版本落差</h3><p>生產資料庫回報 11 筆已套用 migration；GitHub main 目前只追蹤 1 個 SQL migration 檔。需先補齊版本盤點，不可直接重跑 schema.sql。</p></div><div class="admin-actions"><a href="https://github.com/Edward11031709/Starry-Dreamland/blob/main/docs/SECURITY_REVIEW_zh-TW.md" target="_blank" rel="noopener">查看安全檢查報告 ↗</a></div></article></div></section><section class="admin-section"><h2>私有開發預覽</h2><p>輸入公開 GitHub commit SHA 後，Supabase 會在伺服器端驗證管理員身分，並直接匯入該版本的靜態檔案至 Private Storage，再開啟隔離預覽。無須設定 GitHub Secrets。預覽不會使用正式帳號工作階段，也不會寫入正式玩家資料。</p><div class="admin-preview-controls"><label>候選版本完整 SHA<input id="adminPreviewSha" inputmode="text" autocomplete="off" spellcheck="false" maxlength="40" placeholder="貼上 40 字元 commit SHA"></label><div class="admin-preview-actions"><button id="adminPreviewOpen" class="btn sm" type="button">另開全螢幕測試分頁</button><button id="adminPreviewInline" class="btn alt sm" type="button">頁內快速預覽</button></div></div><div id="adminPreviewStatus" class="admin-preview-status" role="status" aria-live="polite">輸入完整 SHA 後，建議使用「另開全螢幕測試分頁」檢查整個園區；頁內快速預覽則保留在管理中心內。</div><iframe id="adminPreviewFrame" class="admin-preview-frame hidden" title="星夢樂園管理員私有開發預覽" sandbox="allow-scripts allow-forms allow-pointer-lock" allow="fullscreen; gamepad" referrerpolicy="no-referrer"></iframe><div class="admin-note" style="margin-top:12px">隔離預覽不共享正式網站的 Cookie、localStorage 或登入 session；請以訪客模式檢查場景與操作。完整設定步驟請見 <a href="https://github.com/Edward11031709/Starry-Dreamland/blob/main/docs/ADMIN_PREVIEW_SETUP_zh-TW.md" target="_blank" rel="noopener" style="color:#f2d9a0">私有預覽設定說明 ↗</a></div></section><section class="admin-section"><h2>已保留的歷史版本</h2><p>可查看舊版程式碼與提交紀錄。回復程式版本不會回退玩家的星塵、服裝或遊戲紀錄。</p><div id="adminHistory" class="admin-version-list"><div class="admin-loading">正在讀取版本紀錄…</div></div></section><section class="admin-section"><h2>正式發布控制</h2><p>發布必須先核准 PR，再由 main 分支手動啟動 GitHub Actions，並通過 production 環境審核。</p><div class="admin-actions" style="justify-content:flex-start"><a href="https://github.com/Edward11031709/Starry-Dreamland/actions" target="_blank" rel="noopener">開啟發布工作流程 ↗</a><a href="https://github.com/Edward11031709/Starry-Dreamland/settings/environments" target="_blank" rel="noopener">檢查 production 保護設定 ↗</a></div><div class="admin-note" style="margin-top:14px">正式發布與私有預覽彼此獨立：管理員可透過 Supabase 將公開 GitHub commit 匯入 Private Storage，隔離預覽不會更新公開網站。只有另行由 main 啟動正式發布並通過 production 環境審核，才會更新玩家使用的版本。</div></section></section>');
+ const base="https://api.github.com/repos/Edward11031709/Starry-Dreamland";
+ const api=async path=>{const response=await fetch(base+path,{headers:{Accept:"application/vnd.github+json"}});if(!response.ok)throw new Error("GitHub API "+response.status);return response.json()};
+ const fmt=value=>{if(!value)return "時間未提供";const d=new Date(value);return Number.isNaN(d.getTime())?"時間未提供":new Intl.DateTimeFormat("zh-TW",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Taipei"}).format(d)};
+ const short=sha=>String(sha||"").slice(0,7)||"—";
+ try{
+  const [main,prs,releases,tags,commits,liveResponse]=await Promise.all([api("/commits/main"),api("/pulls?state=open&per_page=8"),api("/releases?per_page=6"),api("/tags?per_page=6"),api("/commits?per_page=7"),fetch("./release.json?cache="+Date.now()).catch(()=>null)]);let live=null;if(liveResponse?.ok){try{live=await liveResponse.json()}catch(error){}}
+  const liveSha=document.getElementById("adminLiveSha"),mainSha=document.getElementById("adminMainSha"),prCount=document.getElementById("adminPrCount");
+  if(liveSha)liveSha.textContent=live?.commit?short(live.commit):"尚無發布紀錄";
+  if(mainSha)mainSha.textContent=short(main.sha);
+  if(prCount)prCount.textContent=String(prs.length);
+  const previewShaInput=document.getElementById("adminPreviewSha");if(previewShaInput&&!previewShaInput.value&&prs[0]?.head?.sha)previewShaInput.value=prs[0].head.sha;
+  const reviewSelect=document.getElementById("adminReviewCandidate");if(reviewSelect){reviewSelect.innerHTML='<option value="main" data-sha="'+esc(main.sha)+'">main 最新候選 · '+short(main.sha)+'</option>'+prs.map(pr=>'<option value="'+Number(pr.number)+'" data-sha="'+esc(pr.head?.sha||"")+'">PR #'+Number(pr.number)+' · '+esc(pr.title||"候選版本")+' · '+short(pr.head?.sha)+'</option>').join("");if(prs.length)reviewSelect.value=String(prs[0].number)}
+  renderAdminIssueReports();
+  const candidates=document.getElementById("adminCandidates");
+  if(candidates)candidates.innerHTML=prs.length?prs.map(pr=>'<article class="admin-version"><div><h3>#'+pr.number+' · '+esc(pr.title)+'</h3><p>分支：'+esc(pr.head?.ref||"未知")+'　·　提交：'+short(pr.head?.sha)+'　·　更新：'+fmt(pr.updated_at)+'　·　'+(pr.draft?"草稿":"等待審核")+'</p></div><div class="admin-actions"><a href="'+esc(pr.html_url)+'/files" target="_blank" rel="noopener">檢視程式差異 ↗</a><a href="'+esc(pr.html_url)+'/checks" target="_blank" rel="noopener">檢視自動檢查 ↗</a></div></article>').join(""):'<div class="admin-note">目前沒有開啟中的候選版本。</div>';
+  const history=document.getElementById("adminHistory");
+  const entries=releases.length?releases.map(item=>({name:item.name||item.tag_name,sha:item.target_commitish||item.tag_name,date:item.published_at,url:item.html_url,kind:"正式發布"})):tags.length?tags.map(item=>({name:item.name,sha:item.commit?.sha,date:null,url:"https://github.com/Edward11031709/Starry-Dreamland/tree/"+encodeURIComponent(item.name),kind:"版本標籤"})):commits.filter(item=>item.sha!==main.sha).slice(0,5).map(item=>({name:item.commit?.message?.split("\n")[0]||"歷史提交",sha:item.sha,date:item.commit?.author?.date,url:item.html_url,kind:"歷史提交"}));
+  if(history)history.innerHTML='<article class="admin-version"><div><h3>main 最新候選 · '+short(main.sha)+'</h3><p>'+esc(main.commit?.message?.split("\n")[0]||"main")+'　·　'+fmt(main.commit?.author?.date)+'</p></div><div class="admin-actions"><a href="'+'https://github.com/Edward11031709/Starry-Dreamland/tree/main" target="_blank" rel="noopener">檢視目前版本 ↗</a></div></article>'+entries.map(item=>'<article class="admin-version"><div><h3>'+esc(item.name)+'</h3><p>'+esc(item.kind)+'　·　'+short(item.sha)+'　·　'+fmt(item.date)+'</p></div><div class="admin-actions"><a href="'+esc(item.url) +'" target="_blank" rel="noopener">查看舊版 ↗</a></div></article>').join("");
+ }catch(error){const target=document.getElementById("adminCandidates");if(target)target.innerHTML='<div class="admin-note">版本資訊暫時無法載入：'+esc(error.message)+'。請稍後重試或直接開啟 GitHub Repository。</div>'}
+}
+
 function render(){if(!me()){login();return}home()}
 document.addEventListener("submit",e=>{if(e.target&&e.target.id==="parkChatForm"){e.preventDefault();sendParkChat()}});
-document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.parkReaction){sendParkReaction(b.dataset.parkReaction);return}if(b.dataset.parkFullscreen!==undefined){toggleParkFullscreen();return}if(b.dataset.cameraToggle!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-camera-toggle"));return}if(b.dataset.parkInteract!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-touch-interact"));return}if(b.dataset.enterLandscape!==undefined){enterLandscapeMode();return}if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="cloudRetryRestore"){cloudBootStarted=false;restoringSession();bootCloud();return}if(b.id==="adminPreviewOpen"){openAdminPrivatePreview("tab");return}if(b.id==="adminPreviewInline"){openAdminPrivatePreview("inline");return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.mapExpand!==undefined){openParkMap();return}if(b.dataset.mapClose!==undefined){document.getElementById("parkMapModal")?.remove();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();if(b.dataset.page==="admin")adminCenter();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarPreview){atelierPreviewOutfit=b.dataset.avatarPreview;updateAvatarAtelierPreview();document.getElementById("avatarPreviewName").textContent=AVATARS.find(a=>a.id===atelierPreviewOutfit)?.name||"旅人";return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarSave!==undefined){saveAvatarCustomization();return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.parkReaction){sendParkReaction(b.dataset.parkReaction);return}if(b.dataset.parkFullscreen!==undefined){toggleParkFullscreen();return}if(b.dataset.cameraToggle!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-camera-toggle"));return}if(b.dataset.parkInteract!==undefined){window.dispatchEvent(new CustomEvent("starry-3d-touch-interact"));return}if(b.dataset.enterLandscape!==undefined){enterLandscapeMode();return}if(b.id==="cloudGuestPreview"){cloudGuestPreview();return}if(b.id==="cloudRetryRestore"){cloudBootStarted=false;restoringSession();bootCloud();return}if(b.id==="adminPreviewOpen"){openAdminPrivatePreview("tab");return}if(b.id==="adminPreviewInline"){openAdminPrivatePreview("inline");return}if(b.id==="adminApproveCandidate"){if(!me()?.isAdmin)return;const s=document.getElementById("adminReviewCandidate"),n=Number(s?.value),target=document.getElementById("adminReleaseStatus"),url=n>0?"https://github.com/Edward11031709/Starry-Dreamland/pull/"+n+"/files":"https://github.com/Edward11031709/Starry-Dreamland/tree/main";if(target)target.textContent=n>0?"已開啟 PR #"+n+" 的程式差異頁。檢查通過後，請在 GitHub Review changes 中送出 Approve；合併前不會更新公開網站。":"目前選取 main 最新候選。若要正式更新，請確認 main 內容後使用右側發布流程。";window.open(url,"_blank","noopener,noreferrer");return}if(b.id==="adminOpenRelease"){if(!me()?.isAdmin)return;const target=document.getElementById("adminReleaseStatus");if(target)target.textContent="已開啟 GitHub Pages 正式發布工作流程。選擇 main 並確認發布；之後仍須通過 production 環境審核，工作流程成功完成後才會更新公開網站。";window.open("https://github.com/Edward11031709/Starry-Dreamland/actions/workflows/pages.yml","_blank","noopener,noreferrer");return}if(b.id==="adminSaveIssue"){submitAdminIssueReport(false);return}if(b.id==="adminCreateIssue"){submitAdminIssueReport(true);return}if(b.id==="cloudLogin"){cloudLogin();return}if(b.id==="cloudRegister"){cloudRegister();return}if(b.id==="cloudReset"){cloudResetPassword();return}if(b.id==="cloudUpdatePassword"){cloudUpdatePassword();return}if(b.dataset.mapExpand!==undefined){openParkMap();return}if(b.dataset.mapClose!==undefined){document.getElementById("parkMapModal")?.remove();return}if(b.dataset.page){if(b.dataset.page==="home")home();if(b.dataset.page==="children")children();if(b.dataset.page==="leaderboard")rank();if(b.dataset.page==="history")history();if(b.dataset.page==="admin")adminCenter();return}if(b.dataset.wardrobe!==undefined){wardrobe();return}if(b.dataset.avatarPreview){atelierPreviewOutfit=b.dataset.avatarPreview;updateAvatarAtelierPreview();document.getElementById("avatarPreviewName").textContent=AVATARS.find(a=>a.id===atelierPreviewOutfit)?.name||"旅人";return}if(b.dataset.avatarEquip){equipAvatar(b.dataset.avatarEquip);return}if(b.dataset.avatarSave!==undefined){saveAvatarCustomization();return}if(b.dataset.avatarUnlock){unlockAvatar(b.dataset.avatarUnlock);return}if(b.dataset.game){start(b.dataset.game);return}if(b.dataset.launch){launch(b.dataset.launch);return}if(b.dataset.dir){const d={up:"ArrowUp",down:"ArrowDown",left:"ArrowLeft",right:"ArrowRight"}[b.dataset.dir];window.dispatchEvent(new KeyboardEvent("keydown",{key:d}));return}if(b.dataset.quit){result(0,"abandoned",active?active.id:"unknown");return}if(b.dataset.childgame){start(b.dataset.childgame);return}if(b.dataset.child){if(b.dataset.child==="connect")childConnect();else childMemory();return}if(b.id==="enter"){let name=(document.getElementById("nickname").value||"星空旅人").trim().slice(0,16)||"星空旅人";let p=state.players.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:Date.now()+Math.random(),name,points:0,created:Date.now()};state.players.push(p)}state.player=p.id;save();render();return}});
 document.getElementById("logout").onclick=async()=>{stop();await stopParkSocial();if(cloudMode&&sb){const {error}=await sb.auth.signOut();if(error)say("登出時發生問題："+friendlyAuthError(error))}cloudUser=null;state.player=null;state.players=[];state.records=[];save();render()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&active)result(0,"abandoned",active.id)});
 window.addEventListener("starry-supabase-ready",bootCloud);
