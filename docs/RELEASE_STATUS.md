@@ -1,15 +1,15 @@
 # 星夢樂園版本與發布狀態
 ## 2026-11-22 最新主線、公開版與手遊級視覺候選
 
-- 最新 \`main\` HEAD：\`549443d377c5db5e1ad9abb6f045bc90311eeec0\`；PR #23「系統性升級星夢樂園 3D 建築、景觀與遊樂設施」已合併。
-- owner 於 2026-11-22 手動執行 Actions #185（run ID \`45029236953\`），檢查 job 與「發布正式網站」步驟均成功，部署目標為 \`main\` @ \`549443d377c5db5e1ad9abb6f045bc90311eeec0\`。此為目前確認的公開版來源。
-- 新候選分支：\`feature/mobile-game-visual-fidelity-20261122\`，從最新主線 SHA 建立。目標是提升渲染與材質品質，不把前一輪增加程序幾何細節誤當作已達手遊級視覺。
+- 最新 `main` HEAD：`549443d377c5db5e1ad9abb6f045bc90311eeec0`；PR #23「系統性升級星夢樂園 3D 建築、景觀與遊樂設施」已合併。
+- owner 於 2026-11-22 手動執行 Actions #185（run ID `45029236953`），檢查 job 與「發布正式網站」步驟均成功，部署目標為 `main` @ `549443d377c5db5e1ad9abb6f045bc90311eeec0`。此為目前確認的公開版來源。
+- 新候選分支：`feature/mobile-game-visual-fidelity-20261122`，從最新主線 SHA 建立。目標是提升渲染與材質品質，不把前一輪增加程序幾何細節誤當作已達手遊級視覺。
 - 本候選變更包含獨立 Albedo／Normal／Roughness 貼圖、PMREM 環境反射、選擇性高光光暈、柔邊接觸陰影、行動裝置後處理解析度分級，以及減少裝飾燈即時 PointLight 數量。
 - 本候選尚未完成真實 WebGL shader／視覺／FPS 驗收；尚未匯入外部 GLB 模型或外部貼圖，因此不能宣稱模型本身已達手遊資產品質。
 - 不修改 Supabase schema、RLS、RPC、migration、Auth 或任何正式玩家資料；不修改星塵、服裝所有權、遊戲紀錄、聊天或探索資料。
 - PR #24「升級星夢樂園手遊級 PBR 材質與電影感渲染」已建立為 Ready for review（非 Draft），目前 open、尚未合併；基底為 main @ `549443d377c5db5e1ad9abb6f045bc90311eeec0`。
-- PR head：`4a20e57957b033d0a48abd1707a89af315e3d204`；變更 4 個檔案（Three.js 渲染、7 項新增結構測試、3D Roadmap、Release Status）。
-- Actions run #186（run ID `45030493500`）成功：Node tests **53 passed／0 failed**，Three.js／Supabase Edge Function 語法檢查及首頁 inline JavaScript parse 均通過。
+- PR #24 最新 HEAD：`c891002ece36a3f78a285f908ad61470599a3157`；變更 4 個檔案（Three.js 渲染、7 項新增結構測試、3D Roadmap、Release Status）。
+- Actions run #186（run ID `45030493500`）及 #187（run ID `45030566635`）均成功：Node tests **53 passed／0 failed**，Three.js／Supabase Edge Function 語法檢查及首頁 inline JavaScript parse 均通過；#187 為最新文件同步版本的檢查。
 - PR #24 的 `管理員確認後發布正式版` job 為 skipped；本 PR 沒有合併或發布公開網站。仍待管理員私有預覽及真實 WebGL shader、材質反射、bloom、桌機／手機橫向與 FPS 人工驗收。
 
 
