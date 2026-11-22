@@ -26,9 +26,14 @@
 - 私有預覽使用 Supabase Private Storage bucket `sd-admin-previews`，搭配 `sd-admin-preview` Edge Function。只有登入後通過資料庫 `sd_is_admin()` 驗證的管理員才能取得 5 分鐘短效檔案 URL。
 - 在 main 上手動執行 workflow，設定 `publish_private_preview=true`、`preview_commit_sha=<完整 SHA>`、`confirm_release=false)，只會上傳私有預覽，不會部署公開網站。
 - 私有預覽上傳工作只讀取指定 commit 的靜態檔案，不執行候選 commit 的腳本；GitHub Actions service-role secret 只供 main 上的 owner 手動工作使用。
-- 管理中心以不含 `allow-same-origin` 的 sandbox iframe 開啟預覽，不共享正式登入 session 或 localStorage。預覽以訪客模式運行，不測試需要正式雲端寫入的功能。
+- 管理中心可選擇頁內快速預覽或另開全螢幕測試分頁；獨立分頁使用整個瀏覽器可視區域，不再受管理中心卡片高度限制。兩者都以不含 `allow-same-origin` 的 sandbox iframe 開啟，不共享正式登入 session 或 localStorage。預覽以訪客模式運行，不測試需要正式雲端寫入的功能。
 - bucket、Edge Function、GitHub Actions secrets 尚未完成 owner 設定與部署前，管理中心會顯示設定錯誤，不會回退到公開預覽網址。
 - 詳細設定：`docs/ADMIN_PREVIEW_SETUP_zh-TW.md`。
+
+## 管理中心操作入口
+- 管理員可在首頁管理中心選擇候選 PR，直接開啟 GitHub 差異／Review 頁，並從另一個按鈕開啟正式 Pages workflow。
+- 管理中心的錯誤回報可先保存在目前瀏覽器的本機紀錄；按「建立 GitHub 修正單」會開啟預填回報內容的 GitHub Issue 表單，仍須在 GitHub 提交後才成為共用修正單。
+- 目前公開前端沒有 GitHub 寫入憑證，因此不能在瀏覽器中直接核准 PR、合併或啟動 Workflow。要啟用真正的一鍵核准／發布，必須將限定 repository 權限的 GitHub Token 安全存放在 Supabase Edge Function Secrets；不可放入前端或 GitHub Pages 靜態檔案。
 
 ## 發布前檢查
 - 自動檢查通過。
