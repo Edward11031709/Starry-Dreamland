@@ -630,6 +630,37 @@ function buildEntranceGate(scene,materials){
     const light=new THREE.PointLight(PALETTE.gold,7,5,2);light.position.set(x,3.2,0.55);gate.add(light);
   });
   const crownLight=new THREE.PointLight(PALETTE.violet,12,8,2);crownLight.position.set(0,5.8,-0.1);gate.add(crownLight);
+  // Sculpted side chapels and broad entry treads give the threshold a ceremonial scale.
+  [-1,1].forEach(side=>{
+    const wing=new THREE.Group();wing.position.set(side*4.18,0.12,-0.08);gate.add(wing);
+    addMesh(wing,new THREE.BoxGeometry(2.15,1.22,0.56),materials.wall,[0,0.72,0]);
+    addMesh(wing,new THREE.BoxGeometry(2.28,0.13,0.68),materials.gold,[0,1.37,0]);
+    addMesh(wing,new THREE.BoxGeometry(2.1,0.08,0.62),materials.trim,[0,0.14,0]);
+    for(let bay=0;bay<3;bay++){
+      const bx=(bay-1)*0.62;
+      makeWindow(wing,bx,0.79,0.3,0.27,0.62,materials.lampGlow);
+      addMesh(wing,new THREE.BoxGeometry(0.035,0.68,0.08),materials.gold,[bx,0.77,0.36],null,false,false);
+    }
+    addTower(wing,0,0,1.42,2.25,0.34,materials,true);
+    addMesh(wing,new THREE.BoxGeometry(2.34,0.11,0.72),materials.darkStone,[0,0.12,0],null,false,false);
+  });
+  // Low approach treads face the park side; the main walking line remains open.
+  for(let step=0;step<4;step++){
+    const width=7.2+step*0.72,depth=0.48;
+    addMesh(gate,new THREE.BoxGeometry(width,0.105,depth),step%2?materials.top:materials.darkStone,
+      [0,0.08-step*0.035,-0.48-step*0.49],null,false,true);
+    addMesh(gate,new THREE.BoxGeometry(width-0.16,0.018,0.045),materials.gold,
+      [0,0.14-step*0.035,-0.68-step*0.49],null,false,false);
+  }
+  addMesh(gate,new THREE.CylinderGeometry(0.94,0.98,0.055,64),materials.darkStone,[0,0.2,-2.78],null,false,true);
+  const sealRing=addMesh(gate,new THREE.TorusGeometry(0.82,0.035,8,72),materials.gold,[0,0.24,-2.78],null,false,false);
+  sealRing.rotation.x=Math.PI/2;
+  for(let ray=0;ray<8;ray++){
+    const a=ray/8*Math.PI*2;
+    const sealGem=addMesh(gate,new THREE.OctahedronGeometry(0.12,0),ray%2?materials.crystal:materials.silverMetal,
+      [Math.cos(a)*0.62,0.25,-2.78+Math.sin(a)*0.62],[0.68,0.25,1.45],null,false,false);
+    sealGem.rotation.y=a;
+  }
   return gate;
 }
 
