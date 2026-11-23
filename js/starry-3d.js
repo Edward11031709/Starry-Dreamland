@@ -2580,6 +2580,7 @@ function createStarfield(scene, count = 620) {
 
 function disposeWorld(world) {
   if (!world) return;
+  world.running = false;
   if (world.resizeObserver) world.resizeObserver.disconnect();
   if (world.canvas) {
     world.canvas.removeEventListener("wheel", world.onWheel);
