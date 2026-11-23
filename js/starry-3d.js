@@ -1,4 +1,5 @@
 let THREE;
+let GLTFLoaderClass = null;
 
 const PALETTE = {
   night: 0x070918,
@@ -14,6 +15,148 @@ const PALETTE = {
 };
 
 let activeWorld = null;
+
+const PREMIUM_AVATAR_DETAIL_BATCH = 4;
+
+const PREMIUM_PARK_ASSETS = [
+  {id:"castle-cathedral",name:"星夢城堡",url:"https://cdn.3dassets.dev/assets/32747/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-city-cathedral-260bcd65",height:10.2,target:"StarDreamCastle",batch:1,animation:"bell-ring"},
+  {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
+  {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
+  {id:"carousel",name:"星光旋轉木馬",url:"https://cdn.3dassets.dev/assets/28656/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-b3ccf619",height:4.9,batch:2,rideId:"carousel",animation:"spin"},
+  {id:"teacups",name:"星月茶杯",url:"https://cdn.3dassets.dev/assets/28657/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-70d0de97",height:1.35,batch:2,rideId:"teacups",animations:["platform-spin","cup-spin"]},
+  {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true},
+  {id:"ferris-wheel",name:"星河摩天輪",url:"https://cdn.3dassets.dev/assets/28655/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-d18acb96",height:13.8,batch:2,rideId:"ferris",animation:"spin"},
+  {id:"coaster-train",name:"星際雲霄飛車列車",url:"https://cdn.3dassets.dev/assets/28653/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-993fa7ed",height:0.58,batch:2,rideId:"coaster",train:true,animation:"wheel-roll"},
+  {id:"crystal-willow",name:"星晶垂枝樹",url:"https://cdn.3dassets.dev/assets/108/v1/model.glb",source:"https://3dassets.dev/assets/runestone-conservatory-crystal-willow-tree",height:3.0,batch:3,positions:[[33.1,0.21,-17.2],[27.1,0.21,-17.2],[33.1,0.21,-14.7]]},
+  {id:"glowing-crystal-cluster",name:"月光晶簇",url:"https://cdn.3dassets.dev/assets/36999/v1/model.glb",source:"https://3dassets.dev/assets/sunken-city-and-underwater-ruins-glowing-crystal-clust-897febc9",height:1.55,batch:3,positions:[[-32.7,0.68,-15.0],[-27.2,0.68,-18.0],[27.1,0.21,-19.1],[33.2,0.21,-19.1],[-34.0,0.68,-18.2],[34.0,0.21,-16.0]]}
+];
+
+function sha256Hex(buffer){
+  if(!globalThis.crypto?.subtle)return Promise.resolve("unavailable");
+  return globalThis.crypto.subtle.digest("SHA-256",buffer).then(hash=>
+    Array.from(new Uint8Array(hash),value=>value.toString(16).padStart(2,"0")).join("")
+  );
+}
+
+async function loadPremiumGlb(url){
+  if(!GLTFLoaderClass)throw new Error("GLTFLoader 尚未載入");
+  const response=await fetch(url,{mode:"cors",cache:"force-cache"});
+  if(!response.ok)throw new Error("GLB 下載失敗："+response.status);
+  const buffer=await response.arrayBuffer();
+  const sha256=await sha256Hex(buffer);
+  const gltf=await new Promise((resolve,reject)=>{
+    new GLTFLoaderClass().parse(buffer,"",resolve,reject);
+  });
+  return {gltf,sha256,bytes:buffer.byteLength};
+}
+
+function tunePremiumMaterials(root){
+  root.traverse(object=>{
+    if(!object.isMesh)return;
+    object.castShadow=true;object.receiveShadow=true;
+    const original=object.material;
+    const refine=material=>{
+      if(!material)return material;
+      const copy=material.clone();
+      if(copy.color)copy.color.lerp(new THREE.Color(0xd5c8ed),0.12);
+      if("roughness" in copy)copy.roughness=Math.max(0.28,Math.min(0.88,copy.roughness??0.65));
+      if("metalness" in copy)copy.metalness=Math.min(0.62,copy.metalness??0.08);
+      if("envMapIntensity" in copy)copy.envMapIntensity=0.82;
+      return copy;
+    };
+    object.material=Array.isArray(original)?original.map(refine):refine(original);
+  });
+}
+
+function mountPremiumAsset(world,config,gltf){
+  const model=gltf.scene;
+  model.name="PremiumAsset_"+config.id;
+  tunePremiumMaterials(model);
+  const bounds=new THREE.Box3().setFromObject(model);
+  const size=bounds.getSize(new THREE.Vector3());
+  const scale=config.height/Math.max(0.001,size.y);
+  model.scale.setScalar(scale);
+  model.position.y=-bounds.min.y*scale;
+  if(config.train){
+    const ride=world.environment.rides.find(item=>item.id===config.rideId);
+    if(!ride)throw new Error("找不到雲霄飛車互動節點");
+    ride.root.traverse(child=>{if(child.isMesh||child.isLine||child.isPoints)child.visible=false;});
+    ride.root.add(model);
+    model.position.set(0,0,0);
+    model.rotation.y=Math.PI;
+    ride.object=model;
+    ride.rideSeat=new THREE.Group();ride.rideSeat.position.set(0,0.48,0);model.add(ride.rideSeat);
+    ride.axis="track";
+    ride.speed=0.052;
+  }else if(config.rideId){
+    const ride=world.environment.rides.find(item=>item.id===config.rideId);
+    if(!ride)throw new Error("找不到遊樂設施："+config.rideId);
+    ride.root.traverse(child=>{if(child.isMesh||child.isLine||child.isPoints)child.visible=false;});
+    ride.root.add(model);
+    model.position.set(0,0,0);
+  }else if(config.target){
+    const fallback=world.scene.getObjectByName(config.target);
+    if(fallback)fallback.visible=false;
+    model.position.x=config.target==="StarDreamCastle"?0:-30;
+    model.position.z=config.target==="StarDreamCastle"?-18.2:-16.5;
+    model.position.y=config.target==="StarDreamCastle"?0.68:0.68;
+    world.scene.add(model);
+  }else if(config.positions){
+    config.positions.forEach(([x,y,z],index)=>{
+      const instance=index===0?model:model.clone(true);
+      instance.position.set(x,y,z);
+      instance.scale.setScalar(scale);
+      world.scene.add(instance);
+      if(config.id==="crystal-willow")world.environment.colliders.push({x,z,radius:0.62,label:"星晶垂枝樹"});
+      else world.environment.colliders.push({x,z,radius:0.48,label:"月光晶簇"});
+      if(gltf.animations?.length){
+        const mixer=new THREE.AnimationMixer(instance);
+        const clip=gltf.animations.find(item=>item.name.toLowerCase().includes("spin"));
+        if(clip)mixer.clipAction(clip).play();
+        world.assetMixers.push(mixer);
+      }
+    });
+    return;
+  }else{
+    model.position.set(...config.position);
+    world.scene.add(model);
+    if(config.id==="plaza-fountain")world.environment.colliders.push({x:0,z:-5.8,radius:1.9,label:"星夢廣場噴泉"});
+  }
+  if(gltf.animations?.length){
+    const mixer=new THREE.AnimationMixer(model);
+    const names=config.animations||[config.animation].filter(Boolean);
+    names.forEach(name=>{
+      const clip=gltf.animations.find(item=>item.name.toLowerCase().includes(name.toLowerCase()));
+      if(!clip)return;
+      const action=mixer.clipAction(clip);
+      if(config.pingPong)action.setLoop(THREE.LoopPingPong,Infinity);
+      action.play();
+    });
+    world.assetMixers.push(mixer);
+  }
+  return model;
+}
+
+async function loadPremiumParkAssets(world){
+  const queue=PREMIUM_PARK_ASSETS.slice();
+  const workers=Array.from({length:2},async()=>{
+    while(queue.length&&world.running){
+      const config=queue.shift();
+      try{
+        const {gltf,sha256,bytes}=await loadPremiumGlb(config.url);
+        if(!world.running)return;
+        mountPremiumAsset(world,config,gltf);
+        console.info("[Starry Dreamland asset]",config.id,{sha256,bytes,source:config.source});
+        window.dispatchEvent(new CustomEvent("starry-3d-asset-loaded",{detail:{id:config.id,sha256,bytes}}));
+      }catch(error){
+        console.warn("[Starry Dreamland asset fallback]",config.id,error);
+        window.dispatchEvent(new CustomEvent("starry-3d-asset-fallback",{detail:{id:config.id,message:String(error)}}));
+      }
+    }
+  });
+  await Promise.all(workers);
+}
+
 const gameMeta = [
   { id: "moon", title: "月相共鳴", subtitle: "LUNAR RESONANCE", color: 0x75b9f1, icon: "☾" },
   { id: "cipher", title: "星域解碼", subtitle: "STELLAR CIPHER", color: 0xb59af0, icon: "⌘" },
@@ -72,12 +215,314 @@ function makePatternTexture(kind, base, seam, accent) {
   texture.anisotropy=8;
   return texture;
 }
+function createPbrSurfaceMaps(kind,base,seam,accent,repeatX=3,repeatY=3){
+  const size=512;
+  const albedo=document.createElement("canvas");albedo.width=albedo.height=size;
+  const height=document.createElement("canvas");height.width=height.height=size;
+  const rough=document.createElement("canvas");rough.width=rough.height=size;
+  const color=albedo.getContext("2d"),heightCtx=height.getContext("2d"),roughCtx=rough.getContext("2d");
+  if(!color||!heightCtx||!roughCtx)return null;
+  const seed=(x,y)=>Math.abs(Math.sin(x*127.1+y*311.7)*43758.5453)%1;
+  const baseColor=new THREE.Color("#"+base.replace("#",""));
+  const tint=(amount)=>{
+    const value=baseColor.clone().multiplyScalar(amount);
+    return "#"+value.getHexString();
+  };
+  color.fillStyle=base;color.fillRect(0,0,size,size);
+  heightCtx.fillStyle="rgb(128,128,128)";heightCtx.fillRect(0,0,size,size);
+  roughCtx.fillStyle="rgb(224,224,224)";roughCtx.fillRect(0,0,size,size);
+
+  if(kind==="stone"||kind==="paving"){
+    const rowH=kind==="paving"?64:96,colW=kind==="paving"?96:128;
+    for(let row=-1;row<10;row++){
+      const offset=row%2?colW/2:0;
+      for(let col=-1;col<7;col++){
+        const x=col*colW+offset,y=row*rowH;
+        const variation=0.86+seed(col,row)*0.23;
+        color.fillStyle=tint(variation);color.fillRect(x+3,y+3,colW-6,rowH-6);
+        const block=color.createLinearGradient(x,y,x+colW,y+rowH);
+        block.addColorStop(0,"rgba(255,255,255,0.075)");
+        block.addColorStop(0.48,"rgba(255,255,255,0.008)");
+        block.addColorStop(1,"rgba(4,5,18,0.16)");
+        color.fillStyle=block;color.fillRect(x+3,y+3,colW-6,rowH-6);
+        color.strokeStyle=seam;color.lineWidth=kind==="paving"?3:2;
+        color.strokeRect(x+2,y+2,colW-4,rowH-4);
+        color.strokeStyle="rgba(255,255,255,0.11)";color.lineWidth=1;
+        color.beginPath();color.moveTo(x+8,y+6);color.lineTo(x+colW-10,y+6);color.stroke();
+        heightCtx.fillStyle="rgb(145,145,145)";heightCtx.fillRect(x+3,y+3,colW-6,rowH-6);
+        heightCtx.strokeStyle="rgb(76,76,76)";
+        heightCtx.lineWidth=kind==="paving"?4:3;heightCtx.strokeRect(x+2,y+2,colW-4,rowH-4);
+        heightCtx.strokeStyle="rgb(174,174,174)";heightCtx.lineWidth=1;
+        heightCtx.beginPath();heightCtx.moveTo(x+7,y+7);heightCtx.lineTo(x+colW-9,y+7);heightCtx.stroke();
+        for(let fleck=0;fleck<22;fleck++){
+          const fx=x+8+seed(col+fleck,row+3)*(colW-16);
+          const fy=y+8+seed(row+fleck,col+4)*(rowH-16);
+          const alpha=0.025+seed(fleck,col)*0.07;
+          color.fillStyle=accent;color.globalAlpha=alpha;color.fillRect(fx,fy,1+seed(fleck,row)*2,1+seed(row,col)*2);
+          heightCtx.fillStyle=seed(fleck,row)>0.5?"rgb(164,164,164)":"rgb(111,111,111)";
+          heightCtx.fillRect(fx,fy,1.5,1.5);
+        }
+      }
+    }
+  }else if(kind==="roof"){
+    const rowH=54,shingleW=92;
+    for(let row=-1;row<12;row++)for(let col=-1;col<7;col++){
+      const x=col*shingleW+(row%2?shingleW/2:0),y=row*rowH;
+      const light=seed(row,col),variation=0.83+light*0.28;
+      color.fillStyle=tint(variation);color.beginPath();color.roundRect(x+3,y+3,shingleW-6,rowH-7,8);color.fill();
+      const glaze=color.createLinearGradient(0,y,0,y+rowH);
+      glaze.addColorStop(0,"rgba(255,255,255,0.13)");glaze.addColorStop(0.54,"rgba(255,255,255,0.015)");glaze.addColorStop(1,"rgba(0,0,0,0.18)");
+      color.fillStyle=glaze;color.beginPath();color.roundRect(x+3,y+3,shingleW-6,rowH-7,8);color.fill();
+      color.strokeStyle=seam;color.lineWidth=2;color.beginPath();color.roundRect(x+3,y+3,shingleW-6,rowH-7,8);color.stroke();
+      color.strokeStyle=accent;color.globalAlpha=0.2;color.lineWidth=2;
+      color.beginPath();color.moveTo(x+12,y+9);color.lineTo(x+shingleW-12,y+9);color.stroke();color.globalAlpha=1;
+      heightCtx.fillStyle="rgb(155,155,155)";heightCtx.beginPath();heightCtx.roundRect(x+3,y+3,shingleW-6,rowH-7,8);heightCtx.fill();
+      heightCtx.strokeStyle="rgb(80,80,80)";heightCtx.lineWidth=3;heightCtx.beginPath();heightCtx.roundRect(x+3,y+3,shingleW-6,rowH-7,8);heightCtx.stroke();
+      heightCtx.strokeStyle="rgb(184,184,184)";heightCtx.lineWidth=1;heightCtx.beginPath();heightCtx.moveTo(x+10,y+8);heightCtx.lineTo(x+shingleW-12,y+8);heightCtx.stroke();
+    }
+  }else if(kind==="wood"){
+    const grain=color.createLinearGradient(0,0,size,0);
+    grain.addColorStop(0,tint(0.78));grain.addColorStop(0.5,tint(1.02));grain.addColorStop(1,tint(0.82));
+    color.fillStyle=grain;color.fillRect(0,0,size,size);
+    for(let line=0;line<90;line++){
+      const y=line/90*size,phase=seed(line,7)*Math.PI*2;
+      color.strokeStyle=seam;color.globalAlpha=0.12+seed(line,9)*0.14;color.lineWidth=1+seed(line,11)*2;
+      color.beginPath();color.moveTo(0,y);
+      for(let x=0;x<=size;x+=32)color.lineTo(x,y+Math.sin(x/38+phase)*1.8);
+      color.stroke();
+      heightCtx.strokeStyle=line%4===0?"rgb(165,165,165)":"rgb(112,112,112)";
+      heightCtx.lineWidth=line%4===0?3:1;heightCtx.beginPath();heightCtx.moveTo(0,y);heightCtx.lineTo(size,y);heightCtx.stroke();
+    }
+    color.globalAlpha=1;
+  }else{
+    for(let i=0;i<2200;i++){
+      const x=seed(i,5)*size,y=seed(i,11)*size;
+      const alpha=0.02+seed(i,13)*0.07;
+      color.fillStyle=accent;color.globalAlpha=alpha;color.fillRect(x,y,1+seed(i,17)*2,1+seed(i,19)*2);
+      heightCtx.fillStyle=seed(i,23)>0.5?"rgb(166,166,166)":"rgb(98,98,98)";
+      heightCtx.fillRect(x,y,2,2);
+    }
+    color.globalAlpha=1;
+  }
+
+  const heightPixels=heightCtx.getImageData(0,0,size,size).data;
+  const normalData=new Uint8Array(size*size*4);
+  const roughData=new Uint8Array(size*size*4);
+  const roughBase=kind==="roof"?0.58:kind==="paving"?0.83:kind==="wood"?0.72:0.88;
+  const strength=kind==="roof"?3.2:kind==="paving"?2.6:2.1;
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const i=(y*size+x)*4;
+    const left=heightPixels[(y*size+((x+size-1)%size))*4]/255;
+    const right=heightPixels[(y*size+((x+1)%size))*4]/255;
+    const up=heightPixels[(((y+size-1)%size)*size+x)*4]/255;
+    const down=heightPixels[(((y+1)%size)*size+x)*4]/255;
+    let nx=(left-right)*strength,ny=(up-down)*strength,nz=1;
+    const inv=1/Math.sqrt(nx*nx+ny*ny+nz*nz);nx*=inv;ny*=inv;nz*=inv;
+    normalData[i]=Math.round((nx*0.5+0.5)*255);
+    normalData[i+1]=Math.round((ny*0.5+0.5)*255);
+    normalData[i+2]=Math.round((nz*0.5+0.5)*255);
+    normalData[i+3]=255;
+    const noise=(seed(x,y)-0.5)*0.12;
+    const roughness=THREE.MathUtils.clamp(roughBase+noise+(heightPixels[i]/255-0.5)*0.08,0.32,0.99);
+    const value=Math.round(roughness*255);
+    roughData[i]=roughData[i+1]=roughData[i+2]=value;roughData[i+3]=255;
+  }
+  const makeCanvasTexture=(canvas)=>{
+    const texture=new THREE.CanvasTexture(canvas);
+    texture.colorSpace=THREE.SRGBColorSpace;
+    texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+    texture.repeat.set(repeatX,repeatY);
+    texture.anisotropy=8;
+    return texture;
+  };
+  const normalMap=new THREE.DataTexture(normalData,size,size,THREE.RGBAFormat);
+  normalMap.wrapS=normalMap.wrapT=THREE.RepeatWrapping;
+  normalMap.repeat.set(repeatX,repeatY);
+  normalMap.magFilter=THREE.LinearFilter;
+  normalMap.minFilter=THREE.LinearMipmapLinearFilter;
+  normalMap.generateMipmaps=true;
+  normalMap.flipY=true;
+  normalMap.anisotropy=8;
+  normalMap.needsUpdate=true;
+  normalMap.colorSpace=THREE.NoColorSpace;
+  const roughnessMap=new THREE.DataTexture(roughData,size,size,THREE.RGBAFormat);
+  roughnessMap.wrapS=roughnessMap.wrapT=THREE.RepeatWrapping;
+  roughnessMap.repeat.set(repeatX,repeatY);
+  roughnessMap.magFilter=THREE.LinearFilter;
+  roughnessMap.minFilter=THREE.LinearMipmapLinearFilter;
+  roughnessMap.generateMipmaps=true;
+  roughnessMap.flipY=true;
+  roughnessMap.anisotropy=8;
+  roughnessMap.needsUpdate=true;
+  roughnessMap.colorSpace=THREE.NoColorSpace;
+  return {map:makeCanvasTexture(albedo),normalMap,roughnessMap};
+}
+
 function applyPattern(material,kind,base,seam,accent,repeatX=3,repeatY=3){
-  const texture=makePatternTexture(kind,base,seam,accent);
-  texture.repeat.set(repeatX,repeatY);
-  material.map=texture;material.bumpMap=texture;
-  material.bumpScale=kind==="paving"?0.022:0.035;
-  material.needsUpdate=true;return material;
+  const maps=createPbrSurfaceMaps(kind,base,seam,accent,repeatX,repeatY);
+  if(!maps)return material;
+  material.map=maps.map;
+  material.normalMap=maps.normalMap;
+  material.normalScale=new THREE.Vector2(kind==="roof"?0.72:0.54,kind==="roof"?0.72:0.54);
+  material.roughnessMap=maps.roughnessMap;
+  material.bumpMap=null;
+  material.needsUpdate=true;
+  return material;
+}
+
+function createReflectionEnvironment(renderer,scene){
+  const canvas=document.createElement("canvas");canvas.width=1024;canvas.height=512;
+  const ctx=canvas.getContext("2d");
+  if(!ctx)return null;
+  const sky=ctx.createLinearGradient(0,0,0,512);
+  sky.addColorStop(0,"#081026");sky.addColorStop(0.36,"#182443");sky.addColorStop(0.68,"#494467");sky.addColorStop(1,"#b0917d");
+  ctx.fillStyle=sky;ctx.fillRect(0,0,1024,512);
+  const addSoftBox=(x,y,w,h,color,blur)=>{
+    ctx.save();ctx.shadowColor=color;ctx.shadowBlur=blur;ctx.fillStyle=color;ctx.globalAlpha=0.88;
+    ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w,h)*0.22);ctx.fill();ctx.restore();
+  };
+  addSoftBox(86,72,108,20,"#a7c7ff",36);
+  addSoftBox(366,44,152,25,"#f7d7a0",46);
+  addSoftBox(686,84,118,22,"#c5a8ff",40);
+  addSoftBox(888,58,70,18,"#f4cda1",32);
+  const horizon=ctx.createRadialGradient(512,422,6,512,422,460);
+  horizon.addColorStop(0,"rgba(255,210,164,0.38)");
+  horizon.addColorStop(0.3,"rgba(193,164,220,0.14)");
+  horizon.addColorStop(1,"rgba(15,22,52,0)");
+  ctx.fillStyle=horizon;ctx.fillRect(0,0,1024,512);
+  const source=new THREE.CanvasTexture(canvas);
+  source.colorSpace=THREE.SRGBColorSpace;
+  source.mapping=THREE.EquirectangularReflectionMapping;
+  let target=null,generator=null;
+  try{
+    generator=new THREE.PMREMGenerator(renderer);
+    generator.compileEquirectangularShader();
+    target=generator.fromEquirectangular(source);
+    scene.environment=target.texture;
+    scene.environmentIntensity=0.72;
+  }catch(error){
+    console.warn("Starry Dreamland: reflection environment unavailable",error);
+    target?.dispose();target=null;
+  }finally{
+    source.dispose();
+    generator?.dispose();
+  }
+  return target;
+}
+
+
+
+function createCinematicPostFX(renderer,width,height,isSmall){
+  let target=null,quadGeometry=null,quadMaterial=null,postScene=null,disabled=false;
+  try{
+    const scale=isSmall?0.78:1;
+    target=new THREE.WebGLRenderTarget(
+      Math.max(1,Math.floor(width*renderer.getPixelRatio()*scale)),
+      Math.max(1,Math.floor(height*renderer.getPixelRatio()*scale)),
+      {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false}
+    );
+    target.texture.name="StarryDreamlandLinearScene";
+    target.texture.minFilter=THREE.LinearFilter;
+    target.texture.magFilter=THREE.LinearFilter;
+    target.texture.generateMipmaps=false;
+    target.texture.colorSpace=THREE.NoColorSpace;
+
+    postScene=new THREE.Scene();
+    const postCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    quadGeometry=new THREE.PlaneGeometry(2,2);
+    quadMaterial=new THREE.ShaderMaterial({
+      uniforms:{
+        tDiffuse:{value:target.texture},
+        texelSize:{value:new THREE.Vector2(1/target.width,1/target.height)},
+        bloomStrength:{value:isSmall?0.28:0.38},
+        vignetteStrength:{value:isSmall?0.12:0.16}
+      },
+      vertexShader:[
+        "varying vec2 vUv;",
+        "void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}"
+      ].join("\n"),
+      fragmentShader:[
+        "uniform sampler2D tDiffuse;",
+        "uniform vec2 texelSize;",
+        "uniform float bloomStrength;",
+        "uniform float vignetteStrength;",
+        "varying vec2 vUv;",
+        "vec3 brightSample(vec2 uv){",
+        "  vec3 c=texture2D(tDiffuse,clamp(uv,vec2(0.0),vec2(1.0))).rgb;",
+        "  float l=dot(c,vec3(0.2126,0.7152,0.0722));",
+        "  float mask=smoothstep(0.68,0.94,l);",
+        "  return c*mask;",
+        "}",
+        "void main(){",
+        "  vec3 base=texture2D(tDiffuse,vUv).rgb;",
+        "  vec2 r=texelSize;",
+        "  vec3 glow=vec3(0.0);",
+        "  glow+=brightSample(vUv+vec2( 2.0, 0.0)*r)*0.105;",
+        "  glow+=brightSample(vUv+vec2(-2.0, 0.0)*r)*0.105;",
+        "  glow+=brightSample(vUv+vec2( 0.0, 2.0)*r)*0.105;",
+        "  glow+=brightSample(vUv+vec2( 0.0,-2.0)*r)*0.105;",
+        "  glow+=brightSample(vUv+vec2( 5.0, 2.0)*r)*0.075;",
+        "  glow+=brightSample(vUv+vec2(-5.0, 2.0)*r)*0.075;",
+        "  glow+=brightSample(vUv+vec2( 5.0,-2.0)*r)*0.075;",
+        "  glow+=brightSample(vUv+vec2(-5.0,-2.0)*r)*0.075;",
+        "  glow+=brightSample(vUv+vec2( 9.0, 0.0)*r)*0.045;",
+        "  glow+=brightSample(vUv+vec2(-9.0, 0.0)*r)*0.045;",
+        "  glow+=brightSample(vUv+vec2( 0.0, 9.0)*r)*0.045;",
+        "  glow+=brightSample(vUv+vec2( 0.0,-9.0)*r)*0.045;",
+        "  vec3 color=base+glow*bloomStrength;",
+        "  float vignette=smoothstep(0.24,0.88,distance(vUv,vec2(0.5)));",
+        "  color*=1.0-vignette*vignetteStrength;",
+        "  float luma=dot(color,vec3(0.2126,0.7152,0.0722));",
+        "  color=mix(vec3(luma),color,1.055);",
+        "  color=(color-0.5)*1.035+0.5;",
+        "  gl_FragColor=vec4(color,1.0);",
+        "  #include <tonemapping_fragment>",
+        "  #include <colorspace_fragment>",
+        "}"
+      ].join("\n"),
+      depthTest:false,depthWrite:false,toneMapped:true
+    });
+    postScene.add(new THREE.Mesh(quadGeometry,quadMaterial));
+
+    return {
+      target,scene:postScene,camera:postCamera,geometry:quadGeometry,material:quadMaterial,
+      render(scene,camera){
+        if(disabled){renderer.render(scene,camera);return false}
+        const previousToneMapping=renderer.toneMapping;
+        try{
+          renderer.toneMapping=THREE.NoToneMapping;
+          renderer.setRenderTarget(target);
+          renderer.clear();
+          renderer.render(scene,camera);
+          renderer.setRenderTarget(null);
+          renderer.toneMapping=previousToneMapping;
+          renderer.clear();
+          renderer.render(postScene,postCamera);
+          return true;
+        }catch(error){
+          renderer.setRenderTarget(null);
+          renderer.toneMapping=previousToneMapping;
+          disabled=true;
+          console.warn("Starry Dreamland: post-processing failed; using standard renderer",error);
+          renderer.render(scene,camera);
+          return false;
+        }
+      },
+      setSize(w,h,pixelRatio=renderer.getPixelRatio()){
+        const targetWidth=Math.max(1,Math.floor(w*pixelRatio*scale));
+        const targetHeight=Math.max(1,Math.floor(h*pixelRatio*scale));
+        target.setSize(targetWidth,targetHeight);
+        quadMaterial.uniforms.texelSize.value.set(1/targetWidth,1/targetHeight);
+      },
+      dispose(){
+        target.dispose();quadGeometry.dispose();quadMaterial.dispose();
+      }
+    };
+  }catch(error){
+    target?.dispose();quadGeometry?.dispose();quadMaterial?.dispose();
+    console.warn("Starry Dreamland: cinematic post-processing disabled",error);
+    return null;
+  }
 }
 
 function makeMaterial(color, roughness = 0.72, metalness = 0.12, extra = {}) {
@@ -1441,6 +1886,7 @@ function buildEnvironment(scene) {
   applyPattern(materials.road,"paving","#343451","rgba(13,13,34,0.5)","#bda7e6",1.4,2.8);
   applyPattern(materials.paving,"paving","#4a456b","rgba(22,18,48,0.34)","#ddc89b",2.8,2.8);
   applyPattern(materials.top,"stone","#373451","rgba(12,11,33,0.4)","#9c8cc6",2.5,2.5);
+  applyPattern(materials.wood,"wood","#352940","rgba(16,10,24,0.44)","#c6a77d",1.8,5.2);
   // Metals need a balanced dielectric response in this lightweight scene (no HDR reflection probe).
   [materials.trim,materials.gold,materials.silver,materials.silverMetal].forEach((material,index)=>{
     material.metalness=[0.34,0.46,0.38,0.44][index];
@@ -1449,9 +1895,15 @@ function buildEnvironment(scene) {
     material.clearcoatRoughness=0.2;
     material.needsUpdate=true;
   });
-  materials.wall.roughness=0.64;
-  materials.wall.metalness=0.12;
-  materials.wall.clearcoat=0.32;
+  materials.wall.roughness=0.72;
+  materials.wall.metalness=0.08;
+  materials.wall.clearcoat=0.38;
+  [materials.trim,materials.gold,materials.silver,materials.silverMetal].forEach((material,index)=>{
+    material.envMapIntensity=[0.72,0.86,0.78,1.0][index];
+    material.needsUpdate=true;
+  });
+  materials.crystal.envMapIntensity=0.68;
+  materials.water.envMapIntensity=0.82;
 
   // A large connected floating island gives the park room for real exploration.
   const island = new THREE.Group();
@@ -1461,6 +1913,34 @@ function buildEnvironment(scene) {
   const walkSegments = [];
   const terrainZones = [];
   const addCollider = (x,z,radius,label)=>colliders.push({x,z,radius,label});
+  // Large, feathered contact shadows give hero buildings visual weight without extra lights.
+  const shadowCanvas=document.createElement("canvas");shadowCanvas.width=shadowCanvas.height=256;
+  const shadowContext=shadowCanvas.getContext("2d");
+  const shadowGradient=shadowContext?.createRadialGradient(128,128,8,128,128,126);
+  if(shadowContext&&shadowGradient){
+    shadowGradient.addColorStop(0,"rgba(2,5,18,0.52)");
+    shadowGradient.addColorStop(0.34,"rgba(3,6,21,0.34)");
+    shadowGradient.addColorStop(0.68,"rgba(5,8,26,0.12)");
+    shadowGradient.addColorStop(1,"rgba(5,8,26,0)");
+    shadowContext.fillStyle=shadowGradient;shadowContext.fillRect(0,0,256,256);
+  }
+  const shadowTexture=shadowContext?new THREE.CanvasTexture(shadowCanvas):null;
+  if(shadowTexture){shadowTexture.colorSpace=THREE.SRGBColorSpace;shadowTexture.anisotropy=4;}
+  const contactShadowMaterial=shadowTexture?new THREE.MeshBasicMaterial({
+    map:shadowTexture,color:0x111528,transparent:true,opacity:0.78,
+    depthWrite:false,side:THREE.DoubleSide,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-2
+  }):null;
+  function addContactShadow(x,z,width,depth,y=0.79){
+    if(!contactShadowMaterial)return null;
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),contactShadowMaterial);
+    mesh.name="SoftContactShadow";
+    mesh.position.set(x,y,z);
+    mesh.scale.set(width,depth,1);
+    mesh.rotation.x=-Math.PI/2;
+    mesh.renderOrder=1;
+    island.add(mesh);
+    return mesh;
+  }
   const cliff = addMesh(island,new THREE.CylinderGeometry(44.2,34.5,4.2,64,3),materials.rock,[0,-1.42,0]);
   cliff.rotation.y=0.12;
   // The island underside tapers DOWN. A tall rock dome here used to pierce the
@@ -1925,6 +2405,13 @@ function buildEnvironment(scene) {
   const portals=[];
   [-7.2,0,7.2].forEach((x,i)=>{portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials));addCollider(x,8.2,1.62,gameMeta[i].title)});
 
+  // Wide soft grounding shadows sit beneath the park's largest silhouettes.
+  addContactShadow(0,-18.2,13.2,12.4,0.79);
+  addContactShadow(-30,-16.5,9.2,8.5,0.895);
+  addContactShadow(-4.8,30.5,6.2,5.4,0.79);
+  addContactShadow(-24.5,-19.0,13.5,11.8,0.79);
+  addContactShadow(18,9,10.4,9.4,0.79);
+  addContactShadow(-19,-8,10.5,9.4,0.79);
   const rides=[];
   const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);addCollider(-21.5,0.7,4.1,"星光旋轉木馬");
   const teacups=buildTeacupRide(scene,materials,-13,-11.5);rides.push(teacups);addCollider(-13,-11.5,3.55,"星月茶杯");
@@ -1943,7 +2430,7 @@ function buildEnvironment(scene) {
   // Each attraction carries its own sign directly on the matching model.
 
   // Ornate lanterns and crystal groves add life to the walkways; no placeholder visitors are spawned.
-  function addParkLamp(x,z,scale=1){
+  function addParkLamp(x,z,scale=1,hasLocalLight=false){
     const lamp=new THREE.Group();lamp.position.set(x,0.72,z);lamp.scale.setScalar(scale);island.add(lamp);
     addMesh(lamp,new THREE.CylinderGeometry(0.25,0.32,0.2,12),materials.darkStone,[0,0.1,0]);
     addMesh(lamp,new THREE.TorusGeometry(0.27,0.045,8,32),materials.gold,[0,0.19,0]).rotation.x=Math.PI/2;
@@ -1966,13 +2453,13 @@ function buildEnvironment(scene) {
     const halo=addMesh(lamp,new THREE.TorusGeometry(0.34,0.032,8,40),materials.gold,[0,2.84,0]);halo.rotation.x=Math.PI/2;
     addMesh(lamp,new THREE.ConeGeometry(0.28,0.34,8),materials.trim,[0,3.28,0]);
     addMesh(lamp,new THREE.OctahedronGeometry(0.15,1),materials.crystal,[0,3.56,0],[0.68,1.42,0.68],null,false,false);
-    const glow=new THREE.PointLight(0xffd48d,0.48,5.5,2);glow.position.set(0,2.82,0);lamp.add(glow);
+    if(hasLocalLight){const glow=new THREE.PointLight(0xffd48d,0.48,5.5,2);glow.position.set(0,2.82,0);lamp.add(glow);}
   }
   [
     [-4,25],[4,25],[-5,14],[5,14],[-10,2],[10,2],[-17,8],[-26,8],
     [-17,-9],[-29,-17],[17,8],[27,2],[18,-10],[31,-12],[-9,-20],[9,-20],
     [-4,-28],[4,-28],[-34,15],[35,10],[-34,-5],[36,-3]
-  ].forEach((p,i)=>addParkLamp(p[0],p[1],i%4===0?1.12:1));
+  ].forEach((p,i)=>addParkLamp(p[0],p[1],i%4===0?1.12:1,i%5===0));
 
   [
     [-35,23],[-32,27],[-27,25],[-20,23],[-14,28],[14,27],[20,24],[27,26],
@@ -2097,6 +2584,7 @@ function createStarfield(scene, count = 620) {
 
 function disposeWorld(world) {
   if (!world) return;
+  world.running = false;
   if (world.resizeObserver) world.resizeObserver.disconnect();
   if (world.canvas) {
     world.canvas.removeEventListener("wheel", world.onWheel);
@@ -2117,6 +2605,8 @@ function disposeWorld(world) {
   if (world.onKeyUp) window.removeEventListener("keyup", world.onKeyUp);
   if (world.onBlur) window.removeEventListener("blur", world.onBlur);
   if (world.visibilityHandler) document.removeEventListener("visibilitychange", world.visibilityHandler);
+  world.postFX?.dispose();
+  world.reflectionTarget?.dispose();
   if (world.renderer) {
     world.renderer.setAnimationLoop(null);
     world.renderer.dispose();
@@ -2491,6 +2981,30 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     addMesh(player,new THREE.TorusGeometry(0.14,0.024,6,22),trim,[-0.37,0.76,-0.09]);
   }
 
+  // Batch 4: a refined traveller finish that preserves every saved appearance choice.
+  const diademArc=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.29,1.93,0.045),new THREE.Vector3(-0.2,2.08,0.06),
+    new THREE.Vector3(0,2.13,0.07),new THREE.Vector3(0.2,2.08,0.06),
+    new THREE.Vector3(0.29,1.93,0.045)
+  ]);
+  addMesh(headRig,new THREE.TubeGeometry(diademArc,36,0.018,7,false),coutureGold,null,null,false,false);
+  [-0.2,0,0.2].forEach((x,index)=>{
+    const gem=addMesh(headRig,new THREE.OctahedronGeometry(index===1?0.075:0.045,1),
+      index===1?coutureGem:coutureSilver,[x,index===1?2.13:2.06,0.085],[0.72,1.32,0.72],false,false);
+    gem.rotation.z=(index-1)*0.16;
+  });
+  [-1,1].forEach(side=>{
+    const wrist=addMesh(player,new THREE.TorusGeometry(0.105,0.018,7,28),coutureGold,
+      [side*0.43,0.69,0.015],[1.0,1.0,0.82],false,false);
+    wrist.rotation.x=Math.PI/2;
+    addMesh(player,new THREE.OctahedronGeometry(0.042,1),coutureGem,
+      [side*0.43,0.72,0.105],[0.72,1.25,0.72],false,false);
+    const boot=addMesh(player,new THREE.SphereGeometry(0.16,16,12),coutureSilver,
+      [side*0.18,0.105,0.045],[1.1,0.48,1.45],false,false);
+    boot.rotation.y=side*0.12;
+    addMesh(player,new THREE.TorusGeometry(0.13,0.014,6,24),coutureGold,
+      [side*0.18,0.16,0.045],[1.0,1.0,0.78],false,false);
+  });
   const floatingStar=addMesh(headRig,new THREE.OctahedronGeometry(0.105,1),trim,[0,2.34,0],null,false,false);
   const halo=addMesh(headRig,new THREE.TorusGeometry(0.49,0.028,8,44),metal,[0,2.21,0]);
   halo.rotation.x=Math.PI/2;
@@ -2553,6 +3067,9 @@ function mount(host) {
   renderer.domElement.setAttribute("aria-label", "可自由探索星夢夜遊園、漫遊各主題園區並點擊挑戰星門");
   host.appendChild(renderer.domElement);
 
+  const reflectionTarget=createReflectionEnvironment(renderer,scene);
+  const postFX=createCinematicPostFX(renderer,width,height,isSmall);
+
   const hemisphere = new THREE.HemisphereLight(0xe4e7ff, 0x211832, 1.18);
   scene.add(hemisphere);
 
@@ -2612,16 +3129,17 @@ function mount(host) {
   let savedDiscoveryIds=[];
   try{savedDiscoveryIds=JSON.parse(host.dataset.parkDiscoveries||"[]")}catch(error){}
   const world = {
-    host, scene, renderer, camera, skyDome, starfield, parkMotes, environment,
+    host, scene, renderer, camera, skyDome, starfield, parkMotes, environment, reflectionTarget, postFX,
     portals: environment.portals, raycaster, pointer, canvas: renderer.domElement, player,
     cameraState, cameraMode: host.dataset.cameraMode || "first", keys: new Set(),
     touchMove: {x:0,y:0}, touchRun: false, mountedRide: null, mountedRideData:null, minimapLast: 0, nearbyHintLast:0,
     discoveredZones:new Set(Array.isArray(savedDiscoveryIds)?savedDiscoveryIds:[]),activeDiscoveryZone:null,
     localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
-    running: true, frame: 0, lastTime: 0
+    running: true, frame: 0, lastTime: 0, assetMixers: []
   };
   activeWorld = world;
+  loadPremiumParkAssets(world);
   player.visible = world.cameraMode !== "first";
 
   function setCameraMode(mode){
@@ -2899,8 +3417,9 @@ function mount(host) {
         const point=ride.curve.getPointAt(ride.progress),tangent=ride.curve.getTangentAt(ride.progress);
         ride.object.position.copy(point);
         ride.object.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),tangent);
-      } else ride.object.rotation.z += delta * ride.speed;
+      } else if(ride.axis!=="asset") ride.object.rotation.z += delta * ride.speed;
     });
+    world.assetMixers.forEach(mixer=>mixer.update(delta));
     environment.compassHalo.rotation.z += delta * 0.17;
     environment.planet.rotation.y += delta * 0.045;
     environment.planetRing.rotation.z += delta * 0.06;
@@ -3036,7 +3555,8 @@ function mount(host) {
       world.minimapLast=t;
       window.dispatchEvent(new CustomEvent("starry-3d-map",{detail:{x:player.position.x,z:player.position.z,yaw:cameraState.yaw}}));
     }
-    renderer.render(scene, camera);
+    if(postFX)postFX.render(scene,camera);
+    else renderer.render(scene,camera);
   };
   window.STARRY_3D_BOOT_STAGE = "animation loop";
   renderer.setAnimationLoop(world.renderFrame);
@@ -3053,6 +3573,7 @@ function mount(host) {
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.0 : 1.25));
     renderer.setSize(w, h, false);
+    postFX?.setSize(w,h,renderer.getPixelRatio());
   });
   world.resizeObserver.observe(host);
 
@@ -3230,6 +3751,8 @@ async function loadThreeEngine() {
   for (const url of sources) {
     try {
       THREE = await importWithTimeout(url);
+      const loaderModule=await importWithTimeout("https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/loaders/GLTFLoader.js");
+      GLTFLoaderClass=loaderModule.GLTFLoader;
       window.Starry3D = { mount, dispose, mountAvatarPreview, updateAvatarPreview, disposeAvatarPreview };
       window.dispatchEvent(new Event("starry-3d-ready"));
       return;

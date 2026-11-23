@@ -1,6 +1,19 @@
 # 星夢樂園版本與發布狀態
+## 2026-11-22 最新主線、公開版與手遊級視覺候選
 
-## 2026-11-22 主線與公開版狀態校正、園區美術升級候選
+- 最新 `main` HEAD：`549443d377c5db5e1ad9abb6f045bc90311eeec0`；PR #23「系統性升級星夢樂園 3D 建築、景觀與遊樂設施」已合併。
+- owner 於 2026-11-22 手動執行 Actions #185（run ID `45029236953`），檢查 job 與「發布正式網站」步驟均成功，部署目標為 `main` @ `549443d377c5db5e1ad9abb6f045bc90311eeec0`。此為目前確認的公開版來源。
+- 新候選分支：`feature/mobile-game-visual-fidelity-20261122`，從最新主線 SHA 建立。目標是提升渲染與材質品質，不把前一輪增加程序幾何細節誤當作已達手遊級視覺。
+- 本候選變更包含獨立 Albedo／Normal／Roughness 貼圖、PMREM 環境反射、選擇性高光光暈、柔邊接觸陰影、行動裝置後處理解析度分級，以及減少裝飾燈即時 PointLight 數量。
+- 本候選尚未完成真實 WebGL shader／視覺／FPS 驗收；尚未匯入外部 GLB 模型或外部貼圖，因此不能宣稱模型本身已達手遊資產品質。
+- 不修改 Supabase schema、RLS、RPC、migration、Auth 或任何正式玩家資料；不修改星塵、服裝所有權、遊戲紀錄、聊天或探索資料。
+- PR #24「升級星夢樂園手遊級 PBR 材質與電影感渲染」已建立為 Ready for review（非 Draft），目前 open、尚未合併；基底為 main @ `549443d377c5db5e1ad9abb6f045bc90311eeec0`。
+- PR #24 最新 HEAD：`d640fe93094fc537c90449d06be70985767f559e`；變更 4 個檔案（Three.js 渲染、7 項新增結構測試、3D Roadmap、Release Status）。
+- Actions run #186（run ID `45030493500`）、#187（run ID `45030566635`）、#188（run ID `45030772979`）及 #189（run ID `45030827052`）均成功：Node tests **53 passed／0 failed**，Three.js／Supabase Edge Function 語法檢查及首頁 inline JavaScript parse 均通過；#189 對應最新 HEAD `d640fe93094fc537c90449d06be70985767f559e`。
+- PR #24 的 `管理員確認後發布正式版` job 為 skipped；本 PR 沒有合併或發布公開網站。仍待管理員私有預覽及真實 WebGL shader、材質反射、bloom、桌機／手機橫向與 FPS 人工驗收。
+
+
+## 歷史紀錄：PR #23 合併前的候選狀態（2026-11-22）
 
 - PR #21 已合併至 main，merge commit：`309fe992f52a67a544b07ce22200f9d94a8c758c`。
 - PR #22（AGENT.md 維護規範）已合併；目前 main HEAD：`a590bef43caad3c1ed07903f13a66ce8d06d9ab9`。
@@ -16,7 +29,7 @@
 - PR #23 的 `管理員確認後發布正式版` job 為 skipped；本批次沒有部署公開網站。仍待管理員私有預覽及真實瀏覽器 WebGL、桌機／手機橫向、碰撞、設施搭乘與 FPS 人工驗收。
 
 
-## 2026-11-22 最新狀態：整合版已合併，城堡精修續作中
+## 歷史紀錄：PR #20 合併後的狀態（2026-11-22）
 
 - `main` 已包含 PR #20；合併 commit：`991088dd987617de0937a79ea2178a138a4bb5fc`。
 - PR #17、#18 已關閉，原因是內容已由整合 PR #20 取代；兩份舊 PR 保留於 Closed 歷史，不再列於 Open PR 清單。
@@ -62,3 +75,20 @@
 - PR #17、#18 已關閉為由 #20 取代，不再是 Open PR。
 - PR 合併本身不會自動部署；owner 隨後透過 Actions #167 手動發布 `main`，正式部署 job 成功。PR #21 尚未合併，不在此公開版內。
 
+
+
+
+## 2026-11-23 四批次高品質模型整合候選（PR #24 後續提交）
+- 在 PR #24 原有 PBR／PMREM／後處理基礎上新增固定 Three.js r187 的 GLTFLoader import map 與外部 GLB 載入器。
+- 第一批：城堡大教堂、觀測站魔法塔、廣場噴泉；第二批：旋轉木馬、茶杯、自由落體、摩天輪與雲霄飛車列車；第三批：水晶垂枝樹與月光晶簇；第四批：旅人角色新增頭冠寶石、腕部飾環與靴部金屬細節，保留既有外觀資料；尚未覆蓋為外部角色 GLB，避免破壞玩家外觀客製化。
+- 資產來源頁標示 CC0 1.0；模型透過 3DAssets.dev CDN 載入，程式在載入時計算 SHA-256 並記錄。由於二進位檔不 vendoring 至 Repository，尚無固定本地 hash 清單；需在後續版本決定是否改為本地鎖定資產。
+- 單一模型載入失敗會保留程序化模型；載入併發限制為 2；設施 ride id、既有互動及雲霄飛車軌道路徑保留。
+- 尚未實測外部 CDN 真實下載、GLTFLoader parse、WebGL 材質視覺、模型朝向與比例、碰撞及手機 FPS；不得宣稱已達最終手遊級畫面。
+
+
+## 2026-11-23 四批次模型整合驗證更新
+- 新增 `docs/ASSET_CATALOG_zh-TW.md`，記錄 10 項 CC0 GLB 資產的來源頁、CDN、授權、作者／貢獻者資訊與用途；來源頁揭露多數模型使用 AI 工具，已如實記錄。
+- 最新成功 PR CI：run #195（run ID `45105027288`），驗證候選程式碼 SHA `75097df48d6f38291e361bf866701c61f7b31dad`；Node tests **57 passed／0 failed**，Three.js、Supabase Edge Function 語法及首頁 import map JSON／inline JavaScript parse 均成功。
+- PR CI 的正式部署 job 為 skipped；沒有合併、沒有發布公開網站，也沒有修改 Supabase。
+- 本批外部模型透過固定 CDN URL 載入，下載時計算 SHA-256 並記錄到瀏覽器 console；因 GLB 尚未 vendoring 到 Repository，未建立固定本地 hash pinning。資產目錄已明確記錄此限制。
+- 自動化測試通過不代表實際 CDN 下載、GLB 解析、WebGL 畫面、模型比例、鏡頭、碰撞及手機效能已驗收；仍需管理員私有預覽及實機檢查。
