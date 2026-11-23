@@ -16,7 +16,7 @@ const PALETTE = {
 
 let activeWorld = null;
 
-const PREMIUM_PARK_ASSETS = [
+const PREMIUM_AVATAR_DETAIL_BATCH = 4;\n\nconst PREMIUM_PARK_ASSETS = [
   {id:"castle-cathedral",name:"星夢城堡",url:"https://cdn.3dassets.dev/assets/32747/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-city-cathedral-260bcd65",height:10.2,target:"StarDreamCastle",batch:1,animation:"bell-ring"},
   {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
   {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
@@ -52,19 +52,17 @@ function tunePremiumMaterials(root){
   root.traverse(object=>{
     if(!object.isMesh)return;
     object.castShadow=true;object.receiveShadow=true;
-    const list=Array.isArray(object.material)?object.material:[object.material];
-    list.forEach(material=>{
-      if(!material)return;
+    const original=object.material;
+    const refine=material=>{
+      if(!material)return material;
       const copy=material.clone();
-      if(copy.color){
-        const tint=new THREE.Color(0xd5c8ed);
-        copy.color.lerp(tint,0.12);
-      }
+      if(copy.color)copy.color.lerp(new THREE.Color(0xd5c8ed),0.12);
       if("roughness" in copy)copy.roughness=Math.max(0.28,Math.min(0.88,copy.roughness??0.65));
       if("metalness" in copy)copy.metalness=Math.min(0.62,copy.metalness??0.08);
       if("envMapIntensity" in copy)copy.envMapIntensity=0.82;
-      object.material=Array.isArray(object.material)?object.material.map(()=>copy):copy;
-    });
+      return copy;
+    };
+    object.material=Array.isArray(original)?original.map(refine):refine(original);
   });
 }
 
@@ -2978,6 +2976,30 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     addMesh(player,new THREE.TorusGeometry(0.14,0.024,6,22),trim,[-0.37,0.76,-0.09]);
   }
 
+  // Batch 4: a refined traveller finish that preserves every saved appearance choice.
+  const diademArc=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.29,1.93,0.045),new THREE.Vector3(-0.2,2.08,0.06),
+    new THREE.Vector3(0,2.13,0.07),new THREE.Vector3(0.2,2.08,0.06),
+    new THREE.Vector3(0.29,1.93,0.045)
+  ]);
+  addMesh(headRig,new THREE.TubeGeometry(diademArc,36,0.018,7,false),coutureGold,null,null,false,false);
+  [-0.2,0,0.2].forEach((x,index)=>{
+    const gem=addMesh(headRig,new THREE.OctahedronGeometry(index===1?0.075:0.045,1),
+      index===1?coutureGem:coutureSilver,[x,index===1?2.13:2.06,0.085],[0.72,1.32,0.72],false,false);
+    gem.rotation.z=(index-1)*0.16;
+  });
+  [-1,1].forEach(side=>{
+    const wrist=addMesh(player,new THREE.TorusGeometry(0.105,0.018,7,28),coutureGold,
+      [side*0.43,0.69,0.015],[1.0,1.0,0.82],false,false);
+    wrist.rotation.x=Math.PI/2;
+    addMesh(player,new THREE.OctahedronGeometry(0.042,1),coutureGem,
+      [side*0.43,0.72,0.105],[0.72,1.25,0.72],false,false);
+    const boot=addMesh(player,new THREE.SphereGeometry(0.16,16,12),coutureSilver,
+      [side*0.18,0.105,0.045],[1.1,0.48,1.45],false,false);
+    boot.rotation.y=side*0.12;
+    addMesh(player,new THREE.TorusGeometry(0.13,0.014,6,24),coutureGold,
+      [side*0.18,0.16,0.045],[1.0,1.0,0.78],false,false);
+  });
   const floatingStar=addMesh(headRig,new THREE.OctahedronGeometry(0.105,1),trim,[0,2.34,0],null,false,false);
   const halo=addMesh(headRig,new THREE.TorusGeometry(0.49,0.028,8,44),metal,[0,2.21,0]);
   halo.rotation.x=Math.PI/2;
