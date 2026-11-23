@@ -80,21 +80,20 @@ function mountPremiumAsset(world,config,gltf){
   if(config.train){
     const ride=world.environment.rides.find(item=>item.id===config.rideId);
     if(!ride)throw new Error("找不到雲霄飛車互動節點");
-    ride.root.children.forEach(child=>child.visible=false);
+    ride.root.traverse(child=>{if(child.isMesh||child.isLine||child.isPoints)child.visible=false;});
     ride.root.add(model);
     model.position.set(0,0,0);
     model.rotation.y=Math.PI;
     ride.object=model;
+    ride.rideSeat=new THREE.Group();ride.rideSeat.position.set(0,0.48,0);model.add(ride.rideSeat);
     ride.axis="track";
     ride.speed=0.052;
   }else if(config.rideId){
     const ride=world.environment.rides.find(item=>item.id===config.rideId);
     if(!ride)throw new Error("找不到遊樂設施："+config.rideId);
-    ride.root.children.forEach(child=>child.visible=false);
+    ride.root.traverse(child=>{if(child.isMesh||child.isLine||child.isPoints)child.visible=false;});
     ride.root.add(model);
     model.position.set(0,0,0);
-    ride.object=model;
-    ride.axis="asset";
   }else if(config.target){
     const fallback=world.scene.getObjectByName(config.target);
     if(fallback)fallback.visible=false;
@@ -108,6 +107,8 @@ function mountPremiumAsset(world,config,gltf){
       instance.position.set(x,y,z);
       instance.scale.setScalar(scale);
       world.scene.add(instance);
+      if(config.id==="crystal-willow")world.environment.colliders.push({x,z,radius:0.62,label:"星晶垂枝樹"});
+      else world.environment.colliders.push({x,z,radius:0.48,label:"月光晶簇"});
       if(gltf.animations?.length){
         const mixer=new THREE.AnimationMixer(instance);
         const clip=gltf.animations.find(item=>item.name.toLowerCase().includes("spin"));
@@ -116,6 +117,7 @@ function mountPremiumAsset(world,config,gltf){
       }
     });
     return;
+    if(config.id==="plaza-fountain")world.environment.colliders.push({x:0,z:-5.8,radius:1.9,label:"星夢廣場噴泉"});
   }else{
     model.position.set(...config.position);
     world.scene.add(model);
