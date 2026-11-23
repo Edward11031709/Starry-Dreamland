@@ -16,7 +16,9 @@ const PALETTE = {
 
 let activeWorld = null;
 
-const PREMIUM_AVATAR_DETAIL_BATCH = 4;\n\nconst PREMIUM_PARK_ASSETS = [
+const PREMIUM_AVATAR_DETAIL_BATCH = 4;
+
+const PREMIUM_PARK_ASSETS = [
   {id:"castle-cathedral",name:"星夢城堡",url:"https://cdn.3dassets.dev/assets/32747/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-city-cathedral-260bcd65",height:10.2,target:"StarDreamCastle",batch:1,animation:"bell-ring"},
   {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
   {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
