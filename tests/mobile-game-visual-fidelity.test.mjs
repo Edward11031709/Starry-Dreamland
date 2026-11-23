@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const source = readFileSync(new URL("../js/starry-3d.js", import.meta.url), "utf8");
+const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
 function section(startMarker, endMarker) {
   const start = source.indexOf(startMarker);
