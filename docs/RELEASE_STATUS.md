@@ -88,7 +88,7 @@
 
 ## 2026-11-23 四批次模型整合驗證更新
 - 新增 `docs/ASSET_CATALOG_zh-TW.md`，記錄 10 項 CC0 GLB 資產的來源頁、CDN、授權、作者／貢獻者資訊與用途；來源頁揭露多數模型使用 AI 工具，已如實記錄。
-- 最新成功 PR CI：run #194（run ID `45104963295`），驗證候選程式碼 SHA `b90a0593bdc365f0d36216f1ea80951eb7d3e14a`；Node tests **57 passed／0 failed**，Three.js、Supabase Edge Function 語法及首頁 import map JSON／inline JavaScript parse 均成功。
+- 最新成功 PR CI：run #195（run ID `45105027288`），驗證候選程式碼 SHA `75097df48d6f38291e361bf866701c61f7b31dad`；Node tests **57 passed／0 failed**，Three.js、Supabase Edge Function 語法及首頁 import map JSON／inline JavaScript parse 均成功。
 - PR CI 的正式部署 job 為 skipped；沒有合併、沒有發布公開網站，也沒有修改 Supabase。
 - 本批外部模型透過固定 CDN URL 載入，下載時計算 SHA-256 並記錄到瀏覽器 console；因 GLB 尚未 vendoring 到 Repository，未建立固定本地 hash pinning。資產目錄已明確記錄此限制。
 - 自動化測試通過不代表實際 CDN 下載、GLB 解析、WebGL 畫面、模型比例、鏡頭、碰撞及手機效能已驗收；仍需管理員私有預覽及實機檢查。
