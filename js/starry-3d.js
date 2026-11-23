@@ -117,10 +117,10 @@ function mountPremiumAsset(world,config,gltf){
       }
     });
     return;
-    if(config.id==="plaza-fountain")world.environment.colliders.push({x:0,z:-5.8,radius:1.9,label:"星夢廣場噴泉"});
   }else{
     model.position.set(...config.position);
     world.scene.add(model);
+    if(config.id==="plaza-fountain")world.environment.colliders.push({x:0,z:-5.8,radius:1.9,label:"星夢廣場噴泉"});
   }
   if(gltf.animations?.length){
     const mixer=new THREE.AnimationMixer(model);
