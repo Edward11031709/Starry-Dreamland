@@ -92,3 +92,11 @@
 - PR CI 的正式部署 job 為 skipped；沒有合併、沒有發布公開網站，也沒有修改 Supabase。
 - 本批外部模型透過固定 CDN URL 載入，下載時計算 SHA-256 並記錄到瀏覽器 console；因 GLB 尚未 vendoring 到 Repository，未建立固定本地 hash pinning。資產目錄已明確記錄此限制。
 - 自動化測試通過不代表實際 CDN 下載、GLB 解析、WebGL 畫面、模型比例、鏡頭、碰撞及手機效能已驗收；仍需管理員私有預覽及實機檢查。
+
+## 2026-11-23 設施模型搭乘整合與畫質精修候選（PR #26）
+- 候選分支：`feature/ride-asset-integration-polish-20261123`；PR：[ #26 精修高品質遊樂設施整合、乘坐動畫與場景清晰度 ](https://github.com/Edward11031709/Starry-Dreamland/pull/26)，目前 Open／Ready for review，尚未合併、尚未正式發布。
+- 修正四種遊樂設施的 GLB 乘坐錨點：依馬匹／杯體／吊艙語意節點包圍盒建立跟隨模型動畫的旅人錨點；必需節點與動畫先驗證，成功後才隱藏程序化 fallback。茶杯要求平台及杯體兩段動畫；自由落體使用往返升降動畫；摩天輪只承諾來源模型實際提供的輪體 spin，吊艙水平保持限制仍列為人工驗收事項。
+- 修正 GLB 地面接觸點、設施碰撞範圍與下車距離；摩天輪取消不必要的父層放大。手機後處理內部解析度由 0.78 提高至 0.86，新增手機 2×／桌面 4× 多重取樣。
+- CI run #212（run ID `45197395604`）對候選 SHA `a841fb343ce64b1af1671fd5db42742e7f173158` 成功：Node tests **65 passed／0 failed**；Three.js 語法與首頁 inline JavaScript／import map 檢查均成功。正式部署 job 依 PR 保護流程 skipped。
+- 尚未實測真實 CDN GLB 節點名稱、WebGL 畫面、實際第一人稱乘坐高度、桌機／手機 FPS、熱量與畫質觀感；自動化測試通過不等於手遊級美術驗收。須於私有預覽及實機檢查後再評估合併。
+- 未修改 Supabase schema、RLS、RPC、Auth 或玩家資料；未推送 main、未執行正式部署。
