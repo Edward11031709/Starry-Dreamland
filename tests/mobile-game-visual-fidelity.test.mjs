@@ -75,3 +75,30 @@ test("path lanterns keep emissive glow but cap local real-time lights to one in 
   assert.match(lamps, /if\(hasLocalLight\)\{const glow=new THREE\.PointLight/);
   assert.match(environment, /addParkLamp\(p\[0\],p\[1\],i%4===0\?1\.12:1,i%5===0\)/);
 });
+
+test("premium asset catalog covers all four visual batches without adding crowd actors", () => {
+  assert.match(source,/const PREMIUM_PARK_ASSETS = \[/);
+  for(const id of ["castle-cathedral","arcane-observatory","carousel","teacups","drop-tower","ferris-wheel","coaster-train","crystal-willow","glowing-crystal-cluster"])assert.match(source,new RegExp('id:"'+id+'"'));
+  assert.match(source,/batch:1/);assert.match(source,/batch:2/);assert.match(source,/batch:3/);
+  assert.doesNotMatch(source,/townsfolk|fakeNpc|spawnNpc/i);
+});
+
+test("premium GLB loading computes SHA-256 and keeps procedural fallbacks on failure", () => {
+  assert.match(source,/crypto\.subtle\.digest\("SHA-256",buffer\)/);
+  assert.match(source,/async function loadPremiumGlb\(url\)/);
+  assert.match(source,/starry-3d-asset-fallback/);
+  assert.match(source,/if\(fallback\)fallback\.visible=false/);
+  assert.match(source,/loadPremiumParkAssets\(world\)/);
+});
+
+test("GLTFLoader uses the exact pinned Three.js release via import map", () => {
+  assert.match(source,/three@0\.187\.0\/examples\/jsm\/loaders\/GLTFLoader\.js/);
+  assert.match(html,/"three":"https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.187\.0\/build\/three\.module\.js"/);
+  assert.match(html,/"three\/addons\/":"https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.187\.0\/examples\/jsm\/"/);
+});
+
+test("premium ride mixers update while existing interaction anchors remain in place", () => {
+  assert.match(source,/world\.assetMixers\.forEach\(mixer=>mixer\.update\(delta\)\)/);
+  assert.match(source,/ride\.root\.children\.forEach\(child=>child\.visible=false\)/);
+  assert.match(source,/ride\.object=model/);
+});
