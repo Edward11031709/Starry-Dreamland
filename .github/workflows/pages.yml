@@ -50,6 +50,11 @@ jobs:
             if (close < 0 || tagEnd < 0) continue;
             const attributes = chunk.slice(0, tagEnd);
             const source = chunk.slice(tagEnd + 1, close);
+            const typeMatch = attributes.match(/\\btype=["']([^"']+)["']/i);
+            if (typeMatch && typeMatch[1].toLowerCase() === 'importmap') {
+              JSON.parse(source);
+              continue;
+            }
             if (!attributes.includes('src=') && source.trim()) scripts.push(source);
           }
           if (!scripts.length) throw new Error('No inline JavaScript found in index.html');
