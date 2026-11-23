@@ -101,6 +101,6 @@ test("GLTFLoader uses the exact pinned Three.js release via import map", () => {
 
 test("premium ride mixers update while existing interaction anchors remain in place", () => {
   assert.match(source,/world\.assetMixers\.forEach\(mixer=>mixer\.update\(delta\)\)/);
-  assert.match(source,/ride\.root\.children\.forEach\(child=>child\.visible=false\)/);
+  assert.match(source,/ride\.root\.traverse\(child=>\{if\(child\.isMesh\|\|child\.isLine\|\|child\.isPoints\)child\.visible=false;\}\)/);
   assert.match(source,/ride\.object=model/);
 });
