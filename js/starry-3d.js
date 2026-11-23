@@ -24,8 +24,8 @@ const PREMIUM_PARK_ASSETS = [
   {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
   {id:"carousel",name:"星光旋轉木馬",url:"https://cdn.3dassets.dev/assets/28656/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-b3ccf619",height:4.9,batch:2,rideId:"carousel",animation:"spin",requireAnimations:true,seatNodeHints:["horse","saddle","seat"],seatHeightRatio:0.68,seatClearance:0.18,colliderRadius:4.8},
   {id:"teacups",name:"星月茶杯",url:"https://cdn.3dassets.dev/assets/28657/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-70d0de97",height:1.35,batch:2,rideId:"teacups",animations:["platform-spin","cup-spin"],requireAnimations:true,seatNodeHints:["cup","teacup","seat"],seatHeightRatio:0.24,seatClearance:0.18,colliderRadius:4.25},
-  {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true,requireAnimations:true,seatNodeHints:["gondola","cabin","seat"],seatHeightRatio:0.2,seatClearance:0.18,colliderRadius:3.8},
-  {id:"ferris-wheel",name:"星河摩天輪",url:"https://cdn.3dassets.dev/assets/28655/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-d18acb96",height:13.8,batch:2,rideId:"ferris",animation:"spin",requireAnimations:true,seatNodeHints:["gondola","cabin","basket"],seatHeightRatio:0.2,seatClearance:0.18,parentScale:1,colliderRadius:7.4,dismountRadius:8.2},
+  {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true,requireAnimations:true,seatNodeHints:["gondola","cabin","seat"],seatHeightRatio:0.2,seatClearance:0.18,colliderRadius:2.4},
+  {id:"ferris-wheel",name:"星河摩天輪",url:"https://cdn.3dassets.dev/assets/28655/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-d18acb96",height:13.8,batch:2,rideId:"ferris",animation:"spin",requireAnimations:true,seatNodeHints:["gondola","cabin","basket"],seatHeightRatio:0.2,seatClearance:0.18,parentScale:1,colliderRadius:8.0,interactionRadius:7.8,dismountRadius:8.8},
   {id:"coaster-train",name:"星際雲霄飛車列車",url:"https://cdn.3dassets.dev/assets/28653/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-993fa7ed",height:0.58,batch:2,rideId:"coaster",train:true,animation:"wheel-roll"},
   {id:"crystal-willow",name:"星晶垂枝樹",url:"https://cdn.3dassets.dev/assets/108/v1/model.glb",source:"https://3dassets.dev/assets/runestone-conservatory-crystal-willow-tree",height:3.0,batch:3,positions:[[33.1,0.21,-17.2],[27.1,0.21,-17.2],[33.1,0.21,-14.7]]},
   {id:"glowing-crystal-cluster",name:"月光晶簇",url:"https://cdn.3dassets.dev/assets/36999/v1/model.glb",source:"https://3dassets.dev/assets/sunken-city-and-underwater-ruins-glowing-crystal-clust-897febc9",height:1.55,batch:3,positions:[[-32.7,0.68,-15.0],[-27.2,0.68,-18.0],[27.1,0.21,-19.1],[33.2,0.21,-19.1],[-34.0,0.68,-18.2],[34.0,0.21,-16.0]]}
@@ -146,6 +146,7 @@ function applyPremiumRideFootprint(world,ride,config){
     const collider=world.environment.colliders.find(item=>item.label===ride.name);
     if(collider)collider.radius=config.colliderRadius;
   }
+  if(Number.isFinite(config.interactionRadius))ride.interactionRadius=config.interactionRadius;
   if(Number.isFinite(config.dismountRadius))ride.dismountRadius=config.dismountRadius;
 }
 
@@ -514,11 +515,11 @@ function createReflectionEnvironment(renderer,scene){
 function createCinematicPostFX(renderer,width,height,isSmall){
   let target=null,quadGeometry=null,quadMaterial=null,postScene=null,disabled=false;
   try{
-    const scale=isSmall?0.78:1;
+    const scale=isSmall?0.86:1;
     target=new THREE.WebGLRenderTarget(
       Math.max(1,Math.floor(width*renderer.getPixelRatio()*scale)),
       Math.max(1,Math.floor(height*renderer.getPixelRatio()*scale)),
-      {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false}
+      {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false,samples:isSmall?2:4}
     );
     target.texture.name="StarryDreamlandLinearScene";
     target.texture.minFilter=THREE.LinearFilter;
@@ -3155,7 +3156,7 @@ function mount(host) {
   camera.position.set(0, 3.2, 42.2);
   camera.lookAt(0, 1.7, 33.0);
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.0 : 1.25));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.08 : 1.25));
   renderer.setSize(width, height, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -3670,7 +3671,7 @@ function mount(host) {
     camera.aspect = w / h;
     cameraState.distance = small ? 10.2 : 9.5;
     camera.updateProjectionMatrix();
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.0 : 1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.08 : 1.25));
     renderer.setSize(w, h, false);
     postFX?.setSize(w,h,renderer.getPixelRatio());
   });
