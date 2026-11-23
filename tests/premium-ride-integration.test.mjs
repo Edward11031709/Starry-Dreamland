@@ -64,7 +64,7 @@ test("teacups play both independent motion clips and the drop tower cycles its l
   assert.ok(assetLine("teacups").includes("requireAnimations:true"));
   assert.ok(assetLine("drop-tower").includes('animation:"open",pingPong:true'));
   assert.ok(assetLine("drop-tower").includes("requireAnimations:true"));
-  assert.match(mount, /config\.pingPong\)action\.setLoop\(THREE\.LoopPingPong,Infinity\)/);
+  assert.match(seatHelpers, /config\.pingPong\)action\.setLoop\(THREE\.LoopPingPong,Infinity\)/);
 });
 
 test("GLB ride animation is not double-applied by the procedural ride loop", () => {
@@ -81,10 +81,10 @@ test("all static placements preserve the model's ground-contact offset", () => {
 });
 
 test("premium ride collision footprints and dismount distances follow the imported model scale", () => {
-  assert.match(mount, /function applyPremiumRideFootprint/);
-  assert.match(mount, /collider\.radius=config\.colliderRadius/);
-  assert.match(mount, /ride\.dismountRadius=config\.dismountRadius/);
-  assert.match(mount, /ride\.interactionRadius=config\.interactionRadius/);
+  assert.match(seatHelpers, /function applyPremiumRideFootprint/);
+  assert.match(seatHelpers, /collider\.radius=config\.colliderRadius/);
+  assert.match(seatHelpers, /ride\.dismountRadius=config\.dismountRadius/);
+  assert.match(seatHelpers, /ride\.interactionRadius=config\.interactionRadius/);
 });
 
 test("cinematic post-processing uses multisampled render targets and a sharper mobile render scale", () => {
