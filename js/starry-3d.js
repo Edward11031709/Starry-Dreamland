@@ -22,10 +22,10 @@ const PREMIUM_PARK_ASSETS = [
   {id:"castle-cathedral",name:"星夢城堡",url:"https://cdn.3dassets.dev/assets/32747/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-city-cathedral-260bcd65",height:10.2,target:"StarDreamCastle",batch:1,animation:"bell-ring"},
   {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
   {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
-  {id:"carousel",name:"星光旋轉木馬",url:"https://cdn.3dassets.dev/assets/28656/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-b3ccf619",height:4.9,batch:2,rideId:"carousel",animation:"spin"},
-  {id:"teacups",name:"星月茶杯",url:"https://cdn.3dassets.dev/assets/28657/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-70d0de97",height:1.35,batch:2,rideId:"teacups",animations:["platform-spin","cup-spin"]},
-  {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true},
-  {id:"ferris-wheel",name:"星河摩天輪",url:"https://cdn.3dassets.dev/assets/28655/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-d18acb96",height:13.8,batch:2,rideId:"ferris",animation:"spin"},
+  {id:"carousel",name:"星光旋轉木馬",url:"https://cdn.3dassets.dev/assets/28656/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-b3ccf619",height:4.9,batch:2,rideId:"carousel",animation:"spin",requireAnimations:true,seatNodeHints:["horse","saddle","seat"],seatHeightRatio:0.68,seatClearance:0.18,colliderRadius:4.8},
+  {id:"teacups",name:"星月茶杯",url:"https://cdn.3dassets.dev/assets/28657/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-70d0de97",height:1.35,batch:2,rideId:"teacups",animations:["platform-spin","cup-spin"],requireAnimations:true,seatNodeHints:["cup","teacup","seat"],seatHeightRatio:0.24,seatClearance:0.18,colliderRadius:4.25},
+  {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true,requireAnimations:true,seatNodeHints:["gondola","cabin","seat"],seatHeightRatio:0.2,seatClearance:0.18,colliderRadius:2.4},
+  {id:"ferris-wheel",name:"星河摩天輪",url:"https://cdn.3dassets.dev/assets/28655/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-d18acb96",height:13.8,batch:2,rideId:"ferris",animation:"spin",requireAnimations:true,seatNodeHints:["gondola","cabin","basket"],seatHeightRatio:0.2,seatClearance:0.18,parentScale:1,colliderRadius:8.0,interactionRadius:7.8,dismountRadius:8.8},
   {id:"coaster-train",name:"星際雲霄飛車列車",url:"https://cdn.3dassets.dev/assets/28653/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-993fa7ed",height:0.58,batch:2,rideId:"coaster",train:true,animation:"wheel-roll"},
   {id:"crystal-willow",name:"星晶垂枝樹",url:"https://cdn.3dassets.dev/assets/108/v1/model.glb",source:"https://3dassets.dev/assets/runestone-conservatory-crystal-willow-tree",height:3.0,batch:3,positions:[[33.1,0.21,-17.2],[27.1,0.21,-17.2],[33.1,0.21,-14.7]]},
   {id:"glowing-crystal-cluster",name:"月光晶簇",url:"https://cdn.3dassets.dev/assets/36999/v1/model.glb",source:"https://3dassets.dev/assets/sunken-city-and-underwater-ruins-glowing-crystal-clust-897febc9",height:1.55,batch:3,positions:[[-32.7,0.68,-15.0],[-27.2,0.68,-18.0],[27.1,0.21,-19.1],[33.2,0.21,-19.1],[-34.0,0.68,-18.2],[34.0,0.21,-16.0]]}
@@ -68,6 +68,88 @@ function tunePremiumMaterials(root){
   });
 }
 
+function findPremiumRideSeatNode(root,config){
+  const hints=(config.seatNodeHints||[]).map(value=>String(value).toLowerCase());
+  if(!hints.length)return null;
+  root.updateMatrixWorld(true);
+  const candidates=[];
+  root.traverse(node=>{
+    const name=String(node.name||"").toLowerCase();
+    if(!name)return;
+    const hintIndex=hints.findIndex(hint=>name.includes(hint));
+    if(hintIndex<0)return;
+    const bounds=new THREE.Box3().setFromObject(node);
+    if(bounds.isEmpty())return;
+    const size=bounds.getSize(new THREE.Vector3());
+    if(size.y<0.12||size.y>5.5)return;
+    let meshCount=0;
+    node.traverse(child=>{if(child.isMesh)meshCount++});
+    if(!meshCount)return;
+    const groupBonus=node.isGroup?24:0;
+    const childBonus=Math.min(8,node.children.length)*1.5;
+    const volumeBonus=Math.min(12,size.x*size.y*size.z)*0.08;
+    candidates.push({
+      node,
+      score:(hints.length-hintIndex)*100+groupBonus+childBonus+volumeBonus
+    });
+  });
+  candidates.sort((a,b)=>b.score-a.score);
+  return candidates[0]?.node||null;
+}
+
+function attachPremiumRideSeat(root,config){
+  const node=findPremiumRideSeatNode(root,config);
+  if(!node)throw new Error("找不到可安全掛載旅人的乘坐節點："+config.id);
+  node.updateWorldMatrix(true,true);
+  const bounds=new THREE.Box3().setFromObject(node);
+  const size=bounds.getSize(new THREE.Vector3());
+  const center=bounds.getCenter(new THREE.Vector3());
+  const ratio=THREE.MathUtils.clamp(Number(config.seatHeightRatio)||0.24,0.08,0.9);
+  const clearance=Math.max(0,Number(config.seatClearance)||0);
+  const seatWorld=new THREE.Vector3(center.x,bounds.min.y+size.y*ratio+clearance,center.z);
+  const inverse=node.matrixWorld.clone().invert();
+  const anchor=new THREE.Group();
+  anchor.name="StarryPremiumRideSeatAnchor";
+  anchor.position.copy(seatWorld.applyMatrix4(inverse));
+  node.add(anchor);
+  root.updateMatrixWorld(true);
+  return anchor;
+}
+
+function createPremiumAssetMixer(model,gltf,config){
+  const names=config.animations||[config.animation].filter(Boolean);
+  if(!names.length)return null;
+  const clips=names.map(name=>gltf.animations?.find(item=>item.name.toLowerCase().includes(name.toLowerCase()))).filter(Boolean);
+  if(config.requireAnimations&&clips.length!==names.length){
+    const found=clips.map(clip=>clip.name).join(", ")||"無";
+    throw new Error("模型動畫不完整："+config.id+"（需要 "+names.join(", ")+"；找到 "+found+"）");
+  }
+  if(!clips.length)return null;
+  const mixer=new THREE.AnimationMixer(model);
+  clips.forEach(clip=>{
+    const action=mixer.clipAction(clip);
+    if(config.pingPong)action.setLoop(THREE.LoopPingPong,Infinity);
+    action.play();
+  });
+  return mixer;
+}
+
+function hideProceduralRideMeshes(root){
+  root.traverse(child=>{
+    if(child.isMesh||child.isLine||child.isPoints)child.visible=false;
+  });
+}
+
+function applyPremiumRideFootprint(world,ride,config){
+  if(Number.isFinite(config.parentScale))ride.root.scale.setScalar(config.parentScale);
+  if(Number.isFinite(config.colliderRadius)){
+    const collider=world.environment.colliders.find(item=>item.label===ride.name);
+    if(collider)collider.radius=config.colliderRadius;
+  }
+  if(Number.isFinite(config.interactionRadius))ride.interactionRadius=config.interactionRadius;
+  if(Number.isFinite(config.dismountRadius))ride.dismountRadius=config.dismountRadius;
+}
+
 function mountPremiumAsset(world,config,gltf){
   const model=gltf.scene;
   model.name="PremiumAsset_"+config.id;
@@ -75,36 +157,61 @@ function mountPremiumAsset(world,config,gltf){
   const bounds=new THREE.Box3().setFromObject(model);
   const size=bounds.getSize(new THREE.Vector3());
   const scale=config.height/Math.max(0.001,size.y);
+  const groundOffset=-bounds.min.y*scale;
   model.scale.setScalar(scale);
-  model.position.y=-bounds.min.y*scale;
+  model.position.y=groundOffset;
+
   if(config.train){
     const ride=world.environment.rides.find(item=>item.id===config.rideId);
     if(!ride)throw new Error("找不到雲霄飛車互動節點");
-    ride.root.traverse(child=>{if(child.isMesh||child.isLine||child.isPoints)child.visible=false;});
-    ride.root.add(model);
-    model.position.set(0,0,0);
+    const mixer=createPremiumAssetMixer(model,gltf,config);
+    const seat=new THREE.Group();
+    seat.name="StarryPremiumCoasterSeatAnchor";
+    seat.position.set(0,0.48,0);
+    model.add(seat);
     model.rotation.y=Math.PI;
+    hideProceduralRideMeshes(ride.root);
+    ride.root.add(model);
+    model.position.set(0,groundOffset,0);
     ride.object=model;
-    ride.rideSeat=new THREE.Group();ride.rideSeat.position.set(0,0.48,0);model.add(ride.rideSeat);
+    ride.rideSeat=seat;
     ride.axis="track";
     ride.speed=0.052;
-  }else if(config.rideId){
+    if(mixer)world.assetMixers.push(mixer);
+    return model;
+  }
+
+  if(config.rideId){
     const ride=world.environment.rides.find(item=>item.id===config.rideId);
     if(!ride)throw new Error("找不到遊樂設施："+config.rideId);
-    ride.root.traverse(child=>{if(child.isMesh||child.isLine||child.isPoints)child.visible=false;});
+    // Resolve both the visible ride animation and the passenger anchor before hiding
+    // the procedural fallback. If either is missing, the original ride stays usable.
+    const seat=attachPremiumRideSeat(model,config);
+    const mixer=createPremiumAssetMixer(model,gltf,config);
+    hideProceduralRideMeshes(ride.root);
     ride.root.add(model);
-    model.position.set(0,0,0);
-  }else if(config.target){
+    model.position.set(0,groundOffset,0);
+    ride.object=model;
+    ride.rideSeat=seat;
+    ride.axis="asset";
+    applyPremiumRideFootprint(world,ride,config);
+    if(mixer)world.assetMixers.push(mixer);
+    return model;
+  }
+
+  if(config.target){
     const fallback=world.scene.getObjectByName(config.target);
     if(fallback)fallback.visible=false;
-    model.position.x=config.target==="StarDreamCastle"?0:-30;
-    model.position.z=config.target==="StarDreamCastle"?-18.2:-16.5;
-    model.position.y=config.target==="StarDreamCastle"?0.68:0.68;
+    model.position.set(
+      config.target==="StarDreamCastle"?0:-30,
+      0.68+groundOffset,
+      config.target==="StarDreamCastle"?-18.2:-16.5
+    );
     world.scene.add(model);
   }else if(config.positions){
     config.positions.forEach(([x,y,z],index)=>{
       const instance=index===0?model:model.clone(true);
-      instance.position.set(x,y,z);
+      instance.position.set(x,y+groundOffset,z);
       instance.scale.setScalar(scale);
       world.scene.add(instance);
       if(config.id==="crystal-willow")world.environment.colliders.push({x,z,radius:0.62,label:"星晶垂枝樹"});
@@ -116,24 +223,17 @@ function mountPremiumAsset(world,config,gltf){
         world.assetMixers.push(mixer);
       }
     });
-    return;
-  }else{
-    model.position.set(...config.position);
+    return model;
+  }else if(config.position){
+    model.position.set(config.position[0],config.position[1]+groundOffset,config.position[2]);
     world.scene.add(model);
     if(config.id==="plaza-fountain")world.environment.colliders.push({x:0,z:-5.8,radius:1.9,label:"星夢廣場噴泉"});
+  }else{
+    throw new Error("模型缺少場景定位資訊："+config.id);
   }
-  if(gltf.animations?.length){
-    const mixer=new THREE.AnimationMixer(model);
-    const names=config.animations||[config.animation].filter(Boolean);
-    names.forEach(name=>{
-      const clip=gltf.animations.find(item=>item.name.toLowerCase().includes(name.toLowerCase()));
-      if(!clip)return;
-      const action=mixer.clipAction(clip);
-      if(config.pingPong)action.setLoop(THREE.LoopPingPong,Infinity);
-      action.play();
-    });
-    world.assetMixers.push(mixer);
-  }
+
+  const mixer=createPremiumAssetMixer(model,gltf,config);
+  if(mixer)world.assetMixers.push(mixer);
   return model;
 }
 
@@ -415,11 +515,11 @@ function createReflectionEnvironment(renderer,scene){
 function createCinematicPostFX(renderer,width,height,isSmall){
   let target=null,quadGeometry=null,quadMaterial=null,postScene=null,disabled=false;
   try{
-    const scale=isSmall?0.78:1;
+    const scale=isSmall?0.86:1;
     target=new THREE.WebGLRenderTarget(
       Math.max(1,Math.floor(width*renderer.getPixelRatio()*scale)),
       Math.max(1,Math.floor(height*renderer.getPixelRatio()*scale)),
-      {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false}
+      {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false,samples:isSmall?2:4}
     );
     target.texture.name="StarryDreamlandLinearScene";
     target.texture.minFilter=THREE.LinearFilter;
@@ -3056,7 +3156,7 @@ function mount(host) {
   camera.position.set(0, 3.2, 42.2);
   camera.lookAt(0, 1.7, 33.0);
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.0 : 1.25));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmall ? 1.08 : 1.25));
   renderer.setSize(width, height, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -3571,7 +3671,7 @@ function mount(host) {
     camera.aspect = w / h;
     cameraState.distance = small ? 10.2 : 9.5;
     camera.updateProjectionMatrix();
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.0 : 1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.08 : 1.25));
     renderer.setSize(w, h, false);
     postFX?.setSize(w,h,renderer.getPixelRatio());
   });
