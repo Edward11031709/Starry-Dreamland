@@ -37,7 +37,8 @@ test("reflection lighting is baked through PMREM and stored on the scene", () =>
 
 test("selective highlight glow has a mobile quality tier and standard-render fallback", () => {
   const post = section("function createCinematicPostFX(", "function makeMaterial(");
-  assert.match(post, /const scale=isSmall\?0\.78:1/);
+  assert.match(post, /const scale=isSmall\?0\.86:1/);
+  assert.match(post, /samples:isSmall\?2:4/);
   assert.match(post, /new THREE\.WebGLRenderTarget/);
   assert.match(post, /brightSample/);
   assert.match(post, /bloomStrength:\{value:isSmall\?0\.28:0\.38\}/);
@@ -101,6 +102,9 @@ test("GLTFLoader uses the exact pinned Three.js release via import map", () => {
 
 test("premium ride mixers update while existing interaction anchors remain in place", () => {
   assert.match(source,/world\.assetMixers\.forEach\(mixer=>mixer\.update\(delta\)\)/);
-  assert.match(source,/ride\.root\.traverse\(child=>\{if\(child\.isMesh\|\|child\.isLine\|\|child\.isPoints\)child\.visible=false;\}\)/);
+  assert.match(source,/function hideProceduralRideMeshes\(root\)/);
+  assert.match(source,/hideProceduralRideMeshes\(ride\.root\)/);
+  assert.match(source,/ride\.rideSeat=seat/);
+  assert.match(source,/ride\.axis="asset"/);
   assert.match(source,/ride\.object=model/);
 });
