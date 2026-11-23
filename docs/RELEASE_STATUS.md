@@ -80,7 +80,15 @@
 
 ## 2026-11-23 四批次高品質模型整合候選（PR #24 後續提交）
 - 在 PR #24 原有 PBR／PMREM／後處理基礎上新增固定 Three.js r187 的 GLTFLoader import map 與外部 GLB 載入器。
-- 第一批：城堡大教堂、觀測站魔法塔、廣場噴泉；第二批：旋轉木馬、茶杯、自由落體、摩天輪與雲霄飛車列車；第三批：水晶垂枝樹與月光晶簇；第四批：保留既有旅人外觀系統，尚未覆蓋為外部角色 GLB，避免破壞玩家外觀客製化。
+- 第一批：城堡大教堂、觀測站魔法塔、廣場噴泉；第二批：旋轉木馬、茶杯、自由落體、摩天輪與雲霄飛車列車；第三批：水晶垂枝樹與月光晶簇；第四批：旅人角色新增頭冠寶石、腕部飾環與靴部金屬細節，保留既有外觀資料；尚未覆蓋為外部角色 GLB，避免破壞玩家外觀客製化。
 - 資產來源頁標示 CC0 1.0；模型透過 3DAssets.dev CDN 載入，程式在載入時計算 SHA-256 並記錄。由於二進位檔不 vendoring 至 Repository，尚無固定本地 hash 清單；需在後續版本決定是否改為本地鎖定資產。
 - 單一模型載入失敗會保留程序化模型；載入併發限制為 2；設施 ride id、既有互動及雲霄飛車軌道路徑保留。
 - 尚未實測外部 CDN 真實下載、GLTFLoader parse、WebGL 材質視覺、模型朝向與比例、碰撞及手機 FPS；不得宣稱已達最終手遊級畫面。
+
+
+## 2026-11-23 四批次模型整合驗證更新
+- 新增 `docs/ASSET_CATALOG_zh-TW.md`，記錄 10 項 CC0 GLB 資產的來源頁、CDN、授權、作者／貢獻者資訊與用途；來源頁揭露多數模型使用 AI 工具，已如實記錄。
+- 最新成功 PR CI：run #194（run ID `45104963295`），驗證候選程式碼 SHA `b90a0593bdc365f0d36216f1ea80951eb7d3e14a`；Node tests **57 passed／0 failed**，Three.js、Supabase Edge Function 語法及首頁 import map JSON／inline JavaScript parse 均成功。
+- PR CI 的正式部署 job 為 skipped；沒有合併、沒有發布公開網站，也沒有修改 Supabase。
+- 本批外部模型透過固定 CDN URL 載入，下載時計算 SHA-256 並記錄到瀏覽器 console；因 GLB 尚未 vendoring 到 Repository，未建立固定本地 hash pinning。資產目錄已明確記錄此限制。
+- 自動化測試通過不代表實際 CDN 下載、GLB 解析、WebGL 畫面、模型比例、鏡頭、碰撞及手機效能已驗收；仍需管理員私有預覽及實機檢查。
