@@ -1,4 +1,5 @@
 let THREE;
+let GLTFLoaderClass = null;
 
 const PALETTE = {
   night: 0x070918,
@@ -14,6 +15,146 @@ const PALETTE = {
 };
 
 let activeWorld = null;
+
+const PREMIUM_PARK_ASSETS = [
+  {id:"castle-cathedral",name:"星夢城堡",url:"https://cdn.3dassets.dev/assets/32747/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-city-cathedral-260bcd65",height:10.2,target:"StarDreamCastle",batch:1,animation:"bell-ring"},
+  {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
+  {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
+  {id:"carousel",name:"星光旋轉木馬",url:"https://cdn.3dassets.dev/assets/28656/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-b3ccf619",height:4.9,batch:2,rideId:"carousel",animation:"spin"},
+  {id:"teacups",name:"星月茶杯",url:"https://cdn.3dassets.dev/assets/28657/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-70d0de97",height:1.35,batch:2,rideId:"teacups",animations:["platform-spin","cup-spin"]},
+  {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true},
+  {id:"ferris-wheel",name:"星河摩天輪",url:"https://cdn.3dassets.dev/assets/28655/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-d18acb96",height:13.8,batch:2,rideId:"ferris",animation:"spin"},
+  {id:"coaster-train",name:"星際雲霄飛車列車",url:"https://cdn.3dassets.dev/assets/28653/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-993fa7ed",height:0.58,batch:2,rideId:"coaster",train:true,animation:"wheel-roll"},
+  {id:"crystal-willow",name:"星晶垂枝樹",url:"https://cdn.3dassets.dev/assets/108/v1/model.glb",source:"https://3dassets.dev/assets/runestone-conservatory-crystal-willow-tree",height:3.0,batch:3,positions:[[33.1,0.21,-17.2],[27.1,0.21,-17.2],[33.1,0.21,-14.7]]},
+  {id:"glowing-crystal-cluster",name:"月光晶簇",url:"https://cdn.3dassets.dev/assets/36999/v1/model.glb",source:"https://3dassets.dev/assets/sunken-city-and-underwater-ruins-glowing-crystal-clust-897febc9",height:1.55,batch:3,positions:[[-32.7,0.68,-15.0],[-27.2,0.68,-18.0],[27.1,0.21,-19.1],[33.2,0.21,-19.1],[-34.0,0.68,-18.2],[34.0,0.21,-16.0]]}
+];
+
+function sha256Hex(buffer){
+  if(!globalThis.crypto?.subtle)return Promise.resolve("unavailable");
+  return globalThis.crypto.subtle.digest("SHA-256",buffer).then(hash=>
+    Array.from(new Uint8Array(hash),value=>value.toString(16).padStart(2,"0")).join("")
+  );
+}
+
+async function loadPremiumGlb(url){
+  if(!GLTFLoaderClass)throw new Error("GLTFLoader 尚未載入");
+  const response=await fetch(url,{mode:"cors",cache:"force-cache"});
+  if(!response.ok)throw new Error("GLB 下載失敗："+response.status);
+  const buffer=await response.arrayBuffer();
+  const sha256=await sha256Hex(buffer);
+  const gltf=await new Promise((resolve,reject)=>{
+    new GLTFLoaderClass().parse(buffer,"",resolve,reject);
+  });
+  return {gltf,sha256,bytes:buffer.byteLength};
+}
+
+function tunePremiumMaterials(root){
+  root.traverse(object=>{
+    if(!object.isMesh)return;
+    object.castShadow=true;object.receiveShadow=true;
+    const list=Array.isArray(object.material)?object.material:[object.material];
+    list.forEach(material=>{
+      if(!material)return;
+      const copy=material.clone();
+      if(copy.color){
+        const tint=new THREE.Color(0xd5c8ed);
+        copy.color.lerp(tint,0.12);
+      }
+      if("roughness" in copy)copy.roughness=Math.max(0.28,Math.min(0.88,copy.roughness??0.65));
+      if("metalness" in copy)copy.metalness=Math.min(0.62,copy.metalness??0.08);
+      if("envMapIntensity" in copy)copy.envMapIntensity=0.82;
+      object.material=Array.isArray(object.material)?object.material.map(()=>copy):copy;
+    });
+  });
+}
+
+function mountPremiumAsset(world,config,gltf){
+  const model=gltf.scene;
+  model.name="PremiumAsset_"+config.id;
+  tunePremiumMaterials(model);
+  const bounds=new THREE.Box3().setFromObject(model);
+  const size=bounds.getSize(new THREE.Vector3());
+  const scale=config.height/Math.max(0.001,size.y);
+  model.scale.setScalar(scale);
+  model.position.y=-bounds.min.y*scale;
+  if(config.train){
+    const ride=world.environment.rides.find(item=>item.id===config.rideId);
+    if(!ride)throw new Error("找不到雲霄飛車互動節點");
+    ride.root.children.forEach(child=>child.visible=false);
+    ride.root.add(model);
+    model.position.set(0,0,0);
+    model.rotation.y=Math.PI;
+    ride.object=model;
+    ride.axis="track";
+    ride.speed=0.052;
+  }else if(config.rideId){
+    const ride=world.environment.rides.find(item=>item.id===config.rideId);
+    if(!ride)throw new Error("找不到遊樂設施："+config.rideId);
+    ride.root.children.forEach(child=>child.visible=false);
+    ride.root.add(model);
+    model.position.set(0,0,0);
+    ride.object=model;
+    ride.axis="asset";
+  }else if(config.target){
+    const fallback=world.scene.getObjectByName(config.target);
+    if(fallback)fallback.visible=false;
+    model.position.x=config.target==="StarDreamCastle"?0:-30;
+    model.position.z=config.target==="StarDreamCastle"?-18.2:-16.5;
+    model.position.y=config.target==="StarDreamCastle"?0.68:0.68;
+    world.scene.add(model);
+  }else if(config.positions){
+    config.positions.forEach(([x,y,z],index)=>{
+      const instance=index===0?model:model.clone(true);
+      instance.position.set(x,y,z);
+      instance.scale.setScalar(scale);
+      world.scene.add(instance);
+      if(gltf.animations?.length){
+        const mixer=new THREE.AnimationMixer(instance);
+        const clip=gltf.animations.find(item=>item.name.toLowerCase().includes("spin"));
+        if(clip)mixer.clipAction(clip).play();
+        world.assetMixers.push(mixer);
+      }
+    });
+    return;
+  }else{
+    model.position.set(...config.position);
+    world.scene.add(model);
+  }
+  if(gltf.animations?.length){
+    const mixer=new THREE.AnimationMixer(model);
+    const names=config.animations||[config.animation].filter(Boolean);
+    names.forEach(name=>{
+      const clip=gltf.animations.find(item=>item.name.toLowerCase().includes(name.toLowerCase()));
+      if(!clip)return;
+      const action=mixer.clipAction(clip);
+      if(config.pingPong)action.setLoop(THREE.LoopPingPong,Infinity);
+      action.play();
+    });
+    world.assetMixers.push(mixer);
+  }
+  return model;
+}
+
+async function loadPremiumParkAssets(world){
+  const queue=PREMIUM_PARK_ASSETS.slice();
+  const workers=Array.from({length:2},async()=>{
+    while(queue.length&&world.running){
+      const config=queue.shift();
+      try{
+        const {gltf,sha256,bytes}=await loadPremiumGlb(config.url);
+        if(!world.running)return;
+        mountPremiumAsset(world,config,gltf);
+        console.info("[Starry Dreamland asset]",config.id,{sha256,bytes,source:config.source});
+        window.dispatchEvent(new CustomEvent("starry-3d-asset-loaded",{detail:{id:config.id,sha256,bytes}}));
+      }catch(error){
+        console.warn("[Starry Dreamland asset fallback]",config.id,error);
+        window.dispatchEvent(new CustomEvent("starry-3d-asset-fallback",{detail:{id:config.id,message:String(error)}}));
+      }
+    }
+  });
+  await Promise.all(workers);
+}
+
 const gameMeta = [
   { id: "moon", title: "月相共鳴", subtitle: "LUNAR RESONANCE", color: 0x75b9f1, icon: "☾" },
   { id: "cipher", title: "星域解碼", subtitle: "STELLAR CIPHER", color: 0xb59af0, icon: "⌘" },
@@ -2968,9 +3109,10 @@ function mount(host) {
     discoveredZones:new Set(Array.isArray(savedDiscoveryIds)?savedDiscoveryIds:[]),activeDiscoveryZone:null,
     localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
-    running: true, frame: 0, lastTime: 0
+    running: true, frame: 0, lastTime: 0, assetMixers: []
   };
   activeWorld = world;
+  loadPremiumParkAssets(world);
   player.visible = world.cameraMode !== "first";
 
   function setCameraMode(mode){
@@ -3248,8 +3390,9 @@ function mount(host) {
         const point=ride.curve.getPointAt(ride.progress),tangent=ride.curve.getTangentAt(ride.progress);
         ride.object.position.copy(point);
         ride.object.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),tangent);
-      } else ride.object.rotation.z += delta * ride.speed;
+      } else if(ride.axis!=="asset") ride.object.rotation.z += delta * ride.speed;
     });
+    world.assetMixers.forEach(mixer=>mixer.update(delta));
     environment.compassHalo.rotation.z += delta * 0.17;
     environment.planet.rotation.y += delta * 0.045;
     environment.planetRing.rotation.z += delta * 0.06;
@@ -3581,6 +3724,8 @@ async function loadThreeEngine() {
   for (const url of sources) {
     try {
       THREE = await importWithTimeout(url);
+      const loaderModule=await importWithTimeout("https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/loaders/GLTFLoader.js");
+      GLTFLoaderClass=loaderModule.GLTFLoader;
       window.Starry3D = { mount, dispose, mountAvatarPreview, updateAvatarPreview, disposeAvatarPreview };
       window.dispatchEvent(new Event("starry-3d-ready"));
       return;
