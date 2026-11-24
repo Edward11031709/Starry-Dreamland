@@ -8,7 +8,8 @@
 - PR #25「精修旅人髮際線與眼尾細節」仍為 Open／Ready for review，但其分支 `feature/avatar-hairline-couture-20261123` 相較目前 main 為 ahead 3／behind 48、compare status 為 diverged，PR metadata 回報 mergeable=false。此舊 PR 保留待管理員決定，不直接合併、不重寫其歷史，也不把它當作目前可直接合併的分支。
 - 今日角色服裝候選 PR：[ #27 精修旅人禮服布料摺線與曲面層次 ](https://github.com/Edward11031709/Starry-Dreamland/pull/27)，分支 `feature/avatar-fabric-drape-20261124`，以最新 main @ `61a0f5d6fcafb7122a1f14d9285a191280b9ddd3` 為基礎，程式／測試 commit：`178acb5358692270409fb3ecc6b18d4b2c751b79`。
 - PR #27 以既有 robeProfile 曲面半徑插值，新增四道低對比、低金屬度的布料摺線；保留既有角色與 appearance JSON，不新增資料庫欄位、不改碰撞／動畫。
-- PR #27 建立時 Actions #214（run ID `45312334404`）已啟動，當時狀態為 in progress；最終結果以 PR 最新 HEAD 的 Checks 為準。PR 事件的正式發布 job 必須保持 skipped。
+- Actions #214（run ID `45312334404`）驗證程式／測試 commit `178acb5358692270409fb3ecc6b18d4b2c751b79` 成功：Node tests **66 passed／0 failed**，Three.js、Supabase Edge Function 語法及首頁 inline JavaScript／import map 檢查通過。
+- Release Status 文件同步後的 docs-only commit `af2f3c7ad8aaa8c4fbe80efd34aa2d011417103e` 由 Actions #215（run ID `45312394847`）再次驗證成功：**66 passed／0 failed**；正式發布 job **skipped**，沒有 Pages artifact 或正式部署。
 - 已重新讀取 `AGENT.md`、繁中 README、3D Roadmap、Release Status、Release Workflow、管理員預覽、資產目錄及 Supabase 安全文件。AGENT.md 的長期規範已涵蓋本批工作，無需實質修改。
 - 本批沒有修改 Supabase schema、RLS、RPC、migration、Auth 或任何正式玩家資料；沒有調整星塵、服裝所有權或解鎖狀態；沒有新增假 NPC／假玩家。
 - 尚待管理員以私有預覽檢查正面、斜側面、側面、背面、不同服裝配色、摺線穿插及桌機／手機橫向 FPS。自動化模型結構測試不等同真實 WebGL 美術驗收。
