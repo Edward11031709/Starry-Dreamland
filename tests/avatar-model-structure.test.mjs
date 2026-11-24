@@ -90,6 +90,20 @@ const context = { THREE, makeMaterial, addMesh };
 vm.runInNewContext(`${source.slice(start, end)}\nthis.buildPlayer = buildPlayer;`, context);
 const buildPlayer = context.buildPlayer;
 
+test("tailored robe builds four low-profile fabric folds that follow its sculpted profile", () => {
+  const scene = new MockGroup();
+  const player = buildPlayer(scene, "wanderer", {});
+  const robeBody = player.children.find(child => child.geometry?.type === "LatheGeometry");
+
+  assert.ok(robeBody, "tailored robe body should exist");
+  assert.equal(robeBody.userData.drapeFoldCount, 4);
+  assert.ok(
+    player.children.filter(child => child.geometry?.type === "TubeGeometry").length >= 4,
+    "curved fabric folds should be attached to the avatar"
+  );
+  assert.equal(player.userData.appearance.hairStyle, "long");
+});
+
 test("all existing hairstyle options build refined strands without changing appearance keys", () => {
   const expectedStrands = new Map([
     ["long", 6],

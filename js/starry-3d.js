@@ -2824,6 +2824,38 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     const curve=new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(point[0],point[1],point[2])));
     return addMesh(player,new THREE.TubeGeometry(curve,36,radius,7,false),material,null,null,false,false);
   };
+
+  // Soft satin folds follow the tailored robe profile instead of adding more metallic ornaments.
+  const robeFoldMaterial=new THREE.MeshPhysicalMaterial({
+    color:style.mantle,roughness:0.78,metalness:0.02,clearcoat:0.08,
+    clearcoatRoughness:0.55,sheen:0.52,sheenColor:new THREE.Color(0xc8b8ee),
+    sheenRoughness:0.92
+  });
+  const robeSurfaceRadius=y=>{
+    const localY=y-0.77;
+    for(let index=1;index<robeProfile.length;index++){
+      const lower=robeProfile[index-1];
+      const upper=robeProfile[index];
+      if(localY<=upper.y){
+        const ratio=Math.max(0,Math.min(1,(localY-lower.y)/(upper.y-lower.y)));
+        return lower.x+(upper.x-lower.x)*ratio;
+      }
+    }
+    return robeProfile[robeProfile.length-1].x;
+  };
+  const robeFoldAngles=[-1.08,1.08,2.06,4.22];
+  robeFoldAngles.forEach((angle,index)=>{
+    const drift=index%2===0?0.045:-0.045;
+    const points=[1.12,0.94,0.72,0.5,0.34].map((y,step)=>{
+      const progress=step/4;
+      const theta=angle+Math.sin(progress*Math.PI)*drift;
+      const radius=robeSurfaceRadius(y)+0.009;
+      return [Math.sin(theta)*radius,y,Math.cos(theta)*radius];
+    });
+    curveLine(points,robeFoldMaterial,0.0055);
+  });
+  robeBody.userData.drapeFoldCount=robeFoldAngles.length;
+
   // Split velvet mantle tails make the rear silhouette read as layered formalwear, not a plain cylinder cape.
   const backMantleMaterial=new THREE.MeshPhysicalMaterial({
     color:style.mantle,roughness:0.48,metalness:0.12,clearcoat:0.72,
