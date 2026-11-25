@@ -75,3 +75,10 @@
 - 匯入時保留原始手繪貼圖並依共用動漫 Toon/PBR 規則調整材質；動畫僅播放經確認存在的片段，不要求模型必須具備不存在的動畫。
 - 建築各自使用定位樞紐：先依 GLB bounds center 校正模型原點，再朝向中央步道，避免以不明作者原點旋轉造成模型偏位。
 - 碰撞半徑、探索區、入口步道、廣場、接地陰影皆為專案端設定；尚待實際 WebGL 私有預覽檢查建築比例、朝向、動畫、碰撞與手機效能。
+
+
+## 2026-11-25：外部 GLB 材質細節保留修正（候選）
+- 先前共用材質轉換會將部分有手繪 base-color 貼圖的 GLB 也轉成 MeshToonMaterial；MeshToonMaterial 無法完整呈現 roughnessMap、metalnessMap 與部分額外 PBR 通道，可能讓石材、木材、屋瓦、金屬等近距離表面看起來過平。
+- 新版分流：有任何表面貼圖（base-color、normal、roughness、metalness、bump、displacement、AO、emissive、light、alpha）的材質保留 clone 後的 glTF 原生 PBR 通道；只有未貼圖的簡單材質使用共用四階 Toon ramp。
+- 透明、transmission、金屬與 clearcoat 材質保留 PBR；色調只加極輕的藍紫環境融合，避免破壞原始貼圖的手繪色階。
+- **效果邊界：** 這項修正能減少渲染流程丟失的既有材質資料，但不會替模型增加三角面、雕刻、貼圖解析度或服裝細節；仍需視覺驗收，也不能代替高品質主體資產。
