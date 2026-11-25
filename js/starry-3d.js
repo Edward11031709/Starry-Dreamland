@@ -19,16 +19,16 @@ let activeWorld = null;
 const PREMIUM_AVATAR_DETAIL_BATCH = 4;
 
 const PREMIUM_PARK_ASSETS = [
-  {id:"castle-cathedral",name:"星夢城堡",url:"https://cdn.3dassets.dev/assets/32747/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-city-cathedral-260bcd65",height:10.2,target:"StarDreamCastle",batch:1,animation:"bell-ring"},
+  {id:"castle-keep",name:"星夢城堡",url:"https://tevy.dev/models/castle-keep/v2/lod0.glb",mobileUrl:"https://tevy.dev/models/castle-keep/v2/lod1.glb",source:"https://tevy.dev/models/castle-keep",height:17.2,target:"StarDreamCastle",batch:1,motionType:"castle-portcullis"},
   {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
   {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
   {id:"alchemist-shop",name:"星辰煉金工坊",url:"https://cdn.3dassets.dev/assets/32732/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-alchemist-shop-d5f14853",height:7.6,batch:4,position:[25.5,0.87,25],rotationY:-2.33,animations:["crystal-spin","sign-sway"],colliderRadius:3.8,discovery:{id:"astral-alchemy-workshop",name:"星辰煉金工坊",description:"在手繪木造工坊裡尋找旋轉的魔法晶石與星塵配方",radius:5.2}},
   {id:"apothecary-shop",name:"月草藥劑工坊",url:"https://cdn.3dassets.dev/assets/32736/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-apothecary-shop-922c13d1",height:7.1,batch:4,position:[-25.5,0.87,25],rotationY:2.33,animations:["sign-sway"],colliderRadius:3.8,discovery:{id:"moonherb-apothecary",name:"月草藥劑工坊",description:"探索曬草木架、魔法藥瓶與月光藥劑的藥草工坊",radius:5.2}},
   {id:"adventurers-guild",name:"星際冒險者公會",url:"https://cdn.3dassets.dev/assets/32743/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-adventurers-guild-hall-d597e1c9",height:8.5,batch:4,position:[0,0.87,-34],rotationY:0,animations:["banner-sway","sign-sway"],colliderRadius:4.8,discovery:{id:"astral-adventurers-guild",name:"星際冒險者公會",description:"在旗幟與冒險委託板下集結，探索星際遠征的起點",radius:6.0}},
-  {id:"carousel",name:"星光旋轉木馬",url:"https://cdn.3dassets.dev/assets/28656/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-b3ccf619",height:4.9,batch:2,rideId:"carousel",animation:"spin",requireAnimations:true,seatNodeHints:["horse","saddle","seat"],seatHeightRatio:0.68,seatClearance:0.18,colliderRadius:4.8},
+  {id:"carousel",name:"星光旋轉木馬",url:"https://tevy.dev/models/carousel/v2/lod0.glb",mobileUrl:"https://tevy.dev/models/carousel/v2/lod1.glb",source:"https://tevy.dev/models/carousel",height:6.6,batch:2,rideId:"carousel",motionType:"carousel",seatNodeHints:["seat_outer_01"],seatHeightRatio:0.58,seatClearance:0.08,colliderRadius:5.8,interactionRadius:6.0,dismountRadius:7.0,signPosition:[0,7.1,6.8],signScale:[4.8,1.15,1]},
   {id:"teacups",name:"星月茶杯",url:"https://cdn.3dassets.dev/assets/28657/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-70d0de97",height:1.35,batch:2,rideId:"teacups",animations:["platform-spin","cup-spin"],requireAnimations:true,seatNodeHints:["cup","teacup","seat"],seatHeightRatio:0.24,seatClearance:0.18,colliderRadius:4.25},
   {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true,requireAnimations:true,seatNodeHints:["gondola","cabin","seat"],seatHeightRatio:0.2,seatClearance:0.18,colliderRadius:2.4},
-  {id:"ferris-wheel",name:"星河摩天輪",url:"https://cdn.3dassets.dev/assets/28655/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-d18acb96",height:13.8,batch:2,rideId:"ferris",animation:"spin",requireAnimations:true,seatNodeHints:["gondola","cabin","basket"],seatHeightRatio:0.2,seatClearance:0.18,parentScale:1,colliderRadius:8.0,interactionRadius:7.8,dismountRadius:8.8},
+  {id:"ferris-wheel",name:"星河摩天輪",url:"https://tevy.dev/models/ferris-wheel/v2/lod0.glb",mobileUrl:"https://tevy.dev/models/ferris-wheel/v2/lod1.glb",source:"https://tevy.dev/models/ferris-wheel",height:20.5,batch:2,rideId:"ferris",motionType:"ferris-wheel",seatNodeHints:["gondola_01"],seatHeightRatio:0.44,seatClearance:0.1,parentScale:1,colliderRadius:10.5,interactionRadius:9.4,dismountRadius:11.5,signPosition:[0,21.8,5.4],signScale:[5.4,1.3,1]},
   {id:"coaster-train",name:"星際雲霄飛車列車",url:"https://cdn.3dassets.dev/assets/28653/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-993fa7ed",height:0.58,batch:2,rideId:"coaster",train:true,animation:"wheel-roll"},
   {id:"crystal-willow",name:"星晶垂枝樹",url:"https://cdn.3dassets.dev/assets/108/v1/model.glb",source:"https://3dassets.dev/assets/runestone-conservatory-crystal-willow-tree",height:3.0,batch:3,positions:[[33.1,0.21,-17.2],[27.1,0.21,-17.2],[33.1,0.21,-14.7]]},
   {id:"glowing-crystal-cluster",name:"月光晶簇",url:"https://cdn.3dassets.dev/assets/36999/v1/model.glb",source:"https://3dassets.dev/assets/sunken-city-and-underwater-ruins-glowing-crystal-clust-897febc9",height:1.55,batch:3,positions:[[-32.7,0.68,-15.0],[-27.2,0.68,-18.0],[27.1,0.21,-19.1],[33.2,0.21,-19.1],[-34.0,0.68,-18.2],[34.0,0.21,-16.0]]}
@@ -355,11 +355,13 @@ async function loadPremiumParkAssets(world){
     while(queue.length&&world.running){
       const config=queue.shift();
       try{
-        const {gltf,sha256,bytes}=await loadPremiumGlb(config.url);
+        const viewportWidth=Math.min(window.innerWidth||0,world.host.clientWidth||window.innerWidth||0);
+        const assetUrl=viewportWidth<=1024&&config.mobileUrl?config.mobileUrl:config.url;
+        const {gltf,sha256,bytes}=await loadPremiumGlb(assetUrl);
         if(!world.running)return;
         mountPremiumAsset(world,config,gltf);
-        console.info("[Starry Dreamland asset]",config.id,{sha256,bytes,source:config.source});
-        window.dispatchEvent(new CustomEvent("starry-3d-asset-loaded",{detail:{id:config.id,sha256,bytes}}));
+        console.info("[Starry Dreamland asset]",config.id,{sha256,bytes,source:config.source,url:assetUrl,lod:assetUrl===config.url?"LOD0":"LOD1"});
+        window.dispatchEvent(new CustomEvent("starry-3d-asset-loaded",{detail:{id:config.id,sha256,bytes,lod:assetUrl===config.url?0:1}}));
       }catch(error){
         console.warn("[Starry Dreamland asset fallback]",config.id,error);
         window.dispatchEvent(new CustomEvent("starry-3d-asset-fallback",{detail:{id:config.id,message:String(error)}}));
