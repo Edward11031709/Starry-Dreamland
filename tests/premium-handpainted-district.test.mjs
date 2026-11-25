@@ -78,6 +78,10 @@ test("both hand-painted shop districts have connected promenade branches and pla
   assert.match(environment, /addDistrictPlaza\(25\.5,25,5\.7\)/);
   assert.ok(environment.includes("addContactShadow(-25.5,25,8.2,8.2,0.88)"));
   assert.ok(environment.includes("addContactShadow(25.5,25,8.2,8.2,0.88)"));
+  assert.ok(environment.includes("addDistrictPlaza(0,-34,5.7)"));
+  assert.ok(environment.includes("addWalkway([[-8,-23],[-6,-27],[-3,-31],[0,-34]],3.8)"));
+  assert.ok(environment.includes("addWalkway([[8,-23],[6,-27],[3,-31],[0,-34]],3.8)"));
+  assert.ok(environment.includes("addContactShadow(0,-34,9.2,10.2,0.88)"));
 });
 
 test("trees are moved away from the new building footprints and approach paths", () => {
@@ -86,13 +90,14 @@ test("trees are moved away from the new building footprints and approach paths",
   assert.ok(trees.includes("[35,19]"));
   assert.ok(trees.includes("[-12,21]") && trees.includes("[12,21]"));
   assert.doesNotMatch(trees, /\[-32,27\]|\[-27,25\]|\[27,26\]|\[33,23\]|\[36,17\]/);
+  assert.ok(!trees.includes("[0,-35]"), "guild plaza must remain clear of the old tree position");
 });
 
 test("the new asset batch contains buildings only and does not add NPC actors", () => {
   const newAssets = assets.split("\n").filter(line =>
-    line.includes('id:"alchemist-shop"') || line.includes('id:"apothecary-shop"')
+    line.includes('id:"alchemist-shop"') || line.includes('id:"apothecary-shop"') || line.includes('id:"adventurers-guild"')
   );
-  assert.equal(newAssets.length, 2);
+  assert.equal(newAssets.length, 3);
   assert.ok(newAssets.every(line => line.includes("url:") && line.includes("source:")));
   assert.ok(newAssets.every(line => !line.includes('id:"npc') && !line.includes('id:"townsfolk')));
 });
