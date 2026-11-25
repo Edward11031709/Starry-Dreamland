@@ -22,7 +22,7 @@ const assets = section("const PREMIUM_PARK_ASSETS = [", "function sha256Hex(");
 const mount = section("function mountPremiumAsset(", "async function loadPremiumParkAssets(");
 const environment = section("function buildEnvironment(", "function createParkMotes(");
 
-test("the hand-painted alchemist and apothecary are separate CC0 GLB assets", () => {
+test("the hand-painted alchemist and apothecary are separate GLB assets with source pages", () => {
   const alchemist = assetLine("alchemist-shop");
   const apothecary = assetLine("apothecary-shop");
   assert.ok(alchemist.includes("/assets/32732/v1/model.glb"));
@@ -70,8 +70,8 @@ test("both hand-painted shop districts have connected promenade branches and pla
   assert.match(environment, /addWalkway\(\[\[0,34\],\[-8,34\],\[-15\.5,31\],\[-21\.5,27\.5\],\[-25\.5,25\]\],3\.8\)/);
   assert.match(environment, /addDistrictPlaza\(-25\.5,25,5\.7\)/);
   assert.match(environment, /addDistrictPlaza\(25\.5,25,5\.7\)/);
-  assert.match(environment, /addContactShadow\(-25\.5,25,8\.2,8\.2,0\.79\)/);
-  assert.match(environment, /addContactShadow\(25\.5,25,8\.2,8\.2,0\.79\)/);
+  assert.match(environment, /addContactShadow\\(-25\\.5,25,8\\.2,8\\.2,0\\.88\\)/);
+  assert.match(environment, /addContactShadow\\(25\\.5,25,8\\.2,8\\.2,0\\.88\\)/);
 });
 
 test("trees are moved away from the new building footprints and approach paths", () => {
