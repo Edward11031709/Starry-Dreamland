@@ -1,4 +1,37 @@
 # 星夢樂園版本與發布狀態
+
+## 2026-11-25 最新主線、公開版與角色模型候選核對
+
+- 最新 `main` HEAD：`61a0f5d6fcafb7122a1f14d9285a191280b9ddd3`，為 PR #26「精修高品質遊樂設施整合、乘坐動畫與場景清晰度」的 merge commit。PR #24 已於 2026-11-23 合併（merge commit `7de13e6743baeadd5aa5b907749af07743feddec`），PR #26 亦已合併；兩者都已在 main，但不能因此推定已部署公開網站。
+- 最近一次可確認成功的公開 Pages 部署仍是 owner 於 2026-11-22 手動執行 Actions #185（run ID `45029236953`），部署來源為 `main` @ `549443d377c5db5e1ad9abb6f045bc90311eeec0`。本次唯讀檢查確認驗證 job、production job 及「發布正式網站」步驟均成功；未能另行讀回公開網站的 `release.json`，因此以 workflow deployment SHA 作為目前可確認的公開版依據。
+- 目前開啟中的 PR：#25、#27。PR #25「精修旅人髮際線與眼尾細節」仍保留 Open／Ready for review，但相較目前 main 為 ahead 3／behind 48、compare status `diverged`，GitHub metadata 回報 `mergeable=false`。沒有關閉、重寫或刪除該舊 PR。
+- 今日將 PR #25 中獨立的髮際線／眼尾修改重新套用至最新 main 基礎的 PR #27，並與原有禮服布料摺線精修整合。PR #27 標題更新為「旅人角色 3D 精修：髮際線、眼部與禮服布料層次」，分支仍為 `feature/avatar-fabric-drape-20261124`，base 為 main @ `61a0f5d6fcafb7122a1f14d9285a191280b9ddd3`。
+- 本批程式／測試／Roadmap 更新提交：`d1a0c8491532f8bb2523a4cfa4c91419614a82a4`。四種髮型各增加兩束依輪廓設計的前額／鬢角髮束，左右上眼尾各增加一條低對比睫線；保留既有 hairStyle 值及 appearance JSON 四欄位。禮服仍保留四道沿 robeProfile 曲面配置的低對比緞面摺線。
+- Actions #218（run ID `45532744561`）對上述程式／測試／Roadmap 提交成功：Node tests **66 passed／0 failed**；`node --check js/starry-3d.js`、Supabase Edge Function 語法檢查、首頁 import map JSON 與 inline JavaScript parse 均通過。PR 的「管理員確認後發布正式版」job 為 **skipped**；沒有 Pages artifact 或正式部署。
+- 本批只修改角色 3D 幾何、模型結構測試及開發文件；沒有新增外部資產／套件、Supabase schema／RLS／RPC／migration，沒有寫入玩家資料、調整星塵或服裝所有權，也沒有新增 NPC／假玩家。
+- `AGENT.md`、`README_zh-TW.md`、`README.md`、3D Roadmap、Release Workflow、管理員預覽及 Supabase 安全文件已重新檢查；AGENT.md 的既有長期規範足以涵蓋本批工作，無需實質修訂。
+- 仍待管理員以私有預覽檢查四種髮型正／側／背面、髮束穿插、眼尾自然度、禮服摺線與桌機／手機橫向 FPS。自動化測試不等於真實 WebGL 視覺驗收。
+- 發布文件風險：`docs/RELEASE_CHECKLIST_zh-TW.md` 與 `docs/GITHUB_PAGES_DEPLOYMENT_zh-TW.md` 仍含舊版直接上傳 main／修改 Pages Source 的操作說明，與現行人工審核發布流程不一致；本批未混入角色 PR，需另立文件修正批次。
+
+---
+
+
+## 2026-11-24 開發基準、公開版與候選 PR 核對
+
+- 最新 `main` HEAD：`61a0f5d6fcafb7122a1f14d9285a191280b9ddd3`，為 PR #26 的合併 commit。
+- 最近一次可確認的公開版仍是 owner 於 2026-11-22 手動執行 Actions #185（run ID `45029236953`）部署的 `main` @ `549443d377c5db5e1ad9abb6f045bc90311eeec0`；檢查 job、production job、打包與「發布正式網站」步驟均成功。
+- PR #24 已於 2026-11-23 合併，合併 commit 為 `7de13e6743baeadd5aa5b907749af07743feddec`；PR #26 已於 2026-11-23 合併，合併 commit 為 `61a0f5d6fcafb7122a1f14d9285a191280b9ddd3`。這兩批變更目前存在於 main，但部署 run #185 的 SHA 早於它們，因此**尚不能宣稱已出現在公開網站**。
+- PR #25「精修旅人髮際線與眼尾細節」仍為 Open／Ready for review，但其分支 `feature/avatar-hairline-couture-20261123` 相較目前 main 為 ahead 3／behind 48、compare status 為 diverged，PR metadata 回報 mergeable=false。此舊 PR 保留待管理員決定，不直接合併、不重寫其歷史，也不把它當作目前可直接合併的分支。
+- 今日角色服裝候選 PR：[ #27 精修旅人禮服布料摺線與曲面層次 ](https://github.com/Edward11031709/Starry-Dreamland/pull/27)，分支 `feature/avatar-fabric-drape-20261124`，以最新 main @ `61a0f5d6fcafb7122a1f14d9285a191280b9ddd3` 為基礎，程式／測試 commit：`178acb5358692270409fb3ecc6b18d4b2c751b79`。
+- PR #27 以既有 robeProfile 曲面半徑插值，新增四道低對比、低金屬度的布料摺線；保留既有角色與 appearance JSON，不新增資料庫欄位、不改碰撞／動畫。
+- Actions #214（run ID `45312334404`）驗證程式／測試 commit `178acb5358692270409fb3ecc6b18d4b2c751b79` 成功：Node tests **66 passed／0 failed**，Three.js、Supabase Edge Function 語法及首頁 inline JavaScript／import map 檢查通過。
+- Release Status 文件同步後的 docs-only commit `af2f3c7ad8aaa8c4fbe80efd34aa2d011417103e` 由 Actions #215（run ID `45312394847`）再次驗證成功：**66 passed／0 failed**；正式發布 job **skipped**，沒有 Pages artifact 或正式部署。
+- 已重新讀取 `AGENT.md`、繁中 README、3D Roadmap、Release Status、Release Workflow、管理員預覽、資產目錄及 Supabase 安全文件。AGENT.md 的長期規範已涵蓋本批工作，無需實質修改。
+- 本批沒有修改 Supabase schema、RLS、RPC、migration、Auth 或任何正式玩家資料；沒有調整星塵、服裝所有權或解鎖狀態；沒有新增假 NPC／假玩家。
+- 尚待管理員以私有預覽檢查正面、斜側面、側面、背面、不同服裝配色、摺線穿插及桌機／手機橫向 FPS。自動化模型結構測試不等同真實 WebGL 美術驗收。
+
+---
+
 ## 2026-11-22 最新主線、公開版與手遊級視覺候選
 
 - 最新 `main` HEAD：`549443d377c5db5e1ad9abb6f045bc90311eeec0`；PR #23「系統性升級星夢樂園 3D 建築、景觀與遊樂設施」已合併。

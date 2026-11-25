@@ -2824,6 +2824,38 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     const curve=new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(point[0],point[1],point[2])));
     return addMesh(player,new THREE.TubeGeometry(curve,36,radius,7,false),material,null,null,false,false);
   };
+
+  // Soft satin folds follow the tailored robe profile instead of adding more metallic ornaments.
+  const robeFoldMaterial=new THREE.MeshPhysicalMaterial({
+    color:style.mantle,roughness:0.78,metalness:0.02,clearcoat:0.08,
+    clearcoatRoughness:0.55,sheen:0.52,sheenColor:new THREE.Color(0xc8b8ee),
+    sheenRoughness:0.92
+  });
+  const robeSurfaceRadius=y=>{
+    const localY=y-0.77;
+    for(let index=1;index<robeProfile.length;index++){
+      const lower=robeProfile[index-1];
+      const upper=robeProfile[index];
+      if(localY<=upper.y){
+        const ratio=Math.max(0,Math.min(1,(localY-lower.y)/(upper.y-lower.y)));
+        return lower.x+(upper.x-lower.x)*ratio;
+      }
+    }
+    return robeProfile[robeProfile.length-1].x;
+  };
+  const robeFoldAngles=[-1.08,1.08,2.06,4.22];
+  robeFoldAngles.forEach((angle,index)=>{
+    const drift=index%2===0?0.045:-0.045;
+    const points=[1.12,0.94,0.72,0.5,0.34].map((y,step)=>{
+      const progress=step/4;
+      const theta=angle+Math.sin(progress*Math.PI)*drift;
+      const radius=robeSurfaceRadius(y)+0.009;
+      return [Math.sin(theta)*radius,y,Math.cos(theta)*radius];
+    });
+    curveLine(points,robeFoldMaterial,0.0055);
+  });
+  robeBody.userData.drapeFoldCount=robeFoldAngles.length;
+
   // Split velvet mantle tails make the rear silhouette read as layered formalwear, not a plain cylinder cape.
   const backMantleMaterial=new THREE.MeshPhysicalMaterial({
     color:style.mantle,roughness:0.48,metalness:0.12,clearcoat:0.72,
@@ -2898,6 +2930,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   headRig.position.set(0,1.45*(1-headScale),0.025*(1-headScale));
   player.add(headRig);
   let hairStrandCount=0;
+  let faceLashCount=0;
   const addHairStrand=(points,radius=0.012,material=hairHighlight)=>{
     const curve=new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(point[0],point[1],point[2])));
     const strand=addMesh(headRig,new THREE.TubeGeometry(curve,18,radius,5,false),material,null,null,false,false);
@@ -2907,6 +2940,11 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   const addFaceCurve=(points,radius,material)=>{
     const curve=new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(point[0],point[1],point[2])));
     return addMesh(headRig,new THREE.TubeGeometry(curve,18,radius,6,false),material,null,null,false,false);
+  };
+  const addFaceLash=points=>{
+    const lash=addFaceCurve(points,0.0036,shadow);
+    faceLashCount++;
+    return lash;
   };
   // A visible neck and jeweled collar bridge the face and tailored mantle.
   addMesh(headRig,new THREE.CylinderGeometry(0.105,0.12,0.19,18),skin,[0,1.34,0.035]);
@@ -2962,6 +3000,23 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     addHairStrand([[0.02,1.72,0.24],[0.09,1.7,0.23],[0.14,1.66,0.21]],0.006,hairHighlight);
   }
 
+  // Style-specific fringe and temple locks soften each hairline without changing saved style IDs.
+  if(appearance.hairStyle==="long"){
+    addHairStrand([[-0.19,1.72,0.12],[-0.17,1.68,0.19],[-0.11,1.63,0.232],[-0.035,1.62,0.244]],0.014,hair);
+    addHairStrand([[0.035,1.62,0.244],[0.11,1.63,0.232],[0.17,1.68,0.19],[0.19,1.72,0.12]],0.011,hairHighlight);
+  }else if(appearance.hairStyle==="twin"){
+    addHairStrand([[-0.22,1.72,0.12],[-0.17,1.67,0.2],[-0.1,1.62,0.238],[-0.04,1.61,0.244]],0.013,hair);
+    addHairStrand([[0.04,1.61,0.244],[0.1,1.62,0.238],[0.17,1.67,0.2],[0.22,1.72,0.12]],0.013,hair);
+  }else if(appearance.hairStyle==="short"){
+    addHairStrand([[-0.2,1.7,0.12],[-0.17,1.66,0.19],[-0.1,1.63,0.232],[0.01,1.63,0.244]],0.014,hair);
+    addHairStrand([[0.01,1.63,0.244],[0.11,1.64,0.23],[0.17,1.68,0.18],[0.2,1.71,0.12]],0.01,hairHighlight);
+  }else{
+    [-1,1].forEach(side=>addHairStrand([
+      [side*0.25,1.55,0.09],[side*0.24,1.49,0.15],
+      [side*0.22,1.43,0.16],[side*0.2,1.39,0.12]
+    ],0.011,hair));
+  }
+
   // Secondary locks create finer, directional highlights without adding a heavy hair mesh.
   if(appearance.hairStyle==="long"){
     [-1,1].forEach(side=>addHairStrand([
@@ -2999,6 +3054,9 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
       [side*0.15,1.5,0.235],[side*0.13,1.532,0.252],
       [side*0.095,1.541,0.26],[side*0.06,1.532,0.252],[side*0.04,1.5,0.235]
     ],0.007,skin);
+    addFaceLash([
+      [side*0.14,1.512,0.249],[side*0.158,1.525,0.246],[side*0.17,1.54,0.235]
+    ]);
     const lowerLid=addFaceCurve([
       [side*0.04,1.497,0.235],[side*0.07,1.472,0.25],
       [side*0.095,1.466,0.253],[side*0.125,1.472,0.25],[side*0.15,1.497,0.235]
@@ -3111,6 +3169,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   [-0.26,0.26].forEach(x=>addMesh(player,new THREE.OctahedronGeometry(0.075,1),trim,[x,1.08,0.09],null,false,false));
   player.userData.halo=halo;player.userData.floatingStar=floatingStar;player.userData.walkPhase=0;
   player.userData.hairStrandCount=hairStrandCount;
+  player.userData.faceLashCount=faceLashCount;
   scene.add(player);return player;
 }
 
