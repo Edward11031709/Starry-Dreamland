@@ -80,7 +80,7 @@ test("path lanterns keep emissive glow but cap local real-time lights to one in 
 
 test("premium asset catalog covers all four visual batches without adding crowd actors", () => {
   assert.match(source,/const PREMIUM_PARK_ASSETS = \[/);
-  for(const id of ["castle-cathedral","arcane-observatory","carousel","teacups","drop-tower","ferris-wheel","coaster-train","crystal-willow","glowing-crystal-cluster"])assert.match(source,new RegExp('id:"'+id+'"'));
+  for(const id of ["castle-keep","arcane-observatory","carousel","teacups","drop-tower","ferris-wheel","coaster-train","crystal-willow","glowing-crystal-cluster"])assert.match(source,new RegExp('id:"'+id+'"'));
   assert.match(source,/batch:1/);assert.match(source,/batch:2/);assert.match(source,/batch:3/);
   assert.match(source,/const PREMIUM_AVATAR_DETAIL_BATCH = 4/);
   assert.doesNotMatch(source,/id:"[^"]*(?:npc|townsfolk|villager)/i);
