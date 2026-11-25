@@ -25,24 +25,30 @@ const environment = section("function buildEnvironment(", "function createParkMo
 test("the hand-painted alchemist and apothecary are separate GLB assets with source pages", () => {
   const alchemist = assetLine("alchemist-shop");
   const apothecary = assetLine("apothecary-shop");
+  const guild = assetLine("adventurers-guild");
   assert.ok(alchemist.includes("/assets/32732/v1/model.glb"));
   assert.ok(alchemist.includes("alchemist-shop-d5f14853"));
   assert.ok(apothecary.includes("/assets/32736/v1/model.glb"));
   assert.ok(apothecary.includes("apothecary-shop-922c13d1"));
   assert.ok(alchemist.includes('animations:["crystal-spin","sign-sway"]'));
   assert.ok(apothecary.includes('animations:["sign-sway"]'));
-  assert.ok(alchemist.includes("batch:4") && apothecary.includes("batch:4"));
+  assert.ok(guild.includes("/assets/32743/v1/model.glb"));
+  assert.ok(guild.includes("adventurers-guild-hall-d597e1c9"));
+  assert.ok(guild.includes('animations:["banner-sway","sign-sway"]'));
+  assert.ok(alchemist.includes("batch:4") && apothecary.includes("batch:4") && guild.includes("batch:4"));
 });
 
 test("each fantasy shop has its own placement, facing, collider and discovery zone", () => {
   for (const [id, x, rotation, label] of [
     ["alchemist-shop", "25.5", "-2.33", "星辰煉金工坊"],
-    ["apothecary-shop", "-25.5", "2.33", "月草藥劑工坊"]
+    ["apothecary-shop", "-25.5", "2.33", "月草藥劑工坊"],
+    ["adventurers-guild", "0", "0", "星際冒險者公會"]
   ]) {
     const config = assetLine(id);
-    assert.ok(config.includes("position:[" + x + ",0.87,25]"), id + " position");
+    const expectedPosition=id==="adventurers-guild"?"position:[0,0.87,-34]":"position:[" + x + ",0.87,25]";
+    assert.ok(config.includes(expectedPosition), id + " position");
     assert.ok(config.includes("rotationY:" + rotation), id + " should face the promenade");
-    assert.ok(config.includes("colliderRadius:3.8"), id + " collider");
+    assert.ok(config.includes(id==="adventurers-guild"?"colliderRadius:4.8":"colliderRadius:3.8"), id + " collider");
     assert.ok(config.includes('name:"' + label + '"'), id + " discovery label");
     assert.ok(config.includes("discovery:{"), id + " discovery zone");
   }
