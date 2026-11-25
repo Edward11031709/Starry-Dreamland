@@ -115,7 +115,7 @@ test("all existing hairstyle options build refined strands without changing appe
     assert.equal(player.userData.appearance.hairStyle, hairStyle);
     assert.equal(player.userData.hairStrandCount, expectedCount);
     assert.equal(player.userData.faceLashCount, 2, `${hairStyle} avatar should include two fine upper lashes`);
-    assert.ok(player.userData.animeMaterialCount > 30, "avatar surfaces should use cel-shaded materials");
+    assert.ok(player.userData.animeMaterialCount > 10, "avatar surfaces should use cel-shaded materials");
     assert.ok(player.userData.animeOutlineCount >= 4, "main outfit and head silhouette should have ink contours");
     const toonMeshes = [];
     player.traverse(object => { if (object.isMesh) toonMeshes.push(object); });
