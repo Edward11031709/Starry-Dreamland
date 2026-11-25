@@ -139,3 +139,10 @@
 
 - 已核對 VRoid 官方舊 Beta 的 `β Ver AvatarSample_1–4` 及 HairSample 素材確實標示 CC0；官方也明確指出其他 sample models 的使用條件不一，不可把所有 VRoid sample 一概當成 CC0。
 - CC0 VRM 雖可作為動漫比例與 Toon shader 的參考，但目前找到的示例多為校服／一般服裝，與星夢樂園的魔法旅人造型不一致；不會直接把不相符的樣板替換成玩家正式角色。後續應再挑選適合奇幻服裝的完整模型，檢查檔案大小、VRM 版本、SpringBone、授權及手機載入成本後再整合。
+
+
+### 2026-11-25：外部奇幻 GLB 與旅人共用動漫光影
+- 既有 CC0 手繪奇幻 GLB（城堡、觀測站、噴泉、遊樂設施、水晶樹與晶簇）在載入後改用 4 段式 Toon 漸層處理可轉換的表面，保留已嵌入的手繪 base-color map、normal map、ambient-occlusion map 與 emissive map。
+- 透明／半透明、transmission、極高金屬度及鏡面粗糙度很低的材質保留 MeshPhysicalMaterial，避免玻璃、金屬和水晶全部變成同一種平面卡通材質。
+- 每個 GLB 以 material cache 共用轉換後材質，不重複複製相同來源材質；不改變模型幾何、動畫、座位錨點、碰撞、比例或載入 fallback。
+- 新增回歸測試，檢查 Toon ramp、材質快取、貼圖保留及透明／金屬 PBR 退路。仍需於真實 WebGL 私有預覽檢查各資產材質是否過暗、貼圖是否遺失、玻璃和晶石反射是否正常，並在桌機與手機橫向檢查 FPS。
