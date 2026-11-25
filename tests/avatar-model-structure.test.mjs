@@ -22,7 +22,11 @@ class MockGroup {
     this.rotation = { x: 0, y: 0, z: 0 };
     this.userData = {};
   }
-  add(child) { this.children.push(child); }
+  add(child) { child.parent = this; this.children.push(child); }
+  traverse(callback) {
+    callback(this);
+    this.children.forEach(child => child.traverse ? child.traverse(callback) : callback(child));
+  }
 }
 
 class MockMesh extends MockGroup {
@@ -30,6 +34,8 @@ class MockMesh extends MockGroup {
     super();
     this.geometry = geometry;
     this.material = material;
+    this.isMesh = true;
+    this.frustumCulled = true;
   }
 }
 
@@ -61,6 +67,9 @@ const THREE = new Proxy({
   Mesh: MockMesh,
   MeshStandardMaterial: MockMaterial,
   MeshPhysicalMaterial: MockMaterial,
+  MeshToonMaterial: MockMaterial,
+  MeshBasicMaterial: MockMaterial,
+  DataTexture: MockGeometry,
   Color: MockColor,
   Shape: MockShape
 }, {
@@ -92,10 +101,10 @@ const buildPlayer = context.buildPlayer;
 
 test("all existing hairstyle options build refined strands without changing appearance keys", () => {
   const expectedStrands = new Map([
-    ["long", 6],
-    ["short", 5],
-    ["twin", 6],
-    ["hood", 4]
+    ["long", 8],
+    ["short", 7],
+    ["twin", 8],
+    ["hood", 6]
   ]);
 
   for (const [hairStyle, expectedCount] of expectedStrands) {
@@ -105,6 +114,13 @@ test("all existing hairstyle options build refined strands without changing appe
     assert.equal(scene.children[0], player, `${hairStyle} avatar should be attached to the scene`);
     assert.equal(player.userData.appearance.hairStyle, hairStyle);
     assert.equal(player.userData.hairStrandCount, expectedCount);
+    assert.equal(player.userData.faceLashCount, 2, `${hairStyle} avatar should include two fine upper lashes`);
+    assert.ok(player.userData.animeMaterialCount > 30, "avatar surfaces should use cel-shaded materials");
+    assert.ok(player.userData.animeOutlineCount >= 4, "main outfit and head silhouette should have ink contours");
+    const toonMeshes = [];
+    player.traverse(object => { if (object.isMesh) toonMeshes.push(object); });
+    assert.ok(toonMeshes.some(object => object.material instanceof MockMaterial && object.material.gradientMap),
+      "avatar must contain MeshToonMaterial surfaces");
     assert.ok(player.children.length > 0, `${hairStyle} avatar should contain model geometry`);
   }
 });
