@@ -223,9 +223,108 @@ function createPremiumAssetMixer(model,gltf,config){
   return mixer;
 }
 
+function findPremiumNode(root,name){
+  const expected=String(name).toLowerCase();
+  let found=null;
+  root.traverse(node=>{
+    if(!found&&String(node.name||"").toLowerCase()===expected)found=node;
+  });
+  return found;
+}
+
+function createPremiumAssetController(model,config){
+  if(config.motionType==="castle-portcullis"){
+    const gate=findPremiumNode(model,"portcullis");
+    if(!gate)throw new Error("城堡模型缺少 portcullis 樞紐");
+    const closedY=gate.position.y;
+    let elapsed=0;
+    return {
+      update(delta){
+        elapsed+=delta;
+        const phase=elapsed%22;
+        let lift=0;
+        if(phase<3)lift=THREE.MathUtils.smoothstep(phase/3,0,1);
+        else if(phase<14)lift=1;
+        else if(phase<17)lift=1-THREE.MathUtils.smoothstep((phase-14)/3,0,1);
+        gate.position.y=closedY+lift*3.5;
+      }
+    };
+  }
+
+  if(config.motionType==="carousel"){
+    const platform=findPremiumNode(model,"platform");
+    const canopy=findPremiumNode(model,"canopy");
+    const seats=[];
+    for(const ring of ["outer","inner"]){
+      for(let index=1;index<=12;index++){
+        const name="seat_"+ring+"_"+String(index).padStart(2,"0");
+        const node=findPremiumNode(model,name);
+        if(!node)throw new Error("旋轉木馬缺少座椅樞紐："+name);
+        seats.push(node);
+      }
+    }
+    if(!platform||!canopy)throw new Error("旋轉木馬缺少 platform／canopy 樞紐");
+
+    // Use the platform's measured centre as the carousel axis. Keep the static
+    // queue, entrance ramp and base outside this rotating hierarchy.
+    model.updateMatrixWorld(true);
+    const platformBounds=new THREE.Box3().setFromObject(platform);
+    const localCenter=platformBounds.getCenter(new THREE.Vector3())
+      .applyMatrix4(model.matrixWorld.clone().invert());
+    const pivot=new THREE.Group();
+    pivot.name="StarryCarouselMotionPivot";
+    pivot.position.copy(localCenter);
+    model.add(pivot);
+    model.updateMatrixWorld(true);
+    [platform,canopy,...seats].forEach(node=>pivot.attach(node));
+
+    return {
+      update(delta){pivot.rotation.y+=delta*0.19;}
+    };
+  }
+
+  if(config.motionType==="ferris-wheel"){
+    const wheel=findPremiumNode(model,"wheel");
+    if(!wheel)throw new Error("摩天輪缺少 wheel 旋轉樞紐");
+    const gondolas=[];
+    for(let index=1;index<=24;index++){
+      const name="gondola_"+String(index).padStart(2,"0");
+      const node=findPremiumNode(model,name);
+      if(!node)throw new Error("摩天輪缺少吊艙樞紐："+name);
+      gondolas.push(node);
+    }
+    const wheelBase=wheel.rotation.z;
+    const gondolaBases=gondolas.map(node=>node.rotation.z);
+    let angle=0;
+    return {
+      update(delta){
+        angle+=delta*0.105;
+        wheel.rotation.z=wheelBase+angle;
+        // The wheel rotates in the XY plane around its Z axle. Each hanging
+        // cabin counter-rotates around that same axis so the floor stays level.
+        gondolas.forEach((node,index)=>{
+          node.rotation.z=gondolaBases[index]-angle;
+        });
+      }
+    };
+  }
+  return null;
+}
+
+function attachPremiumRideSign(ride,config){
+  if(!config.signPosition)return null;
+  const sign=makeLabelSprite({title:config.name,subtitle:"STAR DREAMLAND · RIDE"});
+  if(!sign)return null;
+  sign.position.set(config.signPosition[0],config.signPosition[1],config.signPosition[2]);
+  const scale=config.signScale||[4,1,1];
+  sign.scale.set(scale[0],scale[1],scale[2]);
+  ride.root.add(sign);
+  return sign;
+}
+
 function hideProceduralRideMeshes(root){
   root.traverse(child=>{
-    if(child.isMesh||child.isLine||child.isPoints)child.visible=false;
+    if(child.isMesh||child.isLine||child.isPoints||child.isSprite)child.visible=false;
   });
 }
 
@@ -276,6 +375,7 @@ function mountPremiumAsset(world,config,gltf){
     // Resolve both the visible ride animation and the passenger anchor before hiding
     // the procedural fallback. If either is missing, the original ride stays usable.
     const seat=attachPremiumRideSeat(model,config);
+    const controller=createPremiumAssetController(model,config);
     const mixer=createPremiumAssetMixer(model,gltf,config);
     hideProceduralRideMeshes(ride.root);
     ride.root.add(model);
@@ -284,19 +384,24 @@ function mountPremiumAsset(world,config,gltf){
     ride.rideSeat=seat;
     ride.axis="asset";
     applyPremiumRideFootprint(world,ride,config);
+    attachPremiumRideSign(ride,config);
+    if(controller)world.assetControllers.push(controller);
     if(mixer)world.assetMixers.push(mixer);
     return model;
   }
 
   if(config.target){
+    // Validate required moving nodes before hiding the original landmark.
+    const controller=createPremiumAssetController(model,config);
     const fallback=world.scene.getObjectByName(config.target);
-    if(fallback)fallback.visible=false;
     model.position.set(
       config.target==="StarDreamCastle"?0:-30,
       0.68+groundOffset,
       config.target==="StarDreamCastle"?-18.2:-16.5
     );
     world.scene.add(model);
+    if(fallback)fallback.visible=false;
+    if(controller)world.assetControllers.push(controller);
   }else if(config.positions){
     config.positions.forEach(([x,y,z],index)=>{
       const instance=index===0?model:model.clone(true);
@@ -2553,7 +2658,11 @@ function buildEnvironment(scene) {
 
   // The old satellite islands become reachable themed gardens at the far end of the park.
   buildCastle(scene,materials);
-  addCollider(0,-18.2,5.7,"星夢城堡");
+  // The new keep fills a broad rectangular footprint, with a walkable gap through its front gate.
+  colliders.push({
+    x:0,z:-18.2,halfWidth:10.2,halfDepth:7.7,
+    entryGapHalfWidth:2.6,entryGapDepth:1.8,label:"星夢城堡"
+  });
   addReflectingPool(island,materials,-5.35,-14.95);
   addReflectingPool(island,materials,5.35,-14.95);
   addCollider(-5.35,-14.95,1.35,"月光倒影池");
@@ -2630,7 +2739,7 @@ function buildEnvironment(scene) {
   [-7.2,0,7.2].forEach((x,i)=>{portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials));addCollider(x,8.2,1.62,gameMeta[i].title)});
 
   // Wide soft grounding shadows sit beneath the park's largest silhouettes.
-  addContactShadow(0,-18.2,13.2,12.4,0.79);
+  addContactShadow(0,-18.2,22.4,17.4,0.79);
   addContactShadow(-30,-16.5,9.2,8.5,0.895);
   addContactShadow(-4.8,30.5,6.2,5.4,0.79);
   addContactShadow(-24.5,-19.0,13.5,11.8,0.79);
@@ -3479,7 +3588,7 @@ function mount(host) {
     discoveredZones:new Set(Array.isArray(savedDiscoveryIds)?savedDiscoveryIds:[]),activeDiscoveryZone:null,
     localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
-    running: true, frame: 0, lastTime: 0, assetMixers: []
+    running: true, frame: 0, lastTime: 0, assetMixers: [], assetControllers: []
   };
   activeWorld = world;
   loadPremiumParkAssets(world);
@@ -3576,7 +3685,17 @@ function mount(host) {
   }
 
   function blockedAt(x,z) {
-    return environment.colliders.some(collider => Math.hypot(x-collider.x,z-collider.z) < collider.radius + 0.48);
+    return environment.colliders.some(collider=>{
+      if(Number.isFinite(collider.halfWidth)&&Number.isFinite(collider.halfDepth)){
+        const dx=Math.abs(x-collider.x),dz=z-collider.z;
+        const inside=dx<collider.halfWidth+0.48&&Math.abs(dz)<collider.halfDepth+0.48;
+        const doorway=Number.isFinite(collider.entryGapHalfWidth)&&
+          dx<collider.entryGapHalfWidth&&
+          dz>collider.halfDepth-collider.entryGapDepth;
+        return inside&&!doorway;
+      }
+      return Math.hypot(x-collider.x,z-collider.z)<(collider.radius||0)+0.48;
+    });
   }
 
   world.onAvatarChange = event => {
@@ -3763,6 +3882,7 @@ function mount(host) {
       } else if(ride.axis!=="asset") ride.object.rotation.z += delta * ride.speed;
     });
     world.assetMixers.forEach(mixer=>mixer.update(delta));
+    world.assetControllers.forEach(controller=>controller.update(delta));
     environment.compassHalo.rotation.z += delta * 0.17;
     environment.planet.rotation.y += delta * 0.045;
     environment.planetRing.rotation.z += delta * 0.06;
