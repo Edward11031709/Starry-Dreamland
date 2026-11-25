@@ -111,6 +111,6 @@ test("the upgraded castle has a broad rectangular collider with a clear front do
 });
 
 test("the per-frame loop advances all manual premium asset controllers",()=>{
-  assert.match(source,/assetMixers:\[\], assetControllers:\[\]/);
+  assert.match(source,/assetMixers:\s*\[\],\s*assetControllers:\s*\[\]/);
   assert.match(source,/world\.assetControllers\.forEach\(controller=>controller\.update\(delta\)\)/);
 });
