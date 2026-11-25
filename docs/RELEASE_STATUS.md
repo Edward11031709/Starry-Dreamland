@@ -130,7 +130,7 @@
 ## 2026-11-25 PR #29 手繪奇幻工坊區（候選）
 
 - 候選分支：`feature/handpainted-fantasy-district-20261125`，以 PR #28 的合併 SHA 為基底。
-- 新增星辰煉金工坊（Alchemist Shop）與月草藥劑工坊（Apothecary Shop）兩個單獨 CC0 GLB；分別 32.3k／21k triangles，約 1.7／1.0 MB。
+- 新增星辰煉金工坊（Alchemist Shop）、月草藥劑工坊（Apothecary Shop）與星際冒險者公會（Adventurers Guild Hall）三個單獨 CC0 GLB；分別約 32.3k／21k／49.9k triangles，約 1.7／1.0／2.6 MB（合計約 103k triangles／5.3 MB）。
 - 新增朝向中央步道的 bounds-center placement pivot、左右支線步道、兩座小廣場、建築碰撞、探索區及接地陰影；移開建築入口周圍的樹木。
 - 動畫使用來源模型的 crystal-spin／sign-sway；不載入資產包中的 NPC，也不載入整個 starter scene。
 - CI 與真實 WebGL 預覽尚待候選 PR 建立後確認。自動測試不等於畫面驗收；建築比例、動畫與手機 FPS 仍須私有預覽檢查。
