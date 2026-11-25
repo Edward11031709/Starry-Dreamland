@@ -68,8 +68,9 @@
 |---|---|---|---:|---:|---|---|
 | Alchemist Shop | [32732 GLB](https://cdn.3dassets.dev/assets/32732/v1/model.glb) | [資產頁](https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-alchemist-shop-d5f14853) | 8.76 × 12.9 × 9.04 m | 32.3k | open、close、crystal-spin、sign-sway | 星辰煉金工坊；保留旋轉晶石與招牌擺動 |
 | Apothecary Shop | [32736 GLB](https://cdn.3dassets.dev/assets/32736/v1/model.glb) | [資產頁](https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-apothecary-shop-922c13d1) | 8.18 × 9.88 × 9.23 m | 21k | open、close、sign-sway | 月草藥劑工坊；保留招牌擺動及藥草店外觀 |
+| Adventurers Guild Hall | [32743 GLB](https://cdn.3dassets.dev/assets/32743/v1/model.glb) | [資產頁](https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-adventurers-guild-hall-d597e1c9) | 12.92 × 12.90 × 14.33 m | 49.9k | open、close、banner-sway、sign-sway | 星際冒險者公會；保留旗幟與招牌擺動 |
 
-- 兩個模型分別約 1.7 MB 與 1.0 MB，採個別 GLB CDN 載入，不下載 92.2 MB 的完整資產包。
+- 三個模型分別約 1.7 MB、1.0 MB 與 2.6 MB（合計約 5.3 MB），採個別 GLB CDN 載入，不下載 92.2 MB 的完整資產包。
 - 主場景只載入兩棟建築，不載入資產包內 14 位 townsfolk／NPC。
 - 匯入時保留原始手繪貼圖並依共用動漫 Toon/PBR 規則調整材質；動畫僅播放經確認存在的片段，不要求模型必須具備不存在的動畫。
 - 建築各自使用定位樞紐：先依 GLB bounds center 校正模型原點，再朝向中央步道，避免以不明作者原點旋轉造成模型偏位。
