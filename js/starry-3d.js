@@ -51,18 +51,79 @@ async function loadPremiumGlb(url){
 }
 
 function tunePremiumMaterials(root){
+  // Share one compact four-step toon ramp across every mesh in this imported asset.
+  const toonGradient=new THREE.DataTexture(
+    new Uint8Array([
+      66,60,90,255,
+      112,104,145,255,
+      187,176,205,255,
+      255,246,232,255
+    ]),
+    4,1,THREE.RGBAFormat,THREE.UnsignedByteType
+  );
+  toonGradient.magFilter=THREE.NearestFilter;
+  toonGradient.minFilter=THREE.NearestFilter;
+  toonGradient.generateMipmaps=false;
+  toonGradient.colorSpace=THREE.NoColorSpace;
+  toonGradient.needsUpdate=true;
+
+  const materialCache=new Map();
+  const ambientTint=new THREE.Color(0xd5c8ed);
   root.traverse(object=>{
     if(!object.isMesh)return;
-    object.castShadow=true;object.receiveShadow=true;
+    object.castShadow=true;
+    object.receiveShadow=true;
     const original=object.material;
     const refine=material=>{
       if(!material)return material;
-      const copy=material.clone();
-      if(copy.color)copy.color.lerp(new THREE.Color(0xd5c8ed),0.12);
-      if("roughness" in copy)copy.roughness=Math.max(0.28,Math.min(0.88,copy.roughness??0.65));
-      if("metalness" in copy)copy.metalness=Math.min(0.62,copy.metalness??0.08);
-      if("envMapIntensity" in copy)copy.envMapIntensity=0.82;
-      return copy;
+      if(materialCache.has(material))return materialCache.get(material);
+
+      const preservePhysical=
+        material.transparent===true||
+        (material.opacity??1)<0.98||
+        (material.transmission??0)>0.015||
+        (material.metalness??0)>0.62||
+        (material.roughness??1)<0.16;
+      const color=material.color&&typeof material.color.clone==="function"
+        ?material.color.clone():new THREE.Color(0xffffff);
+      if(typeof color.lerp==="function")color.lerp(ambientTint,0.08);
+
+      let refined;
+      if(preservePhysical){
+        refined=material.clone();
+        if(refined.color&&typeof refined.color.copy==="function")refined.color.copy(color);
+        if("roughness" in refined)refined.roughness=Math.max(0.24,Math.min(0.88,refined.roughness??0.65));
+        if("metalness" in refined)refined.metalness=Math.min(0.68,refined.metalness??0.08);
+        if("envMapIntensity" in refined)refined.envMapIntensity=0.82;
+      }else{
+        const emissive=material.emissive&&typeof material.emissive.clone==="function"
+          ?material.emissive.clone():new THREE.Color(0x000000);
+        refined=new THREE.MeshToonMaterial({
+          color,
+          map:material.map||null,
+          gradientMap:toonGradient,
+          emissive,
+          emissiveMap:material.emissiveMap||null,
+          emissiveIntensity:material.emissiveIntensity??1,
+          normalMap:material.normalMap||null,
+          aoMap:material.aoMap||null,
+          aoMapIntensity:material.aoMapIntensity??1,
+          lightMap:material.lightMap||null,
+          alphaMap:material.alphaMap||null,
+          transparent:material.transparent||false,
+          opacity:material.opacity??1,
+          alphaTest:material.alphaTest||0,
+          side:material.side,
+          vertexColors:material.vertexColors||false,
+          flatShading:material.flatShading||false,
+          depthWrite:material.depthWrite??true
+        });
+        refined.toneMapped=material.toneMapped??true;
+        refined.name="StarryPremiumAnimeToonMaterial";
+      }
+      materialCache.set(material,refined);
+      if(typeof material.dispose==="function")material.dispose();
+      return refined;
     };
     object.material=Array.isArray(original)?original.map(refine):refine(original);
   });
@@ -2782,6 +2843,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   ];
   const robeBody=addMesh(player,new THREE.LatheGeometry(robeProfile,40),robe,[0,0.77,0]);
   robeBody.castShadow=true;
+  robeBody.userData.animeOutline=true;
   // A second overskirt gives the silhouette depth without a flat boxy cape.
   const overskirtMat=new THREE.MeshPhysicalMaterial({color:style.mantle,roughness:0.42,metalness:0.16,clearcoat:0.62,clearcoatRoughness:0.24,sheen:0.42,sheenColor:new THREE.Color(0xb9a8e8),side:THREE.DoubleSide});
   const overskirt=addMesh(player,new THREE.LatheGeometry([
@@ -2790,9 +2852,11 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     new THREE.Vector2(0.365,0.16),new THREE.Vector2(0.31,0.34)
   ],40),overskirtMat,[0,0.77,-0.012]);
   overskirt.rotation.y=Math.PI/8;
+  overskirt.userData.animeOutline=true;
   addMesh(player,new THREE.CylinderGeometry(0.28,0.31,0.12,24),trim,[0,1.19,0]);
   const cape=addMesh(player,new THREE.CylinderGeometry(0.12,0.53,0.9,24,2,true),mantle,[0,0.72,-0.16]);
   cape.rotation.x=-0.1;
+  cape.userData.animeOutline=true;
   addMesh(player,new THREE.TorusGeometry(0.31,0.045,8,40),trim,[0,0.98,0]).rotation.x=Math.PI/2;
   addMesh(player,new THREE.BoxGeometry(0.54,0.1,0.18),metal,[0,0.99,0.02]);
   addMesh(player,new THREE.OctahedronGeometry(0.13,1),trim,[0,1.0,0.14],[0.72,1.15,0.72]);
@@ -2898,6 +2962,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   headRig.position.set(0,1.45*(1-headScale),0.025*(1-headScale));
   player.add(headRig);
   let hairStrandCount=0;
+  let faceLashCount=0;
   const addHairStrand=(points,radius=0.012,material=hairHighlight)=>{
     const curve=new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(point[0],point[1],point[2])));
     const strand=addMesh(headRig,new THREE.TubeGeometry(curve,18,radius,5,false),material,null,null,false,false);
@@ -2908,15 +2973,22 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     const curve=new THREE.CatmullRomCurve3(points.map(point=>new THREE.Vector3(point[0],point[1],point[2])));
     return addMesh(headRig,new THREE.TubeGeometry(curve,18,radius,6,false),material,null,null,false,false);
   };
+  const addFaceLash=points=>{
+    const lash=addFaceCurve(points,0.0036,shadow);
+    faceLashCount++;
+    return lash;
+  };
   // A visible neck and jeweled collar bridge the face and tailored mantle.
   addMesh(headRig,new THREE.CylinderGeometry(0.105,0.12,0.19,18),skin,[0,1.34,0.035]);
   const neckCollar=addMesh(headRig,new THREE.TorusGeometry(0.14,0.022,7,32),coutureGold,[0,1.285,0.035]);
   neckCollar.rotation.x=Math.PI/2;
   addMesh(headRig,new THREE.OctahedronGeometry(0.045,1),coutureGem,[0,1.29,0.17],[0.72,1.2,0.72],false,false);
   // Face and selectable hair styles. The hood is an actual garment silhouette.
-  addMesh(headRig,new THREE.SphereGeometry(0.255,24,18),skin,[0,1.48,0.025],[0.94,1.05,0.9]);
-  addMesh(headRig,new THREE.SphereGeometry(0.27,24,16,0,Math.PI*2,0,Math.PI/2),hair,[0,1.56,-0.015],
+  const faceMesh=addMesh(headRig,new THREE.SphereGeometry(0.255,32,24),skin,[0,1.48,0.025],[0.94,1.05,0.9]);
+  faceMesh.userData.animeOutline=true;
+  const hairCap=addMesh(headRig,new THREE.SphereGeometry(0.27,32,24,0,Math.PI*2,0,Math.PI/2),hair,[0,1.56,-0.015],
     appearance.hairStyle==="short"?[1.04,0.58,0.98]:[1.04,0.86,0.98]);
+  hairCap.userData.animeOutline=true;
   if(appearance.hairStyle==="long"){
     [-1,1].forEach(side=>{
       addMesh(headRig,new THREE.SphereGeometry(0.085,14,12),hair,[side*0.235,1.34,-0.015],[0.8,2.3,0.98]);
@@ -2962,6 +3034,23 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
     addHairStrand([[0.02,1.72,0.24],[0.09,1.7,0.23],[0.14,1.66,0.21]],0.006,hairHighlight);
   }
 
+  // Style-specific fringe and temple locks soften the hairline while preserving saved appearance values.
+  if(appearance.hairStyle==="long"){
+    addHairStrand([[-0.19,1.72,0.12],[-0.17,1.68,0.19],[-0.11,1.63,0.232],[-0.035,1.62,0.244]],0.014,hair);
+    addHairStrand([[0.035,1.62,0.244],[0.11,1.63,0.232],[0.17,1.68,0.19],[0.19,1.72,0.12]],0.011,hairHighlight);
+  }else if(appearance.hairStyle==="twin"){
+    addHairStrand([[-0.22,1.72,0.12],[-0.17,1.67,0.2],[-0.1,1.62,0.238],[-0.04,1.61,0.244]],0.013,hair);
+    addHairStrand([[0.04,1.61,0.244],[0.1,1.62,0.238],[0.17,1.67,0.2],[0.22,1.72,0.12]],0.013,hair);
+  }else if(appearance.hairStyle==="short"){
+    addHairStrand([[-0.2,1.7,0.12],[-0.17,1.66,0.19],[-0.1,1.63,0.232],[0.01,1.63,0.244]],0.014,hair);
+    addHairStrand([[0.01,1.63,0.244],[0.11,1.64,0.23],[0.17,1.68,0.18],[0.2,1.71,0.12]],0.01,hairHighlight);
+  }else{
+    [-1,1].forEach(side=>addHairStrand([
+      [side*0.25,1.55,0.09],[side*0.24,1.49,0.15],
+      [side*0.22,1.43,0.16],[side*0.2,1.39,0.12]
+    ],0.011,hair));
+  }
+
   // Secondary locks create finer, directional highlights without adding a heavy hair mesh.
   if(appearance.hairStyle==="long"){
     [-1,1].forEach(side=>addHairStrand([
@@ -2991,14 +3080,18 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   // Face sculpt: softly tapered eye shapes, curved lids and brows read clearly at park distance.
   [-1,1].forEach(side=>{
     const eyeX=side*0.095;
-    addMesh(headRig,new THREE.SphereGeometry(0.047,20,16),eyeWhite,[eyeX,1.5,0.236],[1.22,0.84,0.48]);
-    addMesh(headRig,new THREE.SphereGeometry(0.029,18,14),iris,[eyeX,1.5,0.26],[1.04,0.96,0.5]);
-    addMesh(headRig,new THREE.SphereGeometry(0.015,14,12),pupil,[eyeX,1.5,0.276],[1,1,0.52]);
-    addMesh(headRig,new THREE.SphereGeometry(0.009,10,8),eyeWhite,[eyeX+side*0.011,1.517,0.284],null,false,false);
+    addMesh(headRig,new THREE.SphereGeometry(0.054,24,18),eyeWhite,[eyeX,1.5,0.236],[1.22,0.9,0.48]);
+    addMesh(headRig,new THREE.SphereGeometry(0.036,22,18),iris,[eyeX,1.5,0.263],[1.05,1.04,0.52]);
+    addMesh(headRig,new THREE.SphereGeometry(0.017,18,14),pupil,[eyeX,1.5,0.281],[1,1,0.5]);
+    addMesh(headRig,new THREE.SphereGeometry(0.012,12,10),eyeWhite,[eyeX+side*0.012,1.519,0.291],[1,1,0.65],false,false);
+    addMesh(headRig,new THREE.SphereGeometry(0.006,10,8),eyeWhite,[eyeX-side*0.011,1.491,0.291],null,false,false);
     const upperLid=addFaceCurve([
       [side*0.15,1.5,0.235],[side*0.13,1.532,0.252],
       [side*0.095,1.541,0.26],[side*0.06,1.532,0.252],[side*0.04,1.5,0.235]
     ],0.007,skin);
+    addFaceLash([
+      [side*0.14,1.512,0.249],[side*0.158,1.525,0.246],[side*0.17,1.54,0.235]
+    ]);
     const lowerLid=addFaceCurve([
       [side*0.04,1.497,0.235],[side*0.07,1.472,0.25],
       [side*0.095,1.466,0.253],[side*0.125,1.472,0.25],[side*0.15,1.497,0.235]
@@ -3110,7 +3203,88 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   halo.rotation.x=Math.PI/2;
   [-0.26,0.26].forEach(x=>addMesh(player,new THREE.OctahedronGeometry(0.075,1),trim,[x,1.08,0.09],null,false,false));
   player.userData.halo=halo;player.userData.floatingStar=floatingStar;player.userData.walkPhase=0;
+  // Anime fantasy mobile-game finish: crisp cel lighting and controlled ink contours.
+  const toonGradient=new THREE.DataTexture(
+    new Uint8Array([
+      68,62,91,255,
+      112,103,143,255,
+      186,174,203,255,
+      255,246,231,255
+    ]),
+    4,1,THREE.RGBAFormat,THREE.UnsignedByteType
+  );
+  toonGradient.magFilter=THREE.NearestFilter;
+  toonGradient.minFilter=THREE.NearestFilter;
+  toonGradient.generateMipmaps=false;
+  toonGradient.colorSpace=THREE.NoColorSpace;
+  toonGradient.needsUpdate=true;
+
+  const avatarMeshes=[];
+  const toonMaterialCache=new Map();
+  let animeMaterialCount=0;
+  player.traverse(object=>{
+    if(!object.isMesh||!object.material)return;
+    const sourceMaterials=Array.isArray(object.material)?object.material:[object.material];
+    const toonMaterials=sourceMaterials.map(sourceMaterial=>{
+      if(toonMaterialCache.has(sourceMaterial))return toonMaterialCache.get(sourceMaterial);
+      if(sourceMaterial.userData&&sourceMaterial.userData.keepPhysical)return sourceMaterial;
+      const color=sourceMaterial.color&&typeof sourceMaterial.color.clone==="function"
+        ?sourceMaterial.color.clone():sourceMaterial.color||0xffffff;
+      const emissive=sourceMaterial.emissive&&typeof sourceMaterial.emissive.clone==="function"
+        ?sourceMaterial.emissive.clone():sourceMaterial.emissive||0x000000;
+      const toon=new THREE.MeshToonMaterial({
+        color,map:sourceMaterial.map||null,gradientMap:toonGradient,
+        emissive,emissiveMap:sourceMaterial.emissiveMap||null,
+        emissiveIntensity:sourceMaterial.emissiveIntensity??1,
+        normalMap:sourceMaterial.normalMap||null,alphaMap:sourceMaterial.alphaMap||null,
+        transparent:sourceMaterial.transparent||false,
+        opacity:sourceMaterial.opacity??1,
+        alphaTest:sourceMaterial.alphaTest||0,
+        side:sourceMaterial.side,
+        vertexColors:sourceMaterial.vertexColors||false,
+        depthWrite:sourceMaterial.depthWrite??true
+      });
+      toon.toneMapped=sourceMaterial.toneMapped??true;
+      toon.name="StarryAnimeToonMaterial";
+      toonMaterialCache.set(sourceMaterial,toon);
+      if(typeof sourceMaterial.dispose==="function")sourceMaterial.dispose();
+      animeMaterialCount++;
+      return toon;
+    });
+    object.material=Array.isArray(object.material)?toonMaterials:toonMaterials[0];
+    avatarMeshes.push(object);
+  });
+
+  // Thin deep-indigo contour shells are reserved for the main silhouette, not every ornament.
+  const outlineMaterial=new THREE.MeshBasicMaterial({
+    color:0x241d3d,side:THREE.BackSide,transparent:true,
+    opacity:0.78,depthWrite:false,toneMapped:false
+  });
+  let animeOutlineCount=0;
+  avatarMeshes.filter(mesh=>mesh.userData&&mesh.userData.animeOutline).forEach(mesh=>{
+    const outline=new THREE.Mesh(mesh.geometry,outlineMaterial);
+    outline.name="StarryAnimeSilhouette";
+    outline.position.set(mesh.position.x||0,mesh.position.y||0,mesh.position.z||0);
+    outline.rotation.x=mesh.rotation.x||0;
+    outline.rotation.y=mesh.rotation.y||0;
+    outline.rotation.z=mesh.rotation.z||0;
+    const sx=Number.isFinite(mesh.scale.x)?mesh.scale.x:1;
+    const sy=Number.isFinite(mesh.scale.y)?mesh.scale.y:1;
+    const sz=Number.isFinite(mesh.scale.z)?mesh.scale.z:1;
+    outline.scale.set(sx*1.028,sy*1.028,sz*1.028);
+    outline.renderOrder=Math.min(0,mesh.renderOrder-1);
+    outline.frustumCulled=mesh.frustumCulled;
+    outline.castShadow=false;
+    outline.receiveShadow=false;
+    mesh.renderOrder=Math.max(1,mesh.renderOrder||0);
+    mesh.parent.add(outline);
+    animeOutlineCount++;
+  });
+
   player.userData.hairStrandCount=hairStrandCount;
+  player.userData.faceLashCount=faceLashCount;
+  player.userData.animeMaterialCount=animeMaterialCount;
+  player.userData.animeOutlineCount=animeOutlineCount;
   scene.add(player);return player;
 }
 
