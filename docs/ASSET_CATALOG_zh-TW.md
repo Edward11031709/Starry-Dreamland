@@ -43,3 +43,18 @@
 - 這批模型仍使用上表已記錄的 CC0 資產，沒有新增外部 GLB 或改變授權來源。
 - 對不透明、非高金屬的手繪表面套用 4 段式 Toon ramp，保留原本 base-color、normal、AO 與 emissive 貼圖；透明、傳輸與高金屬表面留在 PBR。
 - 這是材質風格整合，不代表幾何模型已被替換為專門手工製作的動漫遊樂園資產；外部 GLB 的實際材質表現仍待 WebGL 預覽驗收。
+
+
+
+## 2026-11-25：正式旅人角色資產候選篩選（未匯入不合規格素材）
+
+使用者要求的是精緻動漫奇幻手遊角色，不是只要有骨架的任意免費人形。以下是本輪查核後的候選來源與不採用原因：
+
+| 來源 | 已查到的特性／授權 | 本輪決策 |
+|---|---|---|
+| [Grab3D Character Mixer](https://grab3d.com/tools/character-mixer/) | 官方頁標示 CC0；198 個模組零件、Cozy／Blocky／Low Poly 三種風格，提供 19 骨架、Idle／Walk／Run／Wave／Jump 等動畫；但沒有面部 blend shapes。 | 不直接匯入。其列出的風格仍偏簡化可愛／低模，不符合目前指定的動漫手遊精緻造型；可作為骨架／流程參考。 |
+| [Broadside 3D Anime Characters](https://broadside2037.com/free-3d-anime-characters) | 官方頁列出 1,754 個免費 VRM，僅個別明確標示 CC0 的角色可免費商用；多數帶標準 Humanoid 骨架、17 種臉部表情與頭髮／衣物 Spring Bone。 | 暫不匯入任意角色。集合含動物頭、賽博龐克、街頭服飾等不同設計；必須逐一挑選與魔法旅人世界觀相符且明確 CC0 的角色，再檢查服裝、髮型、骨架及外觀客製化映射。 |
+| [3DAssets.dev fantasy stylized characters](https://3dassets.dev/assets?category=characters&style=stylized&tag=fantasy) | 搜尋頁列出 73 個 CC0 GLB；目前可見結果以龍、飛龍與生物模型為主。 | 未找到符合玩家角色需求的高品質人形魔法旅人，因此不採用空白人形或龍類作為玩家外觀替代。 |
+| [OpenGameArt Base Rigged Stylized Humanoid](https://opengameart.org/content/base-rigged-stylized-humanoid-character-yw) | 頁面標示 CC0、動漫比例靈感、骨架與基本動畫，但介紹為 base mesh，臉部簡單；本輪來源頁讀取受限，無法確認實際檔案與材質品質。 | 不視為可直接上線模型。若後續採用，只能先作為重新製作服裝與臉部的底模，並須再次驗證實際下載檔及授權。 |
+
+**採用門檻：** 正面／側面／背面剪影、臉部與髮型細節、魔法服裝層次、頭髮與披風骨架、表情支援、完整動畫、明確商用授權、GLB／VRM 檔案大小及手機載入成本都要過關。若只有低模角色、一般街服或未確認授權，不得為了替換而替換。
