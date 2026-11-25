@@ -114,7 +114,13 @@
 - 旅人角色加入四段式 Toon 漸層光影、重點輪廓線、前額／鬢角髮束、眼尾睫線及較清楚的虹膜與眼睛高光；保留 long／short／twin／hood 等既有髮型 ID、旅人類型及 appearance JSON。
 - 對現有外部奇幻 GLB 的不透明、非高金屬材質加入共用 Toon 漸層；保留原始 base-color、normal、AO、emissive 貼圖。透明／transmission／高金屬與極低粗糙度表面保留 PBR，避免玻璃、金屬、水晶失去原有光學質感。
 - 新增材質快取，避免每個網格建立重複材質；不改變外部模型幾何、資產來源、設施動畫、座位錨點、碰撞與 fallback。
-- GitHub Actions run #222（run ID `45600729844`）成功：Node tests **69 passed／0 failed**；Three.js、Supabase Edge Function 與首頁 inline JavaScript／import map 檢查成功；正式部署工作依 PR 流程 skipped。
+- GitHub Actions run #223（run ID `45600966872`）成功，驗證 HEAD `e1618a89991e812711a3e3873308e79cc065d8d0`：Node tests **69 passed／0 failed**；Three.js、Supabase Edge Function 與首頁 inline JavaScript／import map 檢查成功；正式部署工作依 PR 流程 skipped。之後只再更新了文件，最新程式碼與文件 HEAD 仍需以 PR metadata 為準。
 - 尚未進行真實 WebGL 管理員私有預覽、桌機／手機外觀及 FPS 人工驗收。Toon 光影是風格整合的第一步，**不代表已完成真正高品質、具骨架與完整服裝造型的動漫角色模型**；後續仍須挑選／製作符合魔法奇幻設定、授權清楚且相容既有客製化資料的角色資產。
 - 不修改 Supabase schema、RLS、RPC、Auth、migration、帳號、星塵、服裝所有權或任何正式玩家資料；不建立假 NPC／玩家；不執行正式部署。
 
+
+## 2026-11-25 旅人模型來源篩選補充
+
+- 已檢查 Grab3D CC0 modular character tool、Broadside CC0 anime VRM collection、3DAssets.dev fantasy character listing，以及 OpenGameArt 基礎人形底模。
+- 本輪沒有匯入不符合標準的低模、街頭服飾或僅為空白底模的素材；理由與各來源限制已記錄於 `docs/ASSET_CATALOG_zh-TW.md` 與 Roadmap。
+- 不因取得授權就假設模型符合角色美術；完整角色仍需檢查服裝世界觀、臉部／表情、髮絲／披風骨架、動畫及手機成本。
