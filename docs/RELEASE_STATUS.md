@@ -93,10 +93,28 @@
 - 本批外部模型透過固定 CDN URL 載入，下載時計算 SHA-256 並記錄到瀏覽器 console；因 GLB 尚未 vendoring 到 Repository，未建立固定本地 hash pinning。資產目錄已明確記錄此限制。
 - 自動化測試通過不代表實際 CDN 下載、GLB 解析、WebGL 畫面、模型比例、鏡頭、碰撞及手機效能已驗收；仍需管理員私有預覽及實機檢查。
 
-## 2026-11-23 設施模型搭乘整合與畫質精修候選（PR #26）
-- 候選分支：`feature/ride-asset-integration-polish-20261123`；PR：[ #26 精修高品質遊樂設施整合、乘坐動畫與場景清晰度 ](https://github.com/Edward11031709/Starry-Dreamland/pull/26)，目前 Open／Ready for review，尚未合併、尚未正式發布。
-- 修正四種遊樂設施的 GLB 乘坐錨點：依馬匹／杯體／吊艙語意節點包圍盒建立跟隨模型動畫的旅人錨點；必需節點與動畫先驗證，成功後才隱藏程序化 fallback。茶杯要求平台及杯體兩段動畫；自由落體使用往返升降動畫；摩天輪只承諾來源模型實際提供的輪體 spin，吊艙水平保持限制仍列為人工驗收事項。
-- 修正 GLB 地面接觸點、設施碰撞範圍與下車距離；摩天輪取消不必要的父層放大。手機後處理內部解析度由 0.78 提高至 0.86，新增手機 2×／桌面 4× 多重取樣。
-- CI run #212（run ID `45197395604`）對候選 SHA `a841fb343ce64b1af1671fd5db42742e7f173158` 成功：Node tests **65 passed／0 failed**；Three.js 語法與首頁 inline JavaScript／import map 檢查均成功。正式部署 job 依 PR 保護流程 skipped。
-- 尚未實測真實 CDN GLB 節點名稱、WebGL 畫面、實際第一人稱乘坐高度、桌機／手機 FPS、熱量與畫質觀感；自動化測試通過不等於手遊級美術驗收。須於私有預覽及實機檢查後再評估合併。
-- 未修改 Supabase schema、RLS、RPC、Auth 或玩家資料；未推送 main、未執行正式部署。
+## 2026-11-23 設施模型搭乘整合與畫質精修（PR #26 已合併）
+
+- PR：[ #26 精修高品質遊樂設施整合、乘坐動畫與場景清晰度 ](https://github.com/Edward11031709/Starry-Dreamland/pull/26)，已合併至 `main`。
+- 合併後 `main` commit：`61a0f5d6fcafb7122a1f14d9285a191280b9ddd3`。這只代表程式碼進入 main，不代表公開 Pages 已更新；本紀錄沒有核實到使用者核准的正式部署。
+- 設施模型以實際 GLB 語意節點掛載乘坐錨點，檢查必需動畫後才隱藏程序化 fallback；茶杯雙動畫、自由落體往返動畫、摩天輪輪體 spin；同步修正模型地面定位、碰撞與下車距離。
+- 手機後處理解析度提升至 0.86，採手機 2×／桌面 4× 多重取樣。
+- 先前最終候選 CI run #213（run ID `45197615798`）成功：Node tests **65 passed／0 failed**；PR 部署工作跳過。該 CI 只能確認結構與語法，不代表真實 WebGL 視覺驗收。
+- 尚未在真實瀏覽器驗收模型實際節點、搭乘視角、碰撞、桌機／手機 FPS 及畫質；未修改 Supabase／玩家資料。
+
+## 2026-11-25 PR #25 無法 Pull 的處理
+
+- PR：[ #25 精修旅人髮際線與眼尾細節 ](https://github.com/Edward11031709/Starry-Dreamland/pull/25) 仍保持 Open；未擅自關閉或合併。
+- 舊分支 `feature/avatar-hairline-couture-20261123` 相對當前 main 已分岔，落後 **48 個提交**、另有 3 個獨有提交，GitHub 回報 `mergeable=false`。因此不應直接 Pull／Merge，避免把過期的舊版園區程式碼帶回 main。
+- #25 唯一的髮際線前束、鬢角髮束、眼尾睫線及相應測試，已重新移植到最新 main 為 PR #28 的一部分；既有髮型 ID 與 appearance JSON 欄位不變。
+
+## 2026-11-25 動漫奇幻手遊角色與外部模型風格整合（PR #28）
+
+- 候選 PR：[ #28 朝動漫奇幻手遊質感精修旅人角色與 Toon 光影 ](https://github.com/Edward11031709/Starry-Dreamland/pull/28)，分支 `feature/anime-fantasy-character-art-20261125`；狀態 Open／Ready for review，基底為 main，尚未合併、尚未正式發布。
+- 旅人角色加入四段式 Toon 漸層光影、重點輪廓線、前額／鬢角髮束、眼尾睫線及較清楚的虹膜與眼睛高光；保留 long／short／twin／hood 等既有髮型 ID、旅人類型及 appearance JSON。
+- 對現有外部奇幻 GLB 的不透明、非高金屬材質加入共用 Toon 漸層；保留原始 base-color、normal、AO、emissive 貼圖。透明／transmission／高金屬與極低粗糙度表面保留 PBR，避免玻璃、金屬、水晶失去原有光學質感。
+- 新增材質快取，避免每個網格建立重複材質；不改變外部模型幾何、資產來源、設施動畫、座位錨點、碰撞與 fallback。
+- GitHub Actions run #222（run ID `45600729844`）成功：Node tests **69 passed／0 failed**；Three.js、Supabase Edge Function 與首頁 inline JavaScript／import map 檢查成功；正式部署工作依 PR 流程 skipped。
+- 尚未進行真實 WebGL 管理員私有預覽、桌機／手機外觀及 FPS 人工驗收。Toon 光影是風格整合的第一步，**不代表已完成真正高品質、具骨架與完整服裝造型的動漫角色模型**；後續仍須挑選／製作符合魔法奇幻設定、授權清楚且相容既有客製化資料的角色資產。
+- 不修改 Supabase schema、RLS、RPC、Auth、migration、帳號、星塵、服裝所有權或任何正式玩家資料；不建立假 NPC／玩家；不執行正式部署。
+
