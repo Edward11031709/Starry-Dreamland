@@ -19,7 +19,7 @@ let activeWorld = null;
 const PREMIUM_AVATAR_DETAIL_BATCH = 4;
 
 const PREMIUM_PARK_ASSETS = [
-  {id:"castle-keep",name:"星夢城堡",url:"https://tevy.dev/models/castle-keep/v2/lod0.glb",mobileUrl:"https://tevy.dev/models/castle-keep/v2/lod1.glb",source:"https://tevy.dev/models/castle-keep",sha256Lod0:"e28e3d31fd547cafc484e453d384f30554d82c55bd98535308b4c844ac8411e0",sha256Lod1:"8dea85a015a2d60c05709357174504b59c858fb79fa4050301771591a77b9f2f",height:17.2,target:"StarDreamCastle",batch:1,motionType:"castle-portcullis"},
+  {id:"castle-keep",name:"星夢城堡",url:"https://tevy.dev/models/castle-keep/v2/lod0.glb",mobileUrl:"https://tevy.dev/models/castle-keep/v2/lod1.glb",source:"https://tevy.dev/models/castle-keep",sha256Lod0:"e28e3d31fd547cafc484e453d384f30554d82c55bd98535308b4c844ac8411e0",sha256Lod1:"8dea85a015a2d60c05709357174504b59c858fb79fa4050301771591a77b9f2f",themeGrade:"starry-castle",height:17.2,target:"StarDreamCastle",batch:1,motionType:"castle-portcullis"},
   {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
   {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
   {id:"alchemist-shop",name:"星辰煉金工坊",url:"https://cdn.3dassets.dev/assets/32732/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-alchemist-shop-d5f14853",height:7.6,batch:4,position:[25.5,0.87,25],rotationY:-2.33,animations:["crystal-spin","sign-sway"],colliderRadius:3.8,discovery:{id:"astral-alchemy-workshop",name:"星辰煉金工坊",description:"在手繪木造工坊裡尋找旋轉的魔法晶石與星塵配方",radius:5.2}},
@@ -157,33 +157,133 @@ function tunePremiumMaterials(root){
     object.material=Array.isArray(original)?original.map(refine):refine(original);
   });
 }
-function harmonizePremiumRidePalette(root){
-  const materialTargets=[
-    {min:0.94,max:1.01,color:new THREE.Color(0x806cc4)},
-    {min:0,max:0.055,color:new THREE.Color(0x806cc4)},
-    {min:0.53,max:0.74,color:new THREE.Color(0x7489cc)},
-    {min:0.075,max:0.18,color:new THREE.Color(0xe3c58a)}
-  ];
-  const seen=new Set();
+function gradePremiumBaseColorTexture(texture,profile,textureCache){
+  if(!texture||!texture.image)return texture;
+  if(textureCache.has(texture))return textureCache.get(texture);
+  const image=texture.image;
+  const width=image.width||image.naturalWidth||image.videoWidth||0;
+  const height=image.height||image.naturalHeight||image.videoHeight||0;
+  if(!width||!height||width*height>4194304)return texture;
+
+  try{
+    const canvas=document.createElement("canvas");
+    canvas.width=width;canvas.height=height;
+    const context=canvas.getContext("2d",{willReadFrequently:true});
+    if(!context)return texture;
+    context.drawImage(image,0,0,width,height);
+    const pixels=context.getImageData(0,0,width,height);
+    const data=pixels.data;
+
+    const rgbToHsl=(r,g,b)=>{
+      r/=255;g/=255;b/=255;
+      const max=Math.max(r,g,b),min=Math.min(r,g,b);
+      const delta=max-min;
+      let h=0,s=0;
+      const l=(max+min)/2;
+      if(delta>0){
+        s=delta/(1-Math.abs(2*l-1));
+        if(max===r)h=((g-b)/delta)%6;
+        else if(max===g)h=(b-r)/delta+2;
+        else h=(r-g)/delta+4;
+        h/=6;
+        if(h<0)h+=1;
+      }
+      return {h,s,l};
+    };
+    const hslToRgb=(h,s,l)=>{
+      const chroma=(1-Math.abs(2*l-1))*s;
+      const x=chroma*(1-Math.abs((h*6)%2-1));
+      const m=l-chroma/2;
+      let rgb;
+      if(h<1/6)rgb=[chroma,x,0];
+      else if(h<2/6)rgb=[x,chroma,0];
+      else if(h<3/6)rgb=[0,chroma,x];
+      else if(h<4/6)rgb=[0,x,chroma];
+      else if(h<5/6)rgb=[x,0,chroma];
+      else rgb=[chroma,0,x];
+      return rgb.map(value=>Math.round((value+m)*255));
+    };
+
+    for(let index=0;index<data.length;index+=4){
+      if(data[index+3]<12)continue;
+      const hsl=rgbToHsl(data[index],data[index+1],data[index+2]);
+      let {h,s,l}=hsl;
+      if(profile==="starry-castle"&&s<0.2&&l>0.16&&l<0.94){
+        // Cool the neutral stone without flattening its masonry luminance.
+        h=0.67;
+        s=Math.max(0.12,s);
+      }else if(s>0.18){
+        if(h<0.055||h>0.945){h=0.75;s=Math.min(0.84,s*0.88);}
+        else if(h>=0.055&&h<0.19){h=0.115;s=Math.min(0.78,s*0.82);}
+        else if(h>=0.19&&h<0.46){h=0.56;s=Math.min(0.74,s*0.72);}
+        else if(h>=0.5&&h<0.78){h=0.65;s=Math.min(0.8,s*0.84);}
+        else if(h>=0.78&&h<=0.945){h=0.77;s=Math.min(0.78,s*0.82);}
+      }else if(profile==="starry-rides"&&l>0.72){
+        // White canopy panels become a very light moon-silver rather than pure white.
+        h=0.68;s=0.055;
+      }
+      const [r,g,b]=hslToRgb(h,s,l);
+      data[index]=r;data[index+1]=g;data[index+2]=b;
+    }
+
+    context.putImageData(pixels,0,0);
+    const graded=new THREE.CanvasTexture(canvas);
+    graded.name=(texture.name||"PremiumBaseColor")+"_StarryPalette";
+    graded.mapping=texture.mapping;
+    graded.channel=texture.channel;
+    graded.wrapS=texture.wrapS;graded.wrapT=texture.wrapT;
+    graded.magFilter=texture.magFilter;graded.minFilter=texture.minFilter;
+    graded.anisotropy=texture.anisotropy;
+    graded.flipY=texture.flipY;
+    graded.generateMipmaps=texture.generateMipmaps;
+    graded.colorSpace=texture.colorSpace||THREE.SRGBColorSpace;
+    graded.offset.copy(texture.offset);
+    graded.repeat.copy(texture.repeat);
+    graded.center.copy(texture.center);
+    graded.rotation=texture.rotation;
+    graded.matrix.copy(texture.matrix);
+    graded.matrixAutoUpdate=texture.matrixAutoUpdate;
+    graded.premultiplyAlpha=texture.premultiplyAlpha;
+    graded.unpackAlignment=texture.unpackAlignment;
+    graded.needsUpdate=true;
+    textureCache.set(texture,graded);
+    return graded;
+  }catch(error){
+    console.warn("Starry Dreamland: could not grade premium base-colour texture",error);
+    textureCache.set(texture,texture);
+    return texture;
+  }
+}
+
+function harmonizePremiumAssetPalette(root,profile){
+  const materialTargets=profile==="starry-castle"
+    ?[{min:0,max:1,color:new THREE.Color(0xa5a2d3)}]
+    :[
+      {min:0.94,max:1.01,color:new THREE.Color(0x806cc4)},
+      {min:0,max:0.055,color:new THREE.Color(0x806cc4)},
+      {min:0.53,max:0.74,color:new THREE.Color(0x7489cc)},
+      {min:0.075,max:0.18,color:new THREE.Color(0xe3c58a)}
+    ];
+  const textureCache=new Map(),seen=new Set();
   root.traverse(object=>{
     if(!object.isMesh)return;
     const materials=Array.isArray(object.material)?object.material:[object.material];
     materials.forEach(material=>{
-      if(!material||seen.has(material)||!material.color?.getHSL)return;
+      if(!material||seen.has(material))return;
       seen.add(material);
+      if(material.map)material.map=gradePremiumBaseColorTexture(material.map,profile,textureCache);
+      if(!material.color?.getHSL)return;
       const hsl=material.color.getHSL({});
-      if(hsl.s<0.24||hsl.l<0.12||hsl.l>0.94)return;
-      const target=materialTargets.find(entry=>hsl.h>=entry.min&&hsl.h<=entry.max);
-      if(!target)return;
-      // Tint the material factor, not the texture itself: authored paint, normal,
-      // roughness and metallic maps remain intact while vivid fairground colours
-      // drift toward indigo, violet and champagne gold.
-      material.color.lerp(target.color,0.26);
+      if(profile==="starry-castle"){
+        material.color.lerp(materialTargets[0].color,0.18);
+      }else if(hsl.s>=0.24&&hsl.l>=0.12&&hsl.l<=0.94){
+        const target=materialTargets.find(entry=>hsl.h>=entry.min&&hsl.h<=entry.max);
+        if(target)material.color.lerp(target.color,0.18);
+      }
       material.needsUpdate=true;
     });
   });
 }
-
 function findPremiumRideSeatNode(root,config){
   const hints=(config.seatNodeHints||[]).map(value=>String(value).toLowerCase());
   if(!hints.length)return null;
@@ -369,7 +469,7 @@ function mountPremiumAsset(world,config,gltf){
   const model=gltf.scene;
   model.name="PremiumAsset_"+config.id;
   tunePremiumMaterials(model);
-  if(config.themeGrade==="starry-rides")harmonizePremiumRidePalette(model);
+  if(config.themeGrade)harmonizePremiumAssetPalette(model,config.themeGrade);
   const bounds=new THREE.Box3().setFromObject(model);
   const size=bounds.getSize(new THREE.Vector3());
   const scale=config.height/Math.max(0.001,size.y);
