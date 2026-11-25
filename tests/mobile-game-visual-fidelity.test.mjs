@@ -65,7 +65,7 @@ test("hero structures receive soft contact shadows instead of extra point lights
   const environment = section("function buildEnvironment(", "function createParkMotes(");
   assert.match(environment, /SoftContactShadow/);
   assert.match(environment, /new THREE\.MeshBasicMaterial\(\{\s*map:shadowTexture/);
-  assert.match(environment, /addContactShadow\(0,-18\.2,13\.2,12\.4,0\.79\)/);
+  assert.match(environment, /addContactShadow\(0,-18\.2,22\.4,17\.4,0\.79\)/);
   assert.match(environment, /addContactShadow\(-30,-16\.5,9\.2,8\.5,0\.895\)/);
   assert.match(environment, /addContactShadow\(-4\.8,30\.5,6\.2,5\.4,0\.79\)/);
 });
