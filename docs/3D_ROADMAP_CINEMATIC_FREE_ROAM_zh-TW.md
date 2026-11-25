@@ -146,3 +146,10 @@
 - 透明／半透明、transmission、極高金屬度及鏡面粗糙度很低的材質保留 MeshPhysicalMaterial，避免玻璃、金屬和水晶全部變成同一種平面卡通材質。
 - 每個 GLB 以 material cache 共用轉換後材質，不重複複製相同來源材質；不改變模型幾何、動畫、座位錨點、碰撞、比例或載入 fallback。
 - 新增回歸測試，檢查 Toon ramp、材質快取、貼圖保留及透明／金屬 PBR 退路。仍需於真實 WebGL 私有預覽檢查各資產材質是否過暗、貼圖是否遺失、玻璃和晶石反射是否正常，並在桌機與手機橫向檢查 FPS。
+
+
+### 正式旅人角色模型的候選篩選紀錄（2026-11-25）
+
+- 已檢視 Grab3D Character Mixer（CC0、19 bones、5 動畫，但只有 Cozy／Blocky／Low Poly 風格且無臉部 blend shapes）、Broadside 的 CC0 Anime VRM collection（有臉部表情與 Spring Bone，但需逐一確認服裝是否符合魔法旅人）、3DAssets.dev fantasy stylized characters（目前搜尋結果以龍／飛龍為主），以及一款 OpenGameArt 基礎人形底模（CC0，但目前無法讀取來源頁驗證下載檔）。
+- 本輪未匯入這些素材：前兩者的可見服裝風格不一定符合星夢樂園，後兩者不足以直接形成完整玩家角色。選擇不合格素材只會把黏土初稿換成其他低模／街服初稿。
+- 之後只在逐一檢查實際模型、授權、骨架、表情、服裝及手機載入成本後，才替換正式旅人；現有自訂外觀欄位與玩家資料不可因模型更換而失去相容性。
