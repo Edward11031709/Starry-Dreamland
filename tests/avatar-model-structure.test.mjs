@@ -106,10 +106,10 @@ test("tailored robe builds four low-profile fabric folds that follow its sculpte
 
 test("all existing hairstyle options build refined strands without changing appearance keys", () => {
   const expectedStrands = new Map([
-    ["long", 6],
-    ["short", 5],
-    ["twin", 6],
-    ["hood", 4]
+    ["long", 8],
+    ["short", 7],
+    ["twin", 8],
+    ["hood", 6]
   ]);
 
   for (const [hairStyle, expectedCount] of expectedStrands) {
@@ -119,6 +119,10 @@ test("all existing hairstyle options build refined strands without changing appe
     assert.equal(scene.children[0], player, `${hairStyle} avatar should be attached to the scene`);
     assert.equal(player.userData.appearance.hairStyle, hairStyle);
     assert.equal(player.userData.hairStrandCount, expectedCount);
+    assert.equal(player.userData.faceLashCount, 2, `${hairStyle} avatar should include subtle upper lashes`);
+    assert.deepEqual(Object.keys(player.userData.appearance).sort(), [
+      "accentColor", "hairColor", "hairStyle", "skinTone"
+    ]);
     assert.ok(player.children.length > 0, `${hairStyle} avatar should contain model geometry`);
   }
 });
