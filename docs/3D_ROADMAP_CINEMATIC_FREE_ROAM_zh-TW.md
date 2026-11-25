@@ -172,3 +172,12 @@
 - Apothecary Shop：21k triangles、約 1.0 MB。
 - 只載入上述 2 個資產；來源 pack 另有 14 位 townsfolk／NPC，本專案不載入它們。
 - 外部 GLB 仍由 CDN 載入並於下載時計算 SHA-256；本批沒有將二進位檔 vendoring 到 repository，也未固定本地 binary hash。
+
+
+### 2026-11-25 補充：南側冒險者公會地標
+
+- 新增 Adventurers Guild Hall（星際冒險者公會，資產 32743；約 49.9k triangles／2.6 MB），放置於浮島南側，成為城堡以外的另一個大型目的地。
+- 使用來源模型提供的 banner-sway 與 sign-sway；只載入建築，不包含資產包內的 townsfolk／NPC。
+- 南側公會新增左右兩側步道、廣場、碰撞、探索標記及接地陰影，並清除公會正中央原有樹木，避免入口受阻。
+- 第四批目前合計 3 棟獨立手繪建築 GLB（煉金工坊、藥劑工坊、公會）；合計約 103k triangles／5.3 MB。
+- 仍須在管理員私有 WebGL 預覽檢查實際建築朝向、動畫、碰撞、入口通行及手機 FPS；不可將自動化結構測試當成最終美術驗收。
