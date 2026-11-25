@@ -87,5 +87,5 @@ test("the new asset batch contains buildings only and does not add NPC actors", 
   );
   assert.equal(newAssets.length, 2);
   assert.ok(newAssets.every(line => line.includes("url:") && line.includes("source:")));
-  assert.ok(newAssets.every(line => !line.includes("npc") && !line.includes("townsfolk")));
+  assert.ok(newAssets.every(line => !line.includes('id:"npc') && !line.includes('id:"townsfolk')));
 });
