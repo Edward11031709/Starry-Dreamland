@@ -58,3 +58,19 @@
 | [OpenGameArt Base Rigged Stylized Humanoid](https://opengameart.org/content/base-rigged-stylized-humanoid-character-yw) | 頁面標示 CC0、動漫比例靈感、骨架與基本動畫，但介紹為 base mesh，臉部簡單；本輪來源頁讀取受限，無法確認實際檔案與材質品質。 | 不視為可直接上線模型。若後續採用，只能先作為重新製作服裝與臉部的底模，並須再次驗證實際下載檔及授權。 |
 
 **採用門檻：** 正面／側面／背面剪影、臉部與髮型細節、魔法服裝層次、頭髮與披風骨架、表情支援、完整動畫、明確商用授權、GLB／VRM 檔案大小及手機載入成本都要過關。若只有低模角色、一般街服或未確認授權，不得為了替換而替換。
+
+
+## 2026-11-25 第四批：手繪奇幻工坊建築
+
+來源資產包：[Fantasy MMO City And Townsfolk](https://3dassets.dev/packs/fantasy-mmo-city-and-townsfolk)。資產頁標示 CC0 1.0 Universal；同一資產包揭露使用 AI 工具輔助產生模型，屬貢獻者申報資訊，並非聲稱為純手工建模。此包包含 87 個獨立 GLB，且另外含 townsfolk／NPC；本專案只選擇兩棟建築，**不載入整包、不載入任何 townsfolk／NPC，也不載入整個 starter scene**。
+
+| 資產 | GLB | 來源頁 | 原始尺寸（約） | 三角面數 | 動畫 | 用途 |
+|---|---|---|---:|---:|---|---|
+| Alchemist Shop | [32732 GLB](https://cdn.3dassets.dev/assets/32732/v1/model.glb) | [資產頁](https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-alchemist-shop-d5f14853) | 8.76 × 12.9 × 9.04 m | 32.3k | open、close、crystal-spin、sign-sway | 星辰煉金工坊；保留旋轉晶石與招牌擺動 |
+| Apothecary Shop | [32736 GLB](https://cdn.3dassets.dev/assets/32736/v1/model.glb) | [資產頁](https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-apothecary-shop-922c13d1) | 8.18 × 9.88 × 9.23 m | 21k | open、close、sign-sway | 月草藥劑工坊；保留招牌擺動及藥草店外觀 |
+
+- 兩個模型分別約 1.7 MB 與 1.0 MB，採個別 GLB CDN 載入，不下載 92.2 MB 的完整資產包。
+- 主場景只載入兩棟建築，不載入資產包內 14 位 townsfolk／NPC。
+- 匯入時保留原始手繪貼圖並依共用動漫 Toon/PBR 規則調整材質；動畫僅播放經確認存在的片段，不要求模型必須具備不存在的動畫。
+- 建築各自使用定位樞紐：先依 GLB bounds center 校正模型原點，再朝向中央步道，避免以不明作者原點旋轉造成模型偏位。
+- 碰撞半徑、探索區、入口步道、廣場、接地陰影皆為專案端設定；尚待實際 WebGL 私有預覽檢查建築比例、朝向、動畫、碰撞與手機效能。
