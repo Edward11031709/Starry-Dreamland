@@ -3159,11 +3159,14 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   toonGradient.needsUpdate=true;
 
   const avatarMeshes=[];
+  const toonMaterialCache=new Map();
   let animeMaterialCount=0;
   player.traverse(object=>{
     if(!object.isMesh||!object.material)return;
     const sourceMaterials=Array.isArray(object.material)?object.material:[object.material];
     const toonMaterials=sourceMaterials.map(sourceMaterial=>{
+      if(toonMaterialCache.has(sourceMaterial))return toonMaterialCache.get(sourceMaterial);
+      if(sourceMaterial.userData&&sourceMaterial.userData.keepPhysical)return sourceMaterial;
       const color=sourceMaterial.color&&typeof sourceMaterial.color.clone==="function"
         ?sourceMaterial.color.clone():sourceMaterial.color||0xffffff;
       const emissive=sourceMaterial.emissive&&typeof sourceMaterial.emissive.clone==="function"
@@ -3182,6 +3185,7 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
       });
       toon.toneMapped=sourceMaterial.toneMapped??true;
       toon.name="StarryAnimeToonMaterial";
+      toonMaterialCache.set(sourceMaterial,toon);
       if(typeof sourceMaterial.dispose==="function")sourceMaterial.dispose();
       animeMaterialCount++;
       return toon;
