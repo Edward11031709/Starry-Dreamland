@@ -40,7 +40,7 @@ test("each fantasy shop has its own placement, facing, collider and discovery zo
     ["apothecary-shop", "-25.5", "2.33", "月草藥劑工坊"]
   ]) {
     const config = assetLine(id);
-    assert.ok(config.includes("position:[" + x + ",0.72,25]"), id + " position");
+    assert.ok(config.includes("position:[" + x + ",0.87,25]"), id + " position");
     assert.ok(config.includes("rotationY:" + rotation), id + " should face the promenade");
     assert.ok(config.includes("colliderRadius:3.8"), id + " collider");
     assert.ok(config.includes('name:"' + label + '"'), id + " discovery label");
@@ -78,6 +78,7 @@ test("trees are moved away from the new building footprints and approach paths",
   const trees = environment.slice(environment.indexOf("[-35,19],[-35,8]"));
   assert.ok(trees.includes("[-36,3]"));
   assert.ok(trees.includes("[35,19]"));
+  assert.ok(trees.includes("[-12,21]") && trees.includes("[12,21]"));
   assert.doesNotMatch(trees, /\[-32,27\]|\[-27,25\]|\[27,26\]|\[33,23\]|\[36,17\]/);
 });
 
