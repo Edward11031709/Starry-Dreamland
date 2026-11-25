@@ -97,9 +97,9 @@ test("desktop loads full LOD0, compact screens load LOD1 and the pinned hashes a
 test("the new ride palette harmonizes saturated colours without replacing authored textures",()=>{
   assert.ok(assetLine("carousel").includes('themeGrade:"starry-rides"'));
   assert.ok(assetLine("ferris-wheel").includes('themeGrade:"starry-rides"'));
-  assert.match(source,/function harmonizePremiumRidePalette\(root\)/);
-  assert.match(source,/material\.color\.lerp\(target\.color,0\.26\)/);
-  assert.match(source,/if\(config\.themeGrade==="starry-rides"\)harmonizePremiumRidePalette\(model\)/);
+  assert.match(source,/function harmonizePremiumAssetPalette\(root,profile\)/);
+  assert.match(source,/material\.color\.lerp\(target\.color,0\.18\)/);
+  assert.match(source,/if\(config\.themeGrade\)harmonizePremiumAssetPalette\(model,config\.themeGrade\)/);
 });
 
 test("the upgraded castle has a broad rectangular collider with a clear front doorway",()=>{
