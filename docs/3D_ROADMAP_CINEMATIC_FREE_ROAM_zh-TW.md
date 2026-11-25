@@ -153,3 +153,31 @@
 - 已檢視 Grab3D Character Mixer（CC0、19 bones、5 動畫，但只有 Cozy／Blocky／Low Poly 風格且無臉部 blend shapes）、Broadside 的 CC0 Anime VRM collection（有臉部表情與 Spring Bone，但需逐一確認服裝是否符合魔法旅人）、3DAssets.dev fantasy stylized characters（目前搜尋結果以龍／飛龍為主），以及一款 OpenGameArt 基礎人形底模（CC0，但目前無法讀取來源頁驗證下載檔）。
 - 本輪未匯入這些素材：前兩者的可見服裝風格不一定符合星夢樂園，後兩者不足以直接形成完整玩家角色。選擇不合格素材只會把黏土初稿換成其他低模／街服初稿。
 - 之後只在逐一檢查實際模型、授權、骨架、表情、服裝及手機載入成本後，才替換正式旅人；現有自訂外觀欄位與玩家資料不可因模型更換而失去相容性。
+
+
+## 2026-11-25 手繪奇幻工坊區（PR #29 候選）
+
+本批開始把畫面從只有程序化幾何的展示亭與小物件，推進到有完整立面、窗台、屋頂、招牌及原生動畫的獨立建築模型。
+
+- 在浮島北側步道兩翼新增兩棟單獨 GLB：東側「星辰煉金工坊」（Alchemist Shop），西側「月草藥劑工坊」（Apothecary Shop）；來源頁均標示 CC0 1.0。
+- 煉金工坊使用來源模型的 crystal-spin、sign-sway；藥劑工坊使用 sign-sway。動畫片段不存在時不會讓模型載入整體失敗，該模型可退回靜態展示。
+- 兩棟建築各自有獨立方向、collision footprint、接地陰影與探索區；從主北向步道分出左右支線，通往兩座小廣場。
+- 為建築建立 bounds-center placement pivot，依量測包圍盒中心校正原點後再旋轉，並以獨立 collider/discovery 資料接回既有探索與碰撞系統。
+- 為新增建築移開相鄰樹木，清除步道淨空；沒有加入資產包內的 townsfolk／NPC，也沒有把整個 87 模型資產包或 starter scene 載入網站。
+- 新增回歸測試，驗證資產設定、動畫名稱、樞紐中心、碰撞、探索區、步道及樹木淨空。
+- **驗收限制：** 結構測試不代表模型實際 CDN 下載、GLTFLoader parse、建築在第一人稱中的材質與比例、動畫節點或手機 FPS 已通過視覺驗收；這些仍須管理員私有預覽與實機檢查。
+
+### 本批資產尺寸與負擔
+- Alchemist Shop：32.3k triangles、約 1.7 MB。
+- Apothecary Shop：21k triangles、約 1.0 MB。
+- 只載入上述 2 個資產；來源 pack 另有 14 位 townsfolk／NPC，本專案不載入它們。
+- 外部 GLB 仍由 CDN 載入並於下載時計算 SHA-256；本批沒有將二進位檔 vendoring 到 repository，也未固定本地 binary hash。
+
+
+### 2026-11-25 補充：南側冒險者公會地標
+
+- 新增 Adventurers Guild Hall（星際冒險者公會，資產 32743；約 49.9k triangles／2.6 MB），放置於浮島南側，成為城堡以外的另一個大型目的地。
+- 使用來源模型提供的 banner-sway 與 sign-sway；只載入建築，不包含資產包內的 townsfolk／NPC。
+- 南側公會新增左右兩側步道、廣場、碰撞、探索標記及接地陰影，並清除公會正中央原有樹木，避免入口受阻。
+- 第四批目前合計 3 棟獨立手繪建築 GLB（煉金工坊、藥劑工坊、公會）；合計約 103k triangles／5.3 MB。
+- 仍須在管理員私有 WebGL 預覽檢查實際建築朝向、動畫、碰撞、入口通行及手機 FPS；不可將自動化結構測試當成最終美術驗收。
