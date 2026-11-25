@@ -82,3 +82,19 @@
 - 新版分流：有任何表面貼圖（base-color、normal、roughness、metalness、bump、displacement、AO、emissive、light、alpha）的材質保留 clone 後的 glTF 原生 PBR 通道；只有未貼圖的簡單材質使用共用四階 Toon ramp。
 - 透明、transmission、金屬與 clearcoat 材質保留 PBR；色調只加極輕的藍紫環境融合，避免破壞原始貼圖的手繪色階。
 - **效果邊界：** 這項修正能減少渲染流程丟失的既有材質資料，但不會替模型增加三角面、雕刻、貼圖解析度或服裝細節；仍需視覺驗收，也不能代替高品質主體資產。
+
+
+## 2026-11-25：主城堡與大型遊樂設施主體升級候選
+| 資產 | 來源與版本 | LOD0 / LOD1 | 三角面 | 原始尺寸 | 移動節點 |
+|---|---|---:|---:|---:|---|
+| [Castle Keep](https://tevy.dev/models/castle-keep) | Tevy v2 · CC0 1.0 | 3.6 MB / 1.2 MB | 31,902 | 32.4 × 27.85 × 24.4 m | `portcullis` |
+| [Carousel](https://tevy.dev/models/carousel) | Tevy v2 · CC0 1.0 | 2.7 MB / 937 KB | 30,180 | 15 × 10 × 15 m | `platform`、`canopy`、外／內圈各 12 座 |
+| [Ferris Wheel](https://tevy.dev/models/ferris-wheel) | Tevy v2 · CC0 1.0 | 1.8 MB / 639 KB | 46,790 | 37.9 × 40.61 × 14.96 m | `wheel`、`gondola_01–24` |
+
+- 固定使用 Tevy v2 GLB URL；桌面載入 LOD0，視窗寬度不超過 1024 px 載入 LOD1。依 models.json 所列 SHA-256 驗證下載內容。
+- Castle Keep 取代主場景的 City Cathedral 作為城堡主地標，遊戲高度 17.2 m；吊閘依命名節點升降，正面入口保留碰撞缺口。
+- Carousel 將平台、頂棚及內外兩圈座椅重新掛至量測平台中心的旋轉樞紐，底座與登乘坡道留在原地；玩家乘坐錨點掛於外圈第一座。
+- Ferris Wheel 輪體繞 Z 軸轉動；24 個吊艙以相反角度補償，維持水平；玩家乘坐錨點掛於第一個吊艙。
+- 木馬與摩天輪只對高飽和材質顏色因子做輕量靛紫／香檳金校正，不替換模型的原始貼圖通道。
+- 若模型無法下載、SHA-256 不符或缺少必要樞紐，保留原本程序化設施，不留下無法搭乘的半成品。
+- 自動化測試不代表真實 WebGL 美術驗收；建築與設施比例、材質、碰撞、乘坐效果與手機 FPS 仍待瀏覽器實測。
