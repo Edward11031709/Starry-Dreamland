@@ -51,18 +51,79 @@ async function loadPremiumGlb(url){
 }
 
 function tunePremiumMaterials(root){
+  // Share one compact four-step toon ramp across every mesh in this imported asset.
+  const toonGradient=new THREE.DataTexture(
+    new Uint8Array([
+      66,60,90,255,
+      112,104,145,255,
+      187,176,205,255,
+      255,246,232,255
+    ]),
+    4,1,THREE.RGBAFormat,THREE.UnsignedByteType
+  );
+  toonGradient.magFilter=THREE.NearestFilter;
+  toonGradient.minFilter=THREE.NearestFilter;
+  toonGradient.generateMipmaps=false;
+  toonGradient.colorSpace=THREE.NoColorSpace;
+  toonGradient.needsUpdate=true;
+
+  const materialCache=new Map();
+  const ambientTint=new THREE.Color(0xd5c8ed);
   root.traverse(object=>{
     if(!object.isMesh)return;
-    object.castShadow=true;object.receiveShadow=true;
+    object.castShadow=true;
+    object.receiveShadow=true;
     const original=object.material;
     const refine=material=>{
       if(!material)return material;
-      const copy=material.clone();
-      if(copy.color)copy.color.lerp(new THREE.Color(0xd5c8ed),0.12);
-      if("roughness" in copy)copy.roughness=Math.max(0.28,Math.min(0.88,copy.roughness??0.65));
-      if("metalness" in copy)copy.metalness=Math.min(0.62,copy.metalness??0.08);
-      if("envMapIntensity" in copy)copy.envMapIntensity=0.82;
-      return copy;
+      if(materialCache.has(material))return materialCache.get(material);
+
+      const preservePhysical=
+        material.transparent===true||
+        (material.opacity??1)<0.98||
+        (material.transmission??0)>0.015||
+        (material.metalness??0)>0.62||
+        (material.roughness??1)<0.16;
+      const color=material.color&&typeof material.color.clone==="function"
+        ?material.color.clone():new THREE.Color(0xffffff);
+      if(typeof color.lerp==="function")color.lerp(ambientTint,0.08);
+
+      let refined;
+      if(preservePhysical){
+        refined=material.clone();
+        if(refined.color&&typeof refined.color.copy==="function")refined.color.copy(color);
+        if("roughness" in refined)refined.roughness=Math.max(0.24,Math.min(0.88,refined.roughness??0.65));
+        if("metalness" in refined)refined.metalness=Math.min(0.68,refined.metalness??0.08);
+        if("envMapIntensity" in refined)refined.envMapIntensity=0.82;
+      }else{
+        const emissive=material.emissive&&typeof material.emissive.clone==="function"
+          ?material.emissive.clone():new THREE.Color(0x000000);
+        refined=new THREE.MeshToonMaterial({
+          color,
+          map:material.map||null,
+          gradientMap:toonGradient,
+          emissive,
+          emissiveMap:material.emissiveMap||null,
+          emissiveIntensity:material.emissiveIntensity??1,
+          normalMap:material.normalMap||null,
+          aoMap:material.aoMap||null,
+          aoMapIntensity:material.aoMapIntensity??1,
+          lightMap:material.lightMap||null,
+          alphaMap:material.alphaMap||null,
+          transparent:material.transparent||false,
+          opacity:material.opacity??1,
+          alphaTest:material.alphaTest||0,
+          side:material.side,
+          vertexColors:material.vertexColors||false,
+          flatShading:material.flatShading||false,
+          depthWrite:material.depthWrite??true
+        });
+        refined.toneMapped=material.toneMapped??true;
+        refined.name="StarryPremiumAnimeToonMaterial";
+      }
+      materialCache.set(material,refined);
+      if(typeof material.dispose==="function")material.dispose();
+      return refined;
     };
     object.material=Array.isArray(original)?original.map(refine):refine(original);
   });
