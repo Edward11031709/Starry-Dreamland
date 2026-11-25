@@ -71,8 +71,10 @@ test("the Castle Keep portcullis moves with a smooth open, hold and close cycle"
 });
 
 test("manual controllers are checked before a procedural ride or castle fallback is hidden",()=>{
-  assert.ok(mount.indexOf("const controller=createPremiumAssetController(model,config)")<mount.indexOf("hideProceduralRideMeshes(ride.root)"));
-  assert.ok(mount.indexOf("const controller=createPremiumAssetController(model,config)")<mount.indexOf("if(fallback)fallback.visible=false"));
+  const rideBranch=mount.slice(mount.indexOf("if(config.rideId){"),mount.indexOf("if(config.target){"));
+  const targetBranch=mount.slice(mount.indexOf("if(config.target){"),mount.indexOf("else if(config.positions){"));
+  assert.ok(rideBranch.indexOf("const controller=createPremiumAssetController(model,config)")<rideBranch.indexOf("hideProceduralRideMeshes(ride.root)"));
+  assert.ok(targetBranch.indexOf("const controller=createPremiumAssetController(model,config)")<targetBranch.indexOf("if(fallback)fallback.visible=false"));
   assert.match(mount,/if\(controller\)world\.assetControllers\.push\(controller\)/);
   assert.match(loader,/catch\(error\)[\s\S]*?starry-3d-asset-fallback/);
 });
