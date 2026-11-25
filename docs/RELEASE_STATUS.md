@@ -104,17 +104,18 @@
 
 ## 2026-11-25 PR #25 無法 Pull 的處理
 
-- PR：[ #25 精修旅人髮際線與眼尾細節 ](https://github.com/Edward11031709/Starry-Dreamland/pull/25) 仍保持 Open；未擅自關閉或合併。
-- 舊分支 `feature/avatar-hairline-couture-20261123` 相對當前 main 已分岔，落後 **48 個提交**、另有 3 個獨有提交，GitHub 回報 `mergeable=false`。因此不應直接 Pull／Merge，避免把過期的舊版園區程式碼帶回 main。
-- #25 唯一的髮際線前束、鬢角髮束、眼尾睫線及相應測試，已重新移植到最新 main 為 PR #28 的一部分；既有髮型 ID 與 appearance JSON 欄位不變。
+- PR：[ #25 精修旅人髮際線與眼尾細節 ](https://github.com/Edward11031709/Starry-Dreamland/pull/25) 已於 2026-11-25 關閉（未合併）。
+- 舊分支 `feature/avatar-hairline-couture-20261123` 曾相對當時 main 落後 48 個提交並分岔；目前該分支仍留在 GitHub，需由 repo owner 在 Branches 頁面手動刪除。連接的 GitHub 操作未提供 DELETE git ref 能力，沒有假稱已刪除。
+- #25 唯一的髮際線前束、鬢角髮束、眼尾睫線及相應測試，已重新移植至最新 main，並隨 PR #28 合併；既有髮型 ID 與 appearance JSON 欄位不變。
 
 ## 2026-11-25 動漫奇幻手遊角色與外部模型風格整合（PR #28）
 
-- 候選 PR：[ #28 朝動漫奇幻手遊質感精修旅人角色與 Toon 光影 ](https://github.com/Edward11031709/Starry-Dreamland/pull/28)，分支 `feature/anime-fantasy-character-art-20261125`；狀態 Open／Ready for review，基底為 main，尚未合併、尚未正式發布。
+- PR：[ #28 朝動漫奇幻手遊質感精修旅人角色與 Toon 光影 ](https://github.com/Edward11031709/Starry-Dreamland/pull/28)，已於 2026-11-25 合併至 `main`。
+- Merge commit：`8ea0ccdeeb7ea4556f49e04a437c31395598883d`；合併前候選 HEAD：`5f5c6b4503a211c47a7ae5ca5ae2f36732774c25`。程式碼合併不代表使用者已手動發布 Pages。
 - 旅人角色加入四段式 Toon 漸層光影、重點輪廓線、前額／鬢角髮束、眼尾睫線及較清楚的虹膜與眼睛高光；保留 long／short／twin／hood 等既有髮型 ID、旅人類型及 appearance JSON。
 - 對現有外部奇幻 GLB 的不透明、非高金屬材質加入共用 Toon 漸層；保留原始 base-color、normal、AO、emissive 貼圖。透明／transmission／高金屬與極低粗糙度表面保留 PBR，避免玻璃、金屬、水晶失去原有光學質感。
 - 新增材質快取，避免每個網格建立重複材質；不改變外部模型幾何、資產來源、設施動畫、座位錨點、碰撞與 fallback。
-- GitHub Actions run #223（run ID `45600966872`）成功，驗證 HEAD `e1618a89991e812711a3e3873308e79cc065d8d0`：Node tests **69 passed／0 failed**；Three.js、Supabase Edge Function 與首頁 inline JavaScript／import map 檢查成功；正式部署工作依 PR 流程 skipped。之後只再更新了文件，最新程式碼與文件 HEAD 仍需以 PR metadata 為準。
+- GitHub Actions run #225（run ID `45601489252`）成功，驗證最終 PR #28 HEAD `5f5c6b4503a211c47a7ae5ca5ae2f36732774c25`：Node tests **69 passed／0 failed**；Three.js、Supabase Edge Function 與首頁 inline JavaScript／import map 檢查成功；正式部署工作依 PR 流程 skipped。
 - 尚未進行真實 WebGL 管理員私有預覽、桌機／手機外觀及 FPS 人工驗收。Toon 光影是風格整合的第一步，**不代表已完成真正高品質、具骨架與完整服裝造型的動漫角色模型**；後續仍須挑選／製作符合魔法奇幻設定、授權清楚且相容既有客製化資料的角色資產。
 - 不修改 Supabase schema、RLS、RPC、Auth、migration、帳號、星塵、服裝所有權或任何正式玩家資料；不建立假 NPC／玩家；不執行正式部署。
 
@@ -124,3 +125,13 @@
 - 已檢查 Grab3D CC0 modular character tool、Broadside CC0 anime VRM collection、3DAssets.dev fantasy character listing，以及 OpenGameArt 基礎人形底模。
 - 本輪沒有匯入不符合標準的低模、街頭服飾或僅為空白底模的素材；理由與各來源限制已記錄於 `docs/ASSET_CATALOG_zh-TW.md` 與 Roadmap。
 - 不因取得授權就假設模型符合角色美術；完整角色仍需檢查服裝世界觀、臉部／表情、髮絲／披風骨架、動畫及手機成本。
+
+
+## 2026-11-25 PR #29 手繪奇幻工坊區（候選）
+
+- 候選分支：`feature/handpainted-fantasy-district-20261125`，以 PR #28 的合併 SHA 為基底。
+- 新增星辰煉金工坊（Alchemist Shop）與月草藥劑工坊（Apothecary Shop）兩個單獨 CC0 GLB；分別 32.3k／21k triangles，約 1.7／1.0 MB。
+- 新增朝向中央步道的 bounds-center placement pivot、左右支線步道、兩座小廣場、建築碰撞、探索區及接地陰影；移開建築入口周圍的樹木。
+- 動畫使用來源模型的 crystal-spin／sign-sway；不載入資產包中的 NPC，也不載入整個 starter scene。
+- CI 與真實 WebGL 預覽尚待候選 PR 建立後確認。自動測試不等於畫面驗收；建築比例、動畫與手機 FPS 仍須私有預覽檢查。
+- 不修改 Supabase schema、RLS、RPC、Auth、migration、玩家帳號、星塵或服裝所有權；不執行正式部署。
