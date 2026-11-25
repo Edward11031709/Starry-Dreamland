@@ -54,7 +54,9 @@ async function loadPremiumGlb(url){
 }
 
 function tunePremiumMaterials(root){
-  // Share one compact four-step toon ramp across every mesh in this imported asset.
+  // Preserve authored PBR detail on textured assets; reserve the toon ramp for
+  // simple untextured surfaces so the park keeps its anime art direction without
+  // flattening painted stone, timber, roof and metal work.
   const toonGradient=new THREE.DataTexture(
     new Uint8Array([
       66,60,90,255,
@@ -72,6 +74,19 @@ function tunePremiumMaterials(root){
 
   const materialCache=new Map();
   const ambientTint=new THREE.Color(0xd5c8ed);
+  const surfaceTextureKeys=[
+    "map",
+    "normalMap",
+    "roughnessMap",
+    "metalnessMap",
+    "bumpMap",
+    "displacementMap",
+    "aoMap",
+    "emissiveMap",
+    "lightMap",
+    "alphaMap"
+  ];
+
   root.traverse(object=>{
     if(!object.isMesh)return;
     object.castShadow=true;
@@ -81,23 +96,34 @@ function tunePremiumMaterials(root){
       if(!material)return material;
       if(materialCache.has(material))return materialCache.get(material);
 
+      const hasSurfaceTexture=surfaceTextureKeys.some(key=>Boolean(material[key]));
       const preservePhysical=
+        hasSurfaceTexture||
         material.transparent===true||
         (material.opacity??1)<0.98||
         (material.transmission??0)>0.015||
         (material.metalness??0)>0.62||
-        (material.roughness??1)<0.16;
+        (material.roughness??1)<0.16||
+        (material.clearcoat??0)>0.12;
       const color=material.color&&typeof material.color.clone==="function"
         ?material.color.clone():new THREE.Color(0xffffff);
-      if(typeof color.lerp==="function")color.lerp(ambientTint,0.08);
+      if(typeof color.lerp==="function")color.lerp(ambientTint,0.035);
 
       let refined;
       if(preservePhysical){
+        // clone() carries every glTF PBR channel, including roughness/metalness,
+        // normal, occlusion, clearcoat and emissive maps that ToonMaterial cannot use.
         refined=material.clone();
         if(refined.color&&typeof refined.color.copy==="function")refined.color.copy(color);
-        if("roughness" in refined)refined.roughness=Math.max(0.24,Math.min(0.88,refined.roughness??0.65));
-        if("metalness" in refined)refined.metalness=Math.min(0.68,refined.metalness??0.08);
-        if("envMapIntensity" in refined)refined.envMapIntensity=0.82;
+        if("roughness" in refined&&!refined.roughnessMap){
+          refined.roughness=THREE.MathUtils.clamp(refined.roughness??0.68,0.3,0.9);
+        }
+        if("metalness" in refined&&!refined.metalnessMap){
+          refined.metalness=THREE.MathUtils.clamp(refined.metalness??0.08,0,0.72);
+        }
+        if("envMapIntensity" in refined)refined.envMapIntensity=hasSurfaceTexture?0.94:0.82;
+        refined.name=(material.name||"StarryPremiumSurface")+"_StarryPBR";
+        refined.needsUpdate=true;
       }else{
         const emissive=material.emissive&&typeof material.emissive.clone==="function"
           ?material.emissive.clone():new THREE.Color(0x000000);
@@ -131,7 +157,6 @@ function tunePremiumMaterials(root){
     object.material=Array.isArray(original)?original.map(refine):refine(original);
   });
 }
-
 function findPremiumRideSeatNode(root,config){
   const hints=(config.seatNodeHints||[]).map(value=>String(value).toLowerCase());
   if(!hints.length)return null;
