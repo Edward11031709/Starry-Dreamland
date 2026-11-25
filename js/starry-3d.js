@@ -22,6 +22,8 @@ const PREMIUM_PARK_ASSETS = [
   {id:"castle-cathedral",name:"星夢城堡",url:"https://cdn.3dassets.dev/assets/32747/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-city-cathedral-260bcd65",height:10.2,target:"StarDreamCastle",batch:1,animation:"bell-ring"},
   {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
   {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
+  {id:"alchemist-shop",name:"星辰煉金工坊",url:"https://cdn.3dassets.dev/assets/32732/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-alchemist-shop-d5f14853",height:7.6,batch:4,position:[25.5,0.72,25],rotationY:-2.33,animations:["crystal-spin","sign-sway"],colliderRadius:3.8,discovery:{id:"astral-alchemy-workshop",name:"星辰煉金工坊",description:"在手繪木造工坊裡尋找旋轉的魔法晶石與星塵配方",radius:5.2}},
+  {id:"apothecary-shop",name:"月草藥劑工坊",url:"https://cdn.3dassets.dev/assets/32736/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-apothecary-shop-922c13d1",height:7.1,batch:4,position:[-25.5,0.72,25],rotationY:2.33,animations:["sign-sway"],colliderRadius:3.8,discovery:{id:"moonherb-apothecary",name:"月草藥劑工坊",description:"探索曬草木架、魔法藥瓶與月光藥劑的藥草工坊",radius:5.2}},
   {id:"carousel",name:"星光旋轉木馬",url:"https://cdn.3dassets.dev/assets/28656/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-b3ccf619",height:4.9,batch:2,rideId:"carousel",animation:"spin",requireAnimations:true,seatNodeHints:["horse","saddle","seat"],seatHeightRatio:0.68,seatClearance:0.18,colliderRadius:4.8},
   {id:"teacups",name:"星月茶杯",url:"https://cdn.3dassets.dev/assets/28657/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-70d0de97",height:1.35,batch:2,rideId:"teacups",animations:["platform-spin","cup-spin"],requireAnimations:true,seatNodeHints:["cup","teacup","seat"],seatHeightRatio:0.24,seatClearance:0.18,colliderRadius:4.25},
   {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true,requireAnimations:true,seatNodeHints:["gondola","cabin","seat"],seatHeightRatio:0.2,seatClearance:0.18,colliderRadius:2.4},
@@ -287,7 +289,19 @@ function mountPremiumAsset(world,config,gltf){
     return model;
   }else if(config.position){
     model.position.set(config.position[0],config.position[1]+groundOffset,config.position[2]);
+    if(Number.isFinite(config.rotationY))model.rotation.y=config.rotationY;
     world.scene.add(model);
+    if(config.colliderRadius){
+      world.environment.colliders.push({
+        x:config.position[0],z:config.position[2],
+        radius:config.colliderRadius,label:config.name||config.id
+      });
+    }
+    if(config.discovery&&world.environment.discoveryZones){
+      world.environment.discoveryZones.push({
+        ...config.discovery,x:config.position[0],z:config.position[2]
+      });
+    }
     if(config.id==="plaza-fountain")world.environment.colliders.push({x:0,z:-5.8,radius:1.9,label:"星夢廣場噴泉"});
   }else{
     throw new Error("模型缺少場景定位資訊："+config.id);
@@ -2233,6 +2247,11 @@ function buildEnvironment(scene) {
     [[-22,1],[-29,5],[-34,12]],[[25,-8],[34,-2],[36,8]]
   ].forEach(path=>addWalkway(path));
 
+  // Hand-painted fantasy shops occupy the two upper wings of the island.
+  // Curved branches connect both storefronts to the main north promenade.
+  addWalkway([[0,34],[8,34],[15.5,31],[21.5,27.5],[25.5,25]],3.8);
+  addWalkway([[0,34],[-8,34],[-15.5,31],[-21.5,27.5],[-25.5,25]],3.8);
+
   function addDistrictPlaza(x,z,radius,tint=materials.paving){
     addMesh(island,new THREE.CylinderGeometry(radius,radius,0.13,48),tint,[x,0.80,z],null,false,true);
     const ring=addMesh(island,new THREE.TorusGeometry(radius-0.16,0.075,8,64),materials.gold,[x,0.89,z]);
@@ -2401,6 +2420,7 @@ function buildEnvironment(scene) {
   addDistrictPlaza(-13,-11.5,5.4);addDistrictPlaza(13,-10,5.4);
   addDistrictPlaza(18,9,6.3);addDistrictPlaza(-19,-8,6.3);
   addDistrictPlaza(-25,-19,7.0);addDistrictPlaza(25,-17,7.0);addDistrictPlaza(0,31,6.2);
+  addDistrictPlaza(-25.5,25,5.7);addDistrictPlaza(25.5,25,5.7);
 
   // Ornate gateways frame the themed districts and lead the eye along the main paths.
   addOrnamentalArch(0,18.2,8.6,"星夢中庭","STARDREAM PROMENADE");
@@ -2573,6 +2593,8 @@ function buildEnvironment(scene) {
   addContactShadow(-24.5,-19.0,13.5,11.8,0.79);
   addContactShadow(18,9,10.4,9.4,0.79);
   addContactShadow(-19,-8,10.5,9.4,0.79);
+  addContactShadow(-25.5,25,8.2,8.2,0.79);
+  addContactShadow(25.5,25,8.2,8.2,0.79);
   const rides=[];
   const carousel=buildCarousel(scene,materials,-21.5,0.7);rides.push(carousel);addCollider(-21.5,0.7,4.1,"星光旋轉木馬");
   const teacups=buildTeacupRide(scene,materials,-13,-11.5);rides.push(teacups);addCollider(-13,-11.5,3.55,"星月茶杯");
@@ -2623,8 +2645,8 @@ function buildEnvironment(scene) {
   ].forEach((p,i)=>addParkLamp(p[0],p[1],i%4===0?1.12:1,i%5===0));
 
   [
-    [-35,23],[-32,27],[-27,25],[-20,23],[-14,28],[14,27],[20,24],[27,26],
-    [33,23],[36,17],[-36,3],[-34,-8],[-33,-23],[-25,-29],[-16,-31],[15,-31],
+    [-35,19],[-35,8],[-20,23],[-14,28],[14,28],[20,23],[35,19],[35,8],
+    [-36,3],[-34,-8],[-33,-23],[-25,-29],[-16,-31],[15,-31],
     [25,-29],[34,-23],[37,-13],[36,2],[-9,-34],[0,-35],[9,-34],[-2,22],[2,22]
   ].forEach((p,i)=>{
     createTree(island,p[0],p[1],0.62+(i%3)*0.12,{
@@ -2654,7 +2676,9 @@ function buildEnvironment(scene) {
     {id:"stargazer_observatory",name:"星辰觀測站",description:"抵達遠端浮島上的天文圓頂。",x:-30,z:-16.5,radius:3.8},
     {id:"cosmic_coaster",name:"星際雲霄飛車",description:"找到蜿蜒的星際軌道與列車。",x:-24.5,z:-19,radius:5.6},
     {id:"neon_shooting_gallery",name:"霓虹神射手",description:"走到霓虹靶場的大廳門前。",x:18,z:9,radius:5.2},
-    {id:"phantom_mirror_house",name:"幻影鏡屋",description:"抵達鏡面建築外的入口。",x:-19,z:-8,radius:4.9}
+    {id:"phantom_mirror_house",name:"幻影鏡屋",description:"抵達鏡面建築外的入口。",x:-19,z:-8,radius:4.9},
+    {id:"astral_alchemy_workshop",name:"星辰煉金工坊",description:"尋找窗台的魔法瓶、旋轉晶石與星塵配方。",x:25.5,z:25,radius:5.2},
+    {id:"moonherb_apothecary",name:"月草藥劑工坊",description:"走進藥草工坊，發現晾曬藥草與月光藥瓶。",x:-25.5,z:25,radius:5.2}
   ];
   return {materials,island,compass,compassHalo,portals,planet,planetRing,clouds,rides,rideStations,carousel,ticketBooth,arcadeStalls,shootingGallery,mirrorHouse,interactables,colliders,walkSegments,terrainZones,discoveryZones,playableRadius:41.2};
 }
