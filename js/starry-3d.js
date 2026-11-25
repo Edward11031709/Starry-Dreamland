@@ -288,9 +288,20 @@ function mountPremiumAsset(world,config,gltf){
     });
     return model;
   }else if(config.position){
-    model.position.set(config.position[0],config.position[1]+groundOffset,config.position[2]);
-    if(Number.isFinite(config.rotationY))model.rotation.y=config.rotationY;
-    world.scene.add(model);
+    if(Number.isFinite(config.rotationY)){
+      // Rotate around the measured model centre rather than an arbitrary GLB authoring origin.
+      const center=bounds.getCenter(new THREE.Vector3());
+      const placement=new THREE.Group();
+      placement.name="PremiumPlacement_"+config.id;
+      placement.position.set(config.position[0],config.position[1],config.position[2]);
+      placement.rotation.y=config.rotationY;
+      model.position.set(-center.x*scale,groundOffset,-center.z*scale);
+      placement.add(model);
+      world.scene.add(placement);
+    }else{
+      model.position.set(config.position[0],config.position[1]+groundOffset,config.position[2]);
+      world.scene.add(model);
+    }
     if(config.colliderRadius){
       world.environment.colliders.push({
         x:config.position[0],z:config.position[2],
