@@ -6,7 +6,7 @@
 - PR #31「升級星夢城堡、旋轉木馬與摩天輪高細節模型」為 Open、Ready for review、mergeable=true；HEAD `5cc2a2ddf6c776bd6241c68a103517161888bc3a`。最新 Actions #239（run ID `45625613930`）成功，PR 說明記錄 Node tests 91 passed／0 failed；正式部署 job skipped，沒有 Actions artifact。真實 WebGL、搭乘位置、碰撞與手機 FPS 仍待人工驗收。
 - PR #27「旅人角色 3D 精修」仍 Open、非 Draft，但 GitHub 回報 mergeable=false；其 base SHA 為舊版 `61a0f5d6fcafb7122a1f14d9285a191280b9ddd3`，目前 main 已前進。不要直接合併或重寫此舊分支；須由管理員檢查差異及是否已有等效修改進入 main。
 - 本輪角色臉型候選分支：`feature/avatar-face-sculpt-20261126`，以 main @ `631b2b7ddc1e35b379127b675c04e869a0d1f1b7` 建立；以 13 點 LatheGeometry／48 radial segments 取代球形臉部底模，改善下顎、顴頰及太陽穴剪影。保留既有臉部五官錨點與 appearance JSON 四個欄位，不修改資料庫或玩家資料。
-- 本輪新增臉型輪廓結構測試；最新 CI／PR 狀態待本輪分支推送後更新。真實 WebGL 視覺與手機 FPS 尚未驗收。
+- PR #32「旅人臉部輪廓塑形」已建立為 Open、Ready for review（非 Draft）、mergeable=true；功能實作 SHA `4a6c9129f32eab71b627b63d9d05145bdce772f7` 的 Actions #240（run ID `45744861425`）成功：Node tests **82 passed／0 failed**，Three.js 與 Supabase Edge Function 語法檢查、首頁 import map JSON 與 inline JavaScript parse 均通過。正式發布 job skipped，沒有 Pages artifact。之後僅同步文件，不更動臉型程式；最新 HEAD 的 PR CI 仍需以最新 Actions 為準。真實 WebGL 視覺與手機 FPS 尚未驗收。
 - GitHub Repository rulesets 清單讀取為空；main branch protection API 回傳 403（目前連線缺少讀取權限），production Environment Required reviewers 亦未能核實。不得宣稱正式發布保護已完整確認。
 
 ## 2026-11-22 最新主線、公開版與手遊級視覺候選
