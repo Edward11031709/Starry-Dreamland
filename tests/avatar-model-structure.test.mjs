@@ -124,3 +124,29 @@ test("all existing hairstyle options build refined strands without changing appe
     assert.ok(player.children.length > 0, `${hairStyle} avatar should contain model geometry`);
   }
 });
+
+
+test("traveler face uses a sculpted tapered profile without changing saved appearance keys", () => {
+  const scene = new MockGroup();
+  const player = buildPlayer(scene, "wanderer", { appearance: { hairStyle: "long" } });
+  const faceMeshes = [];
+  player.traverse(object => {
+    if (object.isMesh && object.userData?.animeFaceShape === "tapered-oval") faceMeshes.push(object);
+  });
+
+  assert.equal(faceMeshes.length, 1, "one sculpted face mesh should be created");
+  const faceMesh = faceMeshes[0];
+  assert.equal(faceMesh.geometry.type, "LatheGeometry");
+  assert.equal(faceMesh.geometry.args[1], 48, "face profile should use a smooth radial silhouette");
+  const profile = faceMesh.geometry.args[0];
+  const radii = profile.map(point => point.args[0]);
+  assert.equal(profile.length, 13, "face should use the authored 13-point contour");
+  assert.equal(radii[0], 0, "chin should taper to the profile axis");
+  assert.equal(radii.at(-1), 0, "crown should close cleanly at the profile axis");
+  assert.ok(radii[6] > radii[2], "cheek width should exceed the lower jaw width");
+  assert.ok(radii[6] > radii[10], "temple should taper above the cheek line");
+  assert.equal(player.userData.faceShape, "tapered-oval");
+  assert.equal(player.userData.faceProfilePointCount, 13);
+  assert.deepEqual(Object.keys(player.userData.appearance).sort(),
+    ["accentColor", "hairColor", "hairStyle", "skinTone"]);
+});
