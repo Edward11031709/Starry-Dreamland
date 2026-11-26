@@ -3051,7 +3051,28 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   neckCollar.rotation.x=Math.PI/2;
   addMesh(headRig,new THREE.OctahedronGeometry(0.045,1),coutureGem,[0,1.29,0.17],[0.72,1.2,0.72],false,false);
   // Face and selectable hair styles. The hood is an actual garment silhouette.
-  const faceMesh=addMesh(headRig,new THREE.SphereGeometry(0.255,32,24),skin,[0,1.48,0.025],[0.94,1.05,0.9]);
+  // A tapered lathe profile replaces the spherical head: a narrower jaw and chin,
+  // softly full cheeks, and a refined temple line. Facial feature anchors stay unchanged.
+  const faceProfile=[
+    new THREE.Vector2(0,-0.255),
+    new THREE.Vector2(0.038,-0.245),
+    new THREE.Vector2(0.082,-0.225),
+    new THREE.Vector2(0.132,-0.19),
+    new THREE.Vector2(0.176,-0.145),
+    new THREE.Vector2(0.207,-0.09),
+    new THREE.Vector2(0.224,-0.025),
+    new THREE.Vector2(0.225,0.045),
+    new THREE.Vector2(0.212,0.11),
+    new THREE.Vector2(0.182,0.17),
+    new THREE.Vector2(0.132,0.218),
+    new THREE.Vector2(0.07,0.245),
+    new THREE.Vector2(0,0.255)
+  ];
+  const faceMesh=addMesh(headRig,new THREE.LatheGeometry(faceProfile,48),skin,[0,1.48,0.025],[1.04,1.05,1.02]);
+  faceMesh.userData.animeFaceShape="tapered-oval";
+  faceMesh.userData.faceProfilePointCount=faceProfile.length;
+  player.userData.faceShape="tapered-oval";
+  player.userData.faceProfilePointCount=faceProfile.length;
   faceMesh.userData.animeOutline=true;
   const hairCap=addMesh(headRig,new THREE.SphereGeometry(0.27,32,24,0,Math.PI*2,0,Math.PI/2),hair,[0,1.56,-0.015],
     appearance.hairStyle==="short"?[1.04,0.58,0.98]:[1.04,0.86,0.98]);
