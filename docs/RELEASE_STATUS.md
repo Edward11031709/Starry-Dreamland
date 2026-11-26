@@ -135,3 +135,12 @@
 - 動畫使用來源模型的 crystal-spin／sign-sway；不載入資產包中的 NPC，也不載入整個 starter scene。
 - CI 與真實 WebGL 預覽尚待候選 PR 建立後確認。自動測試不等於畫面驗收；建築比例、動畫與手機 FPS 仍須私有預覽檢查。
 - 不修改 Supabase schema、RLS、RPC、Auth、migration、玩家帳號、星塵或服裝所有權；不執行正式部署。
+
+
+## 2026-11-25 主城堡與大型設施升級候選
+- 新分支 `feature/premium-ride-models-20261125`：以 Tevy CC0 v2 Castle Keep 取代教堂型主地標；旋轉木馬與摩天輪也改用高細節、具命名樞紐及三階 LOD 的模型。
+- 新增吊閘升降、木馬平台／頂棚／座椅共同旋轉、摩天輪 24 個吊艙反向補償保持水平；搭乘錨點仍沿用現有 ride interaction。
+- 桌面載入 LOD0，視窗寬度不超過 1024 px 載入 LOD1；模型版本固定並比對來源 SHA-256。城堡／木馬／摩天輪底色貼圖會在載入時做冷紫、靛藍與香檳金色相映射，保留亮度、alpha 及其他 PBR 貼圖。
+- 擴大城堡陰影與矩形碰撞，正面入口留通道；模型節點驗證在 fallback 隱藏前執行。
+- 不修改 Supabase schema／RLS／RPC／Auth／migration、玩家資料、星塵或服裝所有權；不新增 NPC；不執行正式 Pages 部署。
+- 視覺、碰撞、乘坐與手機 FPS 尚待私有瀏覽器／實機驗收，自動測試不能代表美術達標。

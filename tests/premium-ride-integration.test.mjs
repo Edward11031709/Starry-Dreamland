@@ -26,10 +26,10 @@ const rideLoop = section("environment.rides.forEach(ride => {", "world.assetMixe
 
 test("premium ride assets declare semantic passenger nodes and matching ride footprints", () => {
   for (const [id, hint] of [
-    ["carousel", "horse"],
+    ["carousel", "seat_outer_01"],
     ["teacups", "cup"],
     ["drop-tower", "gondola"],
-    ["ferris-wheel", "gondola"]
+    ["ferris-wheel", "gondola_01"]
   ]) {
     const line = assetLine(id);
     assert.ok(line.includes("seatNodeHints:["), id + " is missing seat-node hints");
@@ -37,9 +37,9 @@ test("premium ride assets declare semantic passenger nodes and matching ride foo
   }
   const ferris = assetLine("ferris-wheel");
   assert.ok(ferris.includes("parentScale:1"));
-  assert.ok(ferris.includes("colliderRadius:8.0"));
-  assert.ok(ferris.includes("interactionRadius:7.8"));
-  assert.ok(ferris.includes("dismountRadius:8.8"));
+  assert.ok(ferris.includes("colliderRadius:10.5"));
+  assert.ok(ferris.includes("interactionRadius:9.4"));
+  assert.ok(ferris.includes("dismountRadius:11.5"));
 });
 
 test("ride anchors are attached to named GLB nodes and positioned from their measured bounds", () => {

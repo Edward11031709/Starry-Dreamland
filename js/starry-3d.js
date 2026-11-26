@@ -19,16 +19,16 @@ let activeWorld = null;
 const PREMIUM_AVATAR_DETAIL_BATCH = 4;
 
 const PREMIUM_PARK_ASSETS = [
-  {id:"castle-cathedral",name:"星夢城堡",url:"https://cdn.3dassets.dev/assets/32747/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-city-cathedral-260bcd65",height:10.2,target:"StarDreamCastle",batch:1,animation:"bell-ring"},
+  {id:"castle-keep",name:"星夢城堡",url:"https://tevy.dev/models/castle-keep/v2/lod0.glb",mobileUrl:"https://tevy.dev/models/castle-keep/v2/lod1.glb",source:"https://tevy.dev/models/castle-keep",sha256Lod0:"e28e3d31fd547cafc484e453d384f30554d82c55bd98535308b4c844ac8411e0",sha256Lod1:"8dea85a015a2d60c05709357174504b59c858fb79fa4050301771591a77b9f2f",themeGrade:"starry-castle",height:17.2,target:"StarDreamCastle",batch:1,motionType:"castle-portcullis"},
   {id:"arcane-observatory",name:"星辰觀測站",url:"https://cdn.3dassets.dev/assets/32746/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-arcane-mage-tower-3270d276",height:5.4,target:"StargazerObservatory",batch:1,animation:"crystal-spin"},
   {id:"plaza-fountain",name:"星夢廣場噴泉",url:"https://cdn.3dassets.dev/assets/32770/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-plaza-fountain-9b482127",height:3.4,batch:1,position:[0,0.72,-5.8]},
   {id:"alchemist-shop",name:"星辰煉金工坊",url:"https://cdn.3dassets.dev/assets/32732/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-alchemist-shop-d5f14853",height:7.6,batch:4,position:[25.5,0.87,25],rotationY:-2.33,animations:["crystal-spin","sign-sway"],colliderRadius:3.8,discovery:{id:"astral-alchemy-workshop",name:"星辰煉金工坊",description:"在手繪木造工坊裡尋找旋轉的魔法晶石與星塵配方",radius:5.2}},
   {id:"apothecary-shop",name:"月草藥劑工坊",url:"https://cdn.3dassets.dev/assets/32736/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-apothecary-shop-922c13d1",height:7.1,batch:4,position:[-25.5,0.87,25],rotationY:2.33,animations:["sign-sway"],colliderRadius:3.8,discovery:{id:"moonherb-apothecary",name:"月草藥劑工坊",description:"探索曬草木架、魔法藥瓶與月光藥劑的藥草工坊",radius:5.2}},
   {id:"adventurers-guild",name:"星際冒險者公會",url:"https://cdn.3dassets.dev/assets/32743/v1/model.glb",source:"https://3dassets.dev/assets/fantasy-mmo-city-and-townsfolk-adventurers-guild-hall-d597e1c9",height:8.5,batch:4,position:[0,0.87,-34],rotationY:0,animations:["banner-sway","sign-sway"],colliderRadius:4.8,discovery:{id:"astral-adventurers-guild",name:"星際冒險者公會",description:"在旗幟與冒險委託板下集結，探索星際遠征的起點",radius:6.0}},
-  {id:"carousel",name:"星光旋轉木馬",url:"https://cdn.3dassets.dev/assets/28656/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-b3ccf619",height:4.9,batch:2,rideId:"carousel",animation:"spin",requireAnimations:true,seatNodeHints:["horse","saddle","seat"],seatHeightRatio:0.68,seatClearance:0.18,colliderRadius:4.8},
+  {id:"carousel",name:"星光旋轉木馬",url:"https://tevy.dev/models/carousel/v2/lod0.glb",mobileUrl:"https://tevy.dev/models/carousel/v2/lod1.glb",source:"https://tevy.dev/models/carousel",sha256Lod0:"7f994df1c5050176e162699f3122b36df61aa725eead55e24e1b6d7682cdb7af",sha256Lod1:"8ffb404031aec922f7d4e5afd316172f1ce5ce0b75c3dce820fe200e5f28070a",themeGrade:"starry-rides",height:6.6,batch:2,rideId:"carousel",motionType:"carousel",seatNodeHints:["seat_outer_01"],seatHeightRatio:0.58,seatClearance:0.08,colliderRadius:5.8,interactionRadius:6.0,dismountRadius:7.0,signPosition:[0,7.1,6.8],signScale:[4.8,1.15,1]},
   {id:"teacups",name:"星月茶杯",url:"https://cdn.3dassets.dev/assets/28657/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-70d0de97",height:1.35,batch:2,rideId:"teacups",animations:["platform-spin","cup-spin"],requireAnimations:true,seatNodeHints:["cup","teacup","seat"],seatHeightRatio:0.24,seatClearance:0.18,colliderRadius:4.25},
   {id:"drop-tower",name:"星際自由落體",url:"https://cdn.3dassets.dev/assets/28658/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-a2e7ac6f",height:7.2,batch:2,rideId:"drop",animation:"open",pingPong:true,requireAnimations:true,seatNodeHints:["gondola","cabin","seat"],seatHeightRatio:0.2,seatClearance:0.18,colliderRadius:2.4},
-  {id:"ferris-wheel",name:"星河摩天輪",url:"https://cdn.3dassets.dev/assets/28655/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-d18acb96",height:13.8,batch:2,rideId:"ferris",animation:"spin",requireAnimations:true,seatNodeHints:["gondola","cabin","basket"],seatHeightRatio:0.2,seatClearance:0.18,parentScale:1,colliderRadius:8.0,interactionRadius:7.8,dismountRadius:8.8},
+  {id:"ferris-wheel",name:"星河摩天輪",url:"https://tevy.dev/models/ferris-wheel/v2/lod0.glb",mobileUrl:"https://tevy.dev/models/ferris-wheel/v2/lod1.glb",source:"https://tevy.dev/models/ferris-wheel",sha256Lod0:"b1353fb1db47c37e2d131a9cf1884d7454efbeb1788b073944c4722934fc074e",sha256Lod1:"aca5c70c95ec102f5cf0fd833acf1f6b908a29b7a94cbc08408039bb78c09059",themeGrade:"starry-rides",height:20.5,batch:2,rideId:"ferris",motionType:"ferris-wheel",seatNodeHints:["gondola_01"],seatHeightRatio:0.44,seatClearance:0.1,parentScale:1,colliderRadius:10.5,interactionRadius:9.4,dismountRadius:11.5,signPosition:[0,21.8,5.4],signScale:[5.4,1.3,1]},
   {id:"coaster-train",name:"星際雲霄飛車列車",url:"https://cdn.3dassets.dev/assets/28653/v1/model.glb",source:"https://3dassets.dev/assets/theme-park-rides-and-coasters-theme-park-rides-and-coa-993fa7ed",height:0.58,batch:2,rideId:"coaster",train:true,animation:"wheel-roll"},
   {id:"crystal-willow",name:"星晶垂枝樹",url:"https://cdn.3dassets.dev/assets/108/v1/model.glb",source:"https://3dassets.dev/assets/runestone-conservatory-crystal-willow-tree",height:3.0,batch:3,positions:[[33.1,0.21,-17.2],[27.1,0.21,-17.2],[33.1,0.21,-14.7]]},
   {id:"glowing-crystal-cluster",name:"月光晶簇",url:"https://cdn.3dassets.dev/assets/36999/v1/model.glb",source:"https://3dassets.dev/assets/sunken-city-and-underwater-ruins-glowing-crystal-clust-897febc9",height:1.55,batch:3,positions:[[-32.7,0.68,-15.0],[-27.2,0.68,-18.0],[27.1,0.21,-19.1],[33.2,0.21,-19.1],[-34.0,0.68,-18.2],[34.0,0.21,-16.0]]}
@@ -157,6 +157,133 @@ function tunePremiumMaterials(root){
     object.material=Array.isArray(original)?original.map(refine):refine(original);
   });
 }
+function gradePremiumBaseColorTexture(texture,profile,textureCache){
+  if(!texture||!texture.image)return texture;
+  if(textureCache.has(texture))return textureCache.get(texture);
+  const image=texture.image;
+  const width=image.width||image.naturalWidth||image.videoWidth||0;
+  const height=image.height||image.naturalHeight||image.videoHeight||0;
+  if(!width||!height||width*height>4194304)return texture;
+
+  try{
+    const canvas=document.createElement("canvas");
+    canvas.width=width;canvas.height=height;
+    const context=canvas.getContext("2d",{willReadFrequently:true});
+    if(!context)return texture;
+    context.drawImage(image,0,0,width,height);
+    const pixels=context.getImageData(0,0,width,height);
+    const data=pixels.data;
+
+    const rgbToHsl=(r,g,b)=>{
+      r/=255;g/=255;b/=255;
+      const max=Math.max(r,g,b),min=Math.min(r,g,b);
+      const delta=max-min;
+      let h=0,s=0;
+      const l=(max+min)/2;
+      if(delta>0){
+        s=delta/(1-Math.abs(2*l-1));
+        if(max===r)h=((g-b)/delta)%6;
+        else if(max===g)h=(b-r)/delta+2;
+        else h=(r-g)/delta+4;
+        h/=6;
+        if(h<0)h+=1;
+      }
+      return {h,s,l};
+    };
+    const hslToRgb=(h,s,l)=>{
+      const chroma=(1-Math.abs(2*l-1))*s;
+      const x=chroma*(1-Math.abs((h*6)%2-1));
+      const m=l-chroma/2;
+      let rgb;
+      if(h<1/6)rgb=[chroma,x,0];
+      else if(h<2/6)rgb=[x,chroma,0];
+      else if(h<3/6)rgb=[0,chroma,x];
+      else if(h<4/6)rgb=[0,x,chroma];
+      else if(h<5/6)rgb=[x,0,chroma];
+      else rgb=[chroma,0,x];
+      return rgb.map(value=>Math.round((value+m)*255));
+    };
+
+    for(let index=0;index<data.length;index+=4){
+      if(data[index+3]<12)continue;
+      const hsl=rgbToHsl(data[index],data[index+1],data[index+2]);
+      let {h,s,l}=hsl;
+      if(profile==="starry-castle"&&s<0.2&&l>0.16&&l<0.94){
+        // Cool the neutral stone without flattening its masonry luminance.
+        h=0.67;
+        s=Math.max(0.12,s);
+      }else if(s>0.18){
+        if(h<0.055||h>0.945){h=0.75;s=Math.min(0.84,s*0.88);}
+        else if(h>=0.055&&h<0.19){h=0.115;s=Math.min(0.78,s*0.82);}
+        else if(h>=0.19&&h<0.46){h=0.56;s=Math.min(0.74,s*0.72);}
+        else if(h>=0.5&&h<0.78){h=0.65;s=Math.min(0.8,s*0.84);}
+        else if(h>=0.78&&h<=0.945){h=0.77;s=Math.min(0.78,s*0.82);}
+      }else if(profile==="starry-rides"&&l>0.72){
+        // White canopy panels become a very light moon-silver rather than pure white.
+        h=0.68;s=0.055;
+      }
+      const [r,g,b]=hslToRgb(h,s,l);
+      data[index]=r;data[index+1]=g;data[index+2]=b;
+    }
+
+    context.putImageData(pixels,0,0);
+    const graded=new THREE.CanvasTexture(canvas);
+    graded.name=(texture.name||"PremiumBaseColor")+"_StarryPalette";
+    graded.mapping=texture.mapping;
+    graded.channel=texture.channel;
+    graded.wrapS=texture.wrapS;graded.wrapT=texture.wrapT;
+    graded.magFilter=texture.magFilter;graded.minFilter=texture.minFilter;
+    graded.anisotropy=texture.anisotropy;
+    graded.flipY=texture.flipY;
+    graded.generateMipmaps=texture.generateMipmaps;
+    graded.colorSpace=texture.colorSpace||THREE.SRGBColorSpace;
+    graded.offset.copy(texture.offset);
+    graded.repeat.copy(texture.repeat);
+    graded.center.copy(texture.center);
+    graded.rotation=texture.rotation;
+    graded.matrix.copy(texture.matrix);
+    graded.matrixAutoUpdate=texture.matrixAutoUpdate;
+    graded.premultiplyAlpha=texture.premultiplyAlpha;
+    graded.unpackAlignment=texture.unpackAlignment;
+    graded.needsUpdate=true;
+    textureCache.set(texture,graded);
+    return graded;
+  }catch(error){
+    console.warn("Starry Dreamland: could not grade premium base-colour texture",error);
+    textureCache.set(texture,texture);
+    return texture;
+  }
+}
+
+function harmonizePremiumAssetPalette(root,profile){
+  const materialTargets=profile==="starry-castle"
+    ?[{min:0,max:1,color:new THREE.Color(0xa5a2d3)}]
+    :[
+      {min:0.94,max:1.01,color:new THREE.Color(0x806cc4)},
+      {min:0,max:0.055,color:new THREE.Color(0x806cc4)},
+      {min:0.53,max:0.74,color:new THREE.Color(0x7489cc)},
+      {min:0.075,max:0.18,color:new THREE.Color(0xe3c58a)}
+    ];
+  const textureCache=new Map(),seen=new Set();
+  root.traverse(object=>{
+    if(!object.isMesh)return;
+    const materials=Array.isArray(object.material)?object.material:[object.material];
+    materials.forEach(material=>{
+      if(!material||seen.has(material))return;
+      seen.add(material);
+      if(material.map)material.map=gradePremiumBaseColorTexture(material.map,profile,textureCache);
+      if(!material.color?.getHSL)return;
+      const hsl=material.color.getHSL({});
+      if(profile==="starry-castle"){
+        material.color.lerp(materialTargets[0].color,0.18);
+      }else if(hsl.s>=0.24&&hsl.l>=0.12&&hsl.l<=0.94){
+        const target=materialTargets.find(entry=>hsl.h>=entry.min&&hsl.h<=entry.max);
+        if(target)material.color.lerp(target.color,0.18);
+      }
+      material.needsUpdate=true;
+    });
+  });
+}
 function findPremiumRideSeatNode(root,config){
   const hints=(config.seatNodeHints||[]).map(value=>String(value).toLowerCase());
   if(!hints.length)return null;
@@ -223,9 +350,108 @@ function createPremiumAssetMixer(model,gltf,config){
   return mixer;
 }
 
+function findPremiumNode(root,name){
+  const expected=String(name).toLowerCase();
+  let found=null;
+  root.traverse(node=>{
+    if(!found&&String(node.name||"").toLowerCase()===expected)found=node;
+  });
+  return found;
+}
+
+function createPremiumAssetController(model,config){
+  if(config.motionType==="castle-portcullis"){
+    const gate=findPremiumNode(model,"portcullis");
+    if(!gate)throw new Error("城堡模型缺少 portcullis 樞紐");
+    const closedY=gate.position.y;
+    let elapsed=0;
+    return {
+      update(delta){
+        elapsed+=delta;
+        const phase=elapsed%22;
+        let lift=0;
+        if(phase<3)lift=THREE.MathUtils.smoothstep(phase/3,0,1);
+        else if(phase<14)lift=1;
+        else if(phase<17)lift=1-THREE.MathUtils.smoothstep((phase-14)/3,0,1);
+        gate.position.y=closedY+lift*3.5;
+      }
+    };
+  }
+
+  if(config.motionType==="carousel"){
+    const platform=findPremiumNode(model,"platform");
+    const canopy=findPremiumNode(model,"canopy");
+    const seats=[];
+    for(const ring of ["outer","inner"]){
+      for(let index=1;index<=12;index++){
+        const name="seat_"+ring+"_"+String(index).padStart(2,"0");
+        const node=findPremiumNode(model,name);
+        if(!node)throw new Error("旋轉木馬缺少座椅樞紐："+name);
+        seats.push(node);
+      }
+    }
+    if(!platform||!canopy)throw new Error("旋轉木馬缺少 platform／canopy 樞紐");
+
+    // Use the platform's measured centre as the carousel axis. Keep the static
+    // queue, entrance ramp and base outside this rotating hierarchy.
+    model.updateMatrixWorld(true);
+    const platformBounds=new THREE.Box3().setFromObject(platform);
+    const localCenter=platformBounds.getCenter(new THREE.Vector3())
+      .applyMatrix4(model.matrixWorld.clone().invert());
+    const pivot=new THREE.Group();
+    pivot.name="StarryCarouselMotionPivot";
+    pivot.position.copy(localCenter);
+    model.add(pivot);
+    model.updateMatrixWorld(true);
+    [platform,canopy,...seats].forEach(node=>pivot.attach(node));
+
+    return {
+      update(delta){pivot.rotation.y+=delta*0.19;}
+    };
+  }
+
+  if(config.motionType==="ferris-wheel"){
+    const wheel=findPremiumNode(model,"wheel");
+    if(!wheel)throw new Error("摩天輪缺少 wheel 旋轉樞紐");
+    const gondolas=[];
+    for(let index=1;index<=24;index++){
+      const name="gondola_"+String(index).padStart(2,"0");
+      const node=findPremiumNode(model,name);
+      if(!node)throw new Error("摩天輪缺少吊艙樞紐："+name);
+      gondolas.push(node);
+    }
+    const wheelBase=wheel.rotation.z;
+    const gondolaBases=gondolas.map(node=>node.rotation.z);
+    let angle=0;
+    return {
+      update(delta){
+        angle+=delta*0.105;
+        wheel.rotation.z=wheelBase+angle;
+        // The wheel rotates in the XY plane around its Z axle. Each hanging
+        // cabin counter-rotates around that same axis so the floor stays level.
+        gondolas.forEach((node,index)=>{
+          node.rotation.z=gondolaBases[index]-angle;
+        });
+      }
+    };
+  }
+  return null;
+}
+
+function attachPremiumRideSign(ride,config){
+  if(!config.signPosition)return null;
+  const sign=makeLabelSprite({title:config.name,subtitle:"STAR DREAMLAND · RIDE"});
+  if(!sign)return null;
+  sign.position.set(config.signPosition[0],config.signPosition[1],config.signPosition[2]);
+  const scale=config.signScale||[4,1,1];
+  sign.scale.set(scale[0],scale[1],scale[2]);
+  ride.root.add(sign);
+  return sign;
+}
+
 function hideProceduralRideMeshes(root){
   root.traverse(child=>{
-    if(child.isMesh||child.isLine||child.isPoints)child.visible=false;
+    if(child.isMesh||child.isLine||child.isPoints||child.isSprite)child.visible=false;
   });
 }
 
@@ -243,6 +469,7 @@ function mountPremiumAsset(world,config,gltf){
   const model=gltf.scene;
   model.name="PremiumAsset_"+config.id;
   tunePremiumMaterials(model);
+  if(config.themeGrade)harmonizePremiumAssetPalette(model,config.themeGrade);
   const bounds=new THREE.Box3().setFromObject(model);
   const size=bounds.getSize(new THREE.Vector3());
   const scale=config.height/Math.max(0.001,size.y);
@@ -276,6 +503,7 @@ function mountPremiumAsset(world,config,gltf){
     // Resolve both the visible ride animation and the passenger anchor before hiding
     // the procedural fallback. If either is missing, the original ride stays usable.
     const seat=attachPremiumRideSeat(model,config);
+    const controller=createPremiumAssetController(model,config);
     const mixer=createPremiumAssetMixer(model,gltf,config);
     hideProceduralRideMeshes(ride.root);
     ride.root.add(model);
@@ -284,19 +512,24 @@ function mountPremiumAsset(world,config,gltf){
     ride.rideSeat=seat;
     ride.axis="asset";
     applyPremiumRideFootprint(world,ride,config);
+    attachPremiumRideSign(ride,config);
+    if(controller)world.assetControllers.push(controller);
     if(mixer)world.assetMixers.push(mixer);
     return model;
   }
 
   if(config.target){
+    // Validate required moving nodes before hiding the original landmark.
+    const controller=createPremiumAssetController(model,config);
     const fallback=world.scene.getObjectByName(config.target);
-    if(fallback)fallback.visible=false;
     model.position.set(
       config.target==="StarDreamCastle"?0:-30,
       0.68+groundOffset,
       config.target==="StarDreamCastle"?-18.2:-16.5
     );
     world.scene.add(model);
+    if(fallback)fallback.visible=false;
+    if(controller)world.assetControllers.push(controller);
   }else if(config.positions){
     config.positions.forEach(([x,y,z],index)=>{
       const instance=index===0?model:model.clone(true);
@@ -355,11 +588,18 @@ async function loadPremiumParkAssets(world){
     while(queue.length&&world.running){
       const config=queue.shift();
       try{
-        const {gltf,sha256,bytes}=await loadPremiumGlb(config.url);
+        const viewportWidth=Math.min(window.innerWidth||0,world.host.clientWidth||window.innerWidth||0);
+        const lod=viewportWidth<=1024&&config.mobileUrl?1:0;
+        const assetUrl=lod===1?config.mobileUrl:config.url;
+        const {gltf,sha256,bytes}=await loadPremiumGlb(assetUrl);
+        const expectedHash=lod===1?config.sha256Lod1:config.sha256Lod0;
+        if(expectedHash&&sha256!=="unavailable"&&sha256!==expectedHash){
+          throw new Error("模型 SHA-256 不符："+config.id+" LOD"+lod);
+        }
         if(!world.running)return;
         mountPremiumAsset(world,config,gltf);
-        console.info("[Starry Dreamland asset]",config.id,{sha256,bytes,source:config.source});
-        window.dispatchEvent(new CustomEvent("starry-3d-asset-loaded",{detail:{id:config.id,sha256,bytes}}));
+        console.info("[Starry Dreamland asset]",config.id,{sha256,bytes,source:config.source,url:assetUrl,lod:"LOD"+lod});
+        window.dispatchEvent(new CustomEvent("starry-3d-asset-loaded",{detail:{id:config.id,sha256,bytes,lod}}));
       }catch(error){
         console.warn("[Starry Dreamland asset fallback]",config.id,error);
         window.dispatchEvent(new CustomEvent("starry-3d-asset-fallback",{detail:{id:config.id,message:String(error)}}));
@@ -2551,7 +2791,11 @@ function buildEnvironment(scene) {
 
   // The old satellite islands become reachable themed gardens at the far end of the park.
   buildCastle(scene,materials);
-  addCollider(0,-18.2,5.7,"星夢城堡");
+  // The new keep fills a broad rectangular footprint, with a walkable gap through its front gate.
+  colliders.push({
+    x:0,z:-18.2,halfWidth:10.2,halfDepth:7.7,
+    entryGapHalfWidth:2.6,entryGapDepth:1.8,label:"星夢城堡"
+  });
   addReflectingPool(island,materials,-5.35,-14.95);
   addReflectingPool(island,materials,5.35,-14.95);
   addCollider(-5.35,-14.95,1.35,"月光倒影池");
@@ -2628,7 +2872,7 @@ function buildEnvironment(scene) {
   [-7.2,0,7.2].forEach((x,i)=>{portals.push(buildPortal(scene,gameMeta[i],x,8.2,materials));addCollider(x,8.2,1.62,gameMeta[i].title)});
 
   // Wide soft grounding shadows sit beneath the park's largest silhouettes.
-  addContactShadow(0,-18.2,13.2,12.4,0.79);
+  addContactShadow(0,-18.2,22.4,17.4,0.79);
   addContactShadow(-30,-16.5,9.2,8.5,0.895);
   addContactShadow(-4.8,30.5,6.2,5.4,0.79);
   addContactShadow(-24.5,-19.0,13.5,11.8,0.79);
@@ -3477,7 +3721,7 @@ function mount(host) {
     discoveredZones:new Set(Array.isArray(savedDiscoveryIds)?savedDiscoveryIds:[]),activeDiscoveryZone:null,
     localUserId: host.dataset.sessionId || null, otherPlayers: new Map(),
     pointerDrag: { down: false, dragged: false, x: 0, y: 0 },
-    running: true, frame: 0, lastTime: 0, assetMixers: []
+    running: true, frame: 0, lastTime: 0, assetMixers: [], assetControllers: []
   };
   activeWorld = world;
   loadPremiumParkAssets(world);
@@ -3574,7 +3818,17 @@ function mount(host) {
   }
 
   function blockedAt(x,z) {
-    return environment.colliders.some(collider => Math.hypot(x-collider.x,z-collider.z) < collider.radius + 0.48);
+    return environment.colliders.some(collider=>{
+      if(Number.isFinite(collider.halfWidth)&&Number.isFinite(collider.halfDepth)){
+        const dx=Math.abs(x-collider.x),dz=z-collider.z;
+        const inside=dx<collider.halfWidth+0.48&&Math.abs(dz)<collider.halfDepth+0.48;
+        const doorway=Number.isFinite(collider.entryGapHalfWidth)&&
+          dx<collider.entryGapHalfWidth&&
+          dz>collider.halfDepth-collider.entryGapDepth;
+        return inside&&!doorway;
+      }
+      return Math.hypot(x-collider.x,z-collider.z)<(collider.radius||0)+0.48;
+    });
   }
 
   world.onAvatarChange = event => {
@@ -3761,6 +4015,7 @@ function mount(host) {
       } else if(ride.axis!=="asset") ride.object.rotation.z += delta * ride.speed;
     });
     world.assetMixers.forEach(mixer=>mixer.update(delta));
+    world.assetControllers.forEach(controller=>controller.update(delta));
     environment.compassHalo.rotation.z += delta * 0.17;
     environment.planet.rotation.y += delta * 0.045;
     environment.planetRing.rotation.z += delta * 0.06;
