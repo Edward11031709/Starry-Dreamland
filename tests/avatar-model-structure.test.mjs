@@ -124,3 +124,59 @@ test("all existing hairstyle options build refined strands without changing appe
     assert.ok(player.children.length > 0, `${hairStyle} avatar should contain model geometry`);
   }
 });
+
+
+test("five traveler types receive distinct sculpted face profiles without changing saved appearance keys", () => {
+  const expectedShapes = new Map([
+    ["wanderer", "balanced-oval"],
+    ["mage", "slender-oval"],
+    ["knight", "defined-jaw"],
+    ["priest", "soft-cheek"],
+    ["guardian", "noble-oval"]
+  ]);
+  const profiles = new Map();
+
+  for (const [avatarType, expectedShape] of expectedShapes) {
+    const scene = new MockGroup();
+    const player = buildPlayer(scene, "wanderer", {
+      avatarType,
+      appearance: { hairStyle: "long" }
+    });
+    const faces = [];
+    player.traverse(object => {
+      if (object.isMesh && object.userData?.animeFaceShape) faces.push(object);
+    });
+
+    assert.equal(faces.length, 1, `${avatarType} should build exactly one face mesh`);
+    const face = faces[0];
+    assert.equal(face.geometry.type, "LatheGeometry");
+    assert.equal(face.geometry.args[1], 48);
+    assert.equal(face.userData.animeFaceShape, expectedShape);
+    assert.equal(face.userData.faceProfilePointCount, 13);
+    assert.equal(player.userData.faceShape, expectedShape);
+    assert.equal(player.userData.faceProfileAvatarType, avatarType);
+
+    const profile = face.geometry.args[0];
+    const radii = profile.map(point => point.args[0]);
+    assert.equal(profile.length, 13);
+    assert.equal(radii[0], 0, "chin should close at the profile axis");
+    assert.equal(radii.at(-1), 0, "forehead crown should close at the profile axis");
+    assert.ok(radii[6] > radii[2], "cheek contour should remain wider than the lower jaw");
+    assert.deepEqual(Object.keys(player.userData.appearance).sort(),
+      ["accentColor", "hairColor", "hairStyle", "skinTone"]);
+    profiles.set(avatarType, radii);
+  }
+
+  assert.ok(profiles.get("mage")[3] < profiles.get("wanderer")[3],
+    "mage profile should have a subtly narrower jaw");
+  assert.ok(profiles.get("knight")[3] > profiles.get("wanderer")[3],
+    "knight profile should have a more defined jaw");
+  assert.ok(profiles.get("priest")[6] > profiles.get("wanderer")[6],
+    "priest profile should have softer cheek fullness");
+  assert.ok(profiles.get("guardian")[10] > profiles.get("wanderer")[10],
+    "guardian profile should have a slightly broader upper contour");
+
+  const fallback = buildPlayer(new MockGroup(), "wanderer", { avatarType: "unknown-role" });
+  assert.equal(fallback.userData.faceShape, "balanced-oval",
+    "unknown traveler types should safely fall back to the balanced profile");
+});

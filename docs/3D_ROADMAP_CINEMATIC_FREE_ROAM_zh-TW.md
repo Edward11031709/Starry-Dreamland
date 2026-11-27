@@ -200,3 +200,13 @@
 - 桌機載入 LOD0，視窗／遊戲區寬度不超過 1024 px 時載入 LOD1；依來源 models.json 記錄比對固定版本 SHA-256，偵測下載內容是否偏離已記錄資產。
 - 動態節點名稱與數量會在關閉原本程序化 fallback 前先檢查；若 GLB 或必要節點有問題，保留原設施作 fallback。
 - 此批只替換主城堡、旋轉木馬與摩天輪。雲霄飛車、茶杯、自由落體與玩家角色尚未完成完整高品質模型替換；仍須用真實 WebGL 預覽與手機橫向實機檢查材質、比例、朝向、座艙水平、碰撞與 FPS。
+
+
+### 2026-11-27：旅人類型連動的臉型輪廓（候選分支）
+- 以既有 `avatarType` 選項導出五種細微臉型輪廓：均衡鵝蛋、纖雅、俐落下顎、柔和顴頰與端正上臉；在角色工坊切換旅人類型時即時更新 3D 預覽。
+- 以 13 點 LatheGeometry／48 radial segments 建立漸縮臉部剪影；依下顎、顴頰及上臉區段調整輪廓寬度與深度，不新增 appearance JSON 欄位，不改既有 avatarType 值或保存流程。
+- 保留眼睛、眉毛、鼻樑、鼻尖、嘴唇、耳朵、髮型及 headRig 錨點；未知旅人類型安全回退至均衡輪廓。
+- 新增五種旅人類型輪廓回歸測試，確認輪廓差異、下巴／額頂閉合、顴頰寬於下顎，以及 appearance 四個既有欄位不變。
+- 本批仍是程序化輪廓精修，不是完整高品質骨架角色 GLB；真實 WebGL 正側面、髮型遮擋及手機 FPS 仍待管理員私有預覽驗收。
+- 不修改 Supabase schema／RLS／RPC／migration、玩家資料、星塵、服裝所有權或多人同步；不新增 NPC，不發布正式網站。
+- PR #33 已建立為 Open、Ready for review、mergeable=true；Actions #242（run ID `45931098096`）對 HEAD `6e0300060b8eb90a568661f41cc4f486cdf1fafe` 成功：Node tests **92 passed／0 failed**，Three.js／Supabase Edge Function 語法及首頁 inline JavaScript 檢查通過；正式發布 job skipped，沒有 Pages artifact。
