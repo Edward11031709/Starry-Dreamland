@@ -10,7 +10,6 @@
 - 正式發布保護狀態：Repository rulesets API 回傳空清單；main branch protection API 回傳 403（連線缺少讀取權限）；production Environment Required reviewers 端點亦無法由目前連線讀取。不得宣稱 main／production 已完整受保護，需管理員在 GitHub Settings 核實。
 - 最近成功正式發布的 SHA 與最新 main SHA 不同；合併 PR 不等於發布。日常開發仍只在獨立 feature 分支，正式網站不會由此候選更新。
 
-# 星夢樂園版本與發布狀態
 ## 2026-11-22 最新主線、公開版與手遊級視覺候選
 
 - 最新 `main` HEAD：`549443d377c5db5e1ad9abb6f045bc90311eeec0`；PR #23「系統性升級星夢樂園 3D 建築、景觀與遊樂設施」已合併。
