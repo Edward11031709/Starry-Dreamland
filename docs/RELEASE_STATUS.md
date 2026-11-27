@@ -4,10 +4,10 @@
 
 - GitHub `main` 最新 HEAD：`31bb68aec5a33c284759f48fba23353a0c193989`，為 PR #31「升級星夢城堡、旋轉木馬與摩天輪高細節模型」的合併 commit（2026-11-26）。
 - 最近一次成功的手動正式發布為 Actions #185（run ID `45029236953`，2026-11-22），workflow dispatch 的部署來源 SHA 為 `549443d377c5db5e1ad9abb6f045bc90311eeec0`；已讀取該 run jobs，檢查與「發布正式網站」兩個 job 均成功。此後 main 有 PR #30、#31 等更新，但未見較新的成功 workflow_dispatch 正式發布紀錄，因此公開版仍以 #185 的 SHA 為最近可確認版本。
-- 最近 Actions 全部 runs 查詢回傳 242 筆；最新 PR run 為 #241（run ID `45744968512`），對 PR #32 舊候選 HEAD `19bda00e7541db13702a88fcf3e03221080a5c83` 成功。PR deploy job 為 skipped，沒有 Pages artifact 或正式部署。
+- 最新已完成的 PR Actions run 為 #243（run ID `45931207037`），對文件同步後的 PR #33 HEAD `4e6018044674ff53baeab8a6126d5786e353e3b9` 成功：Node tests **92 passed／0 failed**，語法、首頁 import map JSON 與 inline JavaScript 檢查通過；正式部署 job skipped，沒有 Pages artifact 或正式部署。
 - PR #32 仍 Open、Ready for review，但 base SHA `631b2b7ddc1e35b379127b675c04e869a0d1f1b7` 相較目前 main 落後 18 commits，compare status 為 diverged、mergeable=false；不要直接合併。PR #27 仍 Open、Ready for review，base SHA `61a0f5d6fcafb7122a1f14d9285a191280b9ddd3` 相較目前 main 落後 57 commits，同樣 diverged、mergeable=false。
 - 本輪新候選分支：`feature/avatar-type-face-profiles-20261127`，由最新 main @ `31bb68aec5a33c284759f48fba23353a0c193989` 建立；把臉型輪廓直接整合到目前主線程式，並依既有五種 `avatarType` 顯示五種細微臉型，不新增資料欄位。
-- PR #33「五種旅人類型臉型輪廓差異化」已建立為 Open、Ready for review、mergeable=true；HEAD `6e0300060b8eb90a568661f41cc4f486cdf1fafe`。Actions #242（run ID `45931098096`）成功：Node tests **92 passed／0 failed**，Three.js／Supabase Edge Function 語法檢查與首頁 inline JavaScript parse 通過；正式發布 job skipped，沒有 Pages artifact。
+- PR #33「五種旅人類型臉型輪廓差異化」已建立為 Open、Ready for review、mergeable=true；程式實作 commit `6e0300060b8eb90a568661f41cc4f486cdf1fafe` 的 Actions #242 成功，文件同步後 HEAD `4e6018044674ff53baeab8a6126d5786e353e3b9` 的 Actions #243 再次成功；兩輪均為 Node tests **92 passed／0 failed**，正式發布 job skipped，沒有 Pages artifact。
 - 正式發布保護狀態：Repository rulesets API 回傳空清單；main branch protection API 回傳 403（連線缺少讀取權限）；production Environment Required reviewers 端點亦無法由目前連線讀取。不得宣稱 main／production 已完整受保護，需管理員在 GitHub Settings 核實。
 - 最近成功正式發布的 SHA 與最新 main SHA 不同；合併 PR 不等於發布。日常開發仍只在獨立 feature 分支，正式網站不會由此候選更新。
 
