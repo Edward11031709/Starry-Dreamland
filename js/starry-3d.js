@@ -3294,9 +3294,32 @@ function buildPlayer(scene,avatarId="wanderer",customization={}){
   const neckCollar=addMesh(headRig,new THREE.TorusGeometry(0.14,0.022,7,32),coutureGold,[0,1.285,0.035]);
   neckCollar.rotation.x=Math.PI/2;
   addMesh(headRig,new THREE.OctahedronGeometry(0.045,1),coutureGem,[0,1.29,0.17],[0.72,1.2,0.72],false,false);
-  // Face and selectable hair styles. The hood is an actual garment silhouette.
-  const faceMesh=addMesh(headRig,new THREE.SphereGeometry(0.255,32,24),skin,[0,1.48,0.025],[0.94,1.05,0.9]);
+  // Face contours follow the existing saved traveler type; no new appearance key is required.
+  // Each profile is intentionally subtle so the five roles remain one coherent character family.
+  const faceShapeProfiles={
+    wanderer:{id:"balanced-oval",jaw:1,cheek:1,temple:1,height:1,depth:1},
+    mage:{id:"slender-oval",jaw:0.94,cheek:0.985,temple:1.015,height:1.01,depth:0.985},
+    knight:{id:"defined-jaw",jaw:1.055,cheek:1.015,temple:0.99,height:0.99,depth:1.02},
+    priest:{id:"soft-cheek",jaw:0.965,cheek:1.04,temple:1,height:1.015,depth:1.01},
+    guardian:{id:"noble-oval",jaw:1.025,cheek:1.02,temple:1.035,height:1,depth:1.02}
+  };
+  const faceShape=faceShapeProfiles[avatarType]||faceShapeProfiles.wanderer;
+  const baseFaceProfile=[
+    [0,-0.255],[0.038,-0.245],[0.082,-0.225],[0.132,-0.19],
+    [0.176,-0.145],[0.207,-0.09],[0.224,-0.025],[0.225,0.045],
+    [0.212,0.11],[0.182,0.17],[0.132,0.218],[0.07,0.245],[0,0.255]
+  ];
+  const faceProfile=baseFaceProfile.map(([radius,y],index)=>{
+    const widthScale=index<=4?faceShape.jaw:index<=7?faceShape.cheek:faceShape.temple;
+    return new THREE.Vector2(radius*widthScale,y*faceShape.height);
+  });
+  const faceMesh=addMesh(headRig,new THREE.LatheGeometry(faceProfile,48),skin,[0,1.48,0.025],[1.04,1.05,1.02*faceShape.depth]);
+  faceMesh.userData.animeFaceShape=faceShape.id;
+  faceMesh.userData.faceProfilePointCount=faceProfile.length;
   faceMesh.userData.animeOutline=true;
+  player.userData.faceShape=faceShape.id;
+  player.userData.faceProfilePointCount=faceProfile.length;
+  player.userData.faceProfileAvatarType=avatarType;
   const hairCap=addMesh(headRig,new THREE.SphereGeometry(0.27,32,24,0,Math.PI*2,0,Math.PI/2),hair,[0,1.56,-0.015],
     appearance.hairStyle==="short"?[1.04,0.58,0.98]:[1.04,0.86,0.98]);
   hairCap.userData.animeOutline=true;
