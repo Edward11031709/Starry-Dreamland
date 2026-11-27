@@ -209,3 +209,4 @@
 - 新增五種旅人類型輪廓回歸測試，確認輪廓差異、下巴／額頂閉合、顴頰寬於下顎，以及 appearance 四個既有欄位不變。
 - 本批仍是程序化輪廓精修，不是完整高品質骨架角色 GLB；真實 WebGL 正側面、髮型遮擋及手機 FPS 仍待管理員私有預覽驗收。
 - 不修改 Supabase schema／RLS／RPC／migration、玩家資料、星塵、服裝所有權或多人同步；不新增 NPC，不發布正式網站。
+- PR #33 已建立為 Open、Ready for review、mergeable=true；Actions #242（run ID `45931098096`）對 HEAD `6e0300060b8eb90a568661f41cc4f486cdf1fafe` 成功：Node tests **92 passed／0 failed**，Three.js／Supabase Edge Function 語法及首頁 inline JavaScript 檢查通過；正式發布 job skipped，沒有 Pages artifact。
