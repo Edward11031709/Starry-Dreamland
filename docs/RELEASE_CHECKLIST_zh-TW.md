@@ -1,24 +1,55 @@
-# GitHub Pages 發布檢查表
+# 星夢樂園正式發布檢查表
 
-## 上傳前
-- [ ] 解壓縮發布 ZIP。
-- [ ] 確認 index.html、app.js、styles.css、config.js 都在根目錄。
-- [ ] 確認 assets/ 資料夾也在根目錄。
-- [ ] 不要上傳 ZIP 本身取代檔案；需要上傳解壓後內容。
-- [ ] 確認沒有密碼、service-role key 或真實玩家資料。
+> 本文件只描述正式版的審核與發布流程。日常 AI 開發、PR 建立與測試均不得自行合併、推送 main 或發布公開網站。
 
-## GitHub
-- [ ] 將解壓後所有內容上傳至 main 分支根目錄。
-- [ ] Settings → Pages → Source 選 GitHub Actions。
-- [ ] Actions 出現綠色成功狀態。
-- [ ] 開啟 https://Edward11031709.github.io/Starry-Dreamland/
+## A. 開發候選檢查
 
-## 瀏覽器測試
-- [ ] 登入／展示帳號流程可用。
-- [ ] 三款遊戲可開始、結束及返回廣場。
-- [ ] 積分及歷史紀錄可保存於目前瀏覽器。
-- [ ] 手機畫面沒有主要按鈕被裁切。
-- [ ] 3D／星塵動畫失敗時有可用 fallback。
+- [ ] 所有修改都位於 dev/* 或 feature/* 分支，且分支由當時最新的 main 建立。
+- [ ] 沒有直接提交或推送 main。
+- [ ] PR 目標為 main，變更範圍單一且摘要以繁體中文撰寫。
+- [ ] 已閱讀 AGENT.md、README_zh-TW.md、相關 Roadmap、安全文件及本次修改涉及的程式。
+- [ ] PR CI 的語法、測試與安全檢查已完成；失敗項目與未執行項目均有說明。
+- [ ] 管理員已檢查程式差異、授權來源、外部資產、相容性及風險。
+- [ ] 需要 3D 驗收時，已透過管理員私有預覽檢查正面、側面、背面、近遠景、桌機與手機橫向；自動化結構測試不當作美術驗收。
+- [ ] 確認沒有把候選版、PR CI 或私有預覽描述成已上線。
+- [ ] 確認沒有未經批准的 Supabase schema／RLS／RPC／migration、正式資料寫入、星塵調整或服裝所有權變更。
 
-## 已知限制
-目前 localStorage 資料不跨裝置同步。全體玩家共用帳號及排行榜需另外連接 Supabase 等後端。
+## B. 合併前的擁有者核准
+
+- [ ] 專案擁有者已親自檢查 PR 差異、測試證據及私有預覽。
+- [ ] 專案擁有者已明確批准該 PR 可以合併。
+- [ ] 合併前再次確認 base 是最新 main，且沒有未解決的衝突或過期測試。
+- [ ] 合併由專案擁有者依 GitHub 審核流程手動完成；日常自動化開發不得代替合併。
+
+## C. 正式發布（僅限專案擁有者手動執行）
+
+- [ ] 確認 main 的最新 SHA 就是已核准的候選版本。
+- [ ] 在 GitHub Actions 選擇「星夢樂園檢查與正式發布」workflow。
+- [ ] 明確選擇 main 作為執行 ref，並由擁有者手動執行 workflow_dispatch。
+- [ ] 只有在已完成人工驗收後，才設定 confirm_release=true。
+- [ ] GitHub production Environment 已由管理員確認 Required reviewers、允許部署分支及審核人；未確認前停止發布。
+- [ ] 確認正式部署 job 僅在 owner、main、workflow_dispatch 與確認欄位全部符合時執行。
+- [ ] 不以 PR CI、一般 push、合併事件或排程工作取代人工正式發布。
+
+## D. 發布後核對
+
+- [ ] 同一次 workflow run 的驗證 job 與正式部署 job 均成功。
+- [ ] Pages artifact 與部署步驟成功，且沒有只成功打包卻部署失敗的情況。
+- [ ] 讀取公開網站的 release.json，確認 commit SHA 與核准的 main SHA 一致。
+- [ ] 開啟正式網址並強制重新整理，檢查首頁、登入入口、3D 世界、遊戲入口及手機橫向版。
+- [ ] 在 docs/RELEASE_STATUS.md 記錄日期、workflow run、實際部署 SHA、結果及上一個可回復版本 SHA。
+- [ ] 只有在以上項目完成後，才可將該版本標記為「已發布」。
+
+## E. 回復
+
+- [ ] 先確認問題屬於程式版本，不以回復程式碼方式處理玩家資料。
+- [ ] 由擁有者建立並審核 revert PR，回到先前已知良好的程式碼版本。
+- [ ] 回復版本仍須由擁有者手動執行相同的正式發布流程。
+- [ ] 不執行 Supabase migration rollback，不重設帳號、星塵、服裝、遊戲紀錄或其他玩家資料。
+
+## 明確禁止
+
+- 不得把 ZIP 或網站檔案直接上傳／提交到 main。
+- 不得在日常開發中修改 GitHub Pages Source、production Environment 或正式發布設定。
+- 不得因 PR 建立、CI 成功或分支更新而自動發布。
+- 不得把未部署的候選版本標示為正式網站現況。
