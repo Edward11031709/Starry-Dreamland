@@ -1,4 +1,18 @@
 # 星夢樂園版本與發布狀態
+
+## 2026-11-28：最新主線、候選 PR 與發布核對
+
+- 最新可查 main HEAD：31bb68aec5a33c284759f48fba23353a0c193989（2026-11-26 合併 PR #31：星夢城堡、旋轉木馬與摩天輪高細節模型）。
+- 目前主要角色候選 PR #33：feature/avatar-type-face-profiles-20261127，HEAD ccaa41cb9145f7124bda88bed786009cdb0b917b；相較 main ahead 10／behind 0，PR 搜尋結果為 Open。PR #33 的 Actions #244（run ID 45931386266）驗證 job 成功，92 passed／0 failed；正式部署 job skipped，沒有 Pages artifact。
+- 其他仍開啟的候選：PR #32（臉部輪廓）相較 main ahead 5／behind 18、compare 狀態 diverged；PR #27（髮際線／禮服）ahead 7／behind 57、compare 狀態 diverged。保留其歷史，不直接合併或刪除。
+- 目前開啟的主要追蹤 Issue：#14「Upgrade 3D traveler models and expand personal appearance customization」。
+- main 的 combined status 查詢未回傳任何 status check；這不等於測試成功。PR #33 的驗證證據以 Actions #244 為準。
+- Repository 文件中最近可讀到的成功正式發布紀錄為 Actions #185（run ID 45029236953），部署 SHA 549443d377c5db5e1ad9abb6f045bc90311eeec0，日期 2026-11-22。**本次 GitHub 連線提供 PR commit runs 與 job 查詢，但沒有提供 Repository 全部 workflow runs 清單；也未能從公開網站讀回 release.json，因此不能確認 2026-11-22 之後是否另有正式發布。請勿把此紀錄當成已驗證的最新公開版。**
+- 本次開發分支：feature/release-safety-docs-20261128，由 main @ 31bb68aec5a33c284759f48fba23353a0c193989 建立；用途是修正過期的 Pages 發布文件與加入文件安全回歸測試，尚未合併或發布。
+- AGENT.md、README_zh-TW.md、README.md、3D Roadmap、Release Workflow、Admin Preview、Supabase Setup 與 Security Review 已重新檢查。AGENT.md 的分支、審核及發布規範已完整，無需實質修改。
+- 不修改 GitHub Pages 正式設定；不合併 PR、不推送 main、不觸發正式部署；不執行 Supabase migration、不寫入正式玩家資料、不調整星塵或服裝所有權、不新增 NPC。
+
+---
 ## 2026-11-22 最新主線、公開版與手遊級視覺候選
 
 - 最新 `main` HEAD：`549443d377c5db5e1ad9abb6f045bc90311eeec0`；PR #23「系統性升級星夢樂園 3D 建築、景觀與遊樂設施」已合併。
