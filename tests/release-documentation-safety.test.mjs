@@ -13,7 +13,8 @@ test("release documentation no longer instructs direct uploads or commits to mai
 });
 
 test("release guidance requires owner review and a manual workflow dispatch", () => {
-  assert.match(checklist, /專案擁有者已親自檢查並明確批准/);
+  assert.match(checklist, /專案擁有者已親自檢查 PR 差異/);
+  assert.match(checklist, /專案擁有者已明確批准該 PR 可以合併/);
   assert.match(checklist, /workflow_dispatch/);
   assert.match(checklist, /confirm_release=true/);
   assert.match(guide, /production Environment/);
